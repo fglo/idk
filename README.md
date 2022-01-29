@@ -39,6 +39,8 @@ a := 67
 b := 'b'
 ```
 
+Only global variables are currently supported (you can't declare variables inside an `if` statement).
+
 ### Calculations
 
 Calculations are done using normal set of operators: `+`, `-`, `*`, `/`:
@@ -61,6 +63,19 @@ i := 3 - 4 / 2
 You can print variables, integers, character and expressions using the `print` keyword:
 ```
 print a
+```
+
+### Conditional statements
+
+You can do simple `if` statements:
+```
+if a < 68
+    print b
+end
+
+if a > 67
+    print c
+end
 ```
 
 ## Running programs

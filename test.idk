@@ -10,14 +10,31 @@ y := b + c + d
 z := b - a * 2
 z1 := 2 + 3 * 2 / 2
 
-print x
-print y
-print z
+if x = 3
+    print x
+    print y
+    print z
+end 
 
-print z1
+if x < 5
+    print z1
+end 
 
-print 4
-print c + b
+test := a * 0 + 2 / 2
+if x > 2
+    print test = 1
+end 
 
-print d
-print 'x'
+if x = 2
+    print d
+end 
+
+if x < 2
+    print 4
+    print c + b
+end 
+
+if x > 2
+    print 4
+    print c + b
+end 

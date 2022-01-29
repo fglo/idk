@@ -10,6 +10,12 @@ def try_parse_literal(token):
 def try_parse_keyword(token):
     if token == 'print':
         return KEYWORD_PRINT
+    if token == 'if':
+        return KEYWORD_IF
+    if token == 'do':
+        return KEYWORD_DO
+    if token == 'end':
+        return KEYWORD_END
     return -1
     
 def try_parse_operator(token):
@@ -25,6 +31,10 @@ def try_parse_operator(token):
         return OPERATOR_DIVISION
     if token == '=':
         return OPERATOR_EQ
+    if token == '>':
+        return OPERATOR_GT
+    if token == '<':
+        return OPERATOR_LT
     return -1
 
 def interpret_line_tokens(tokens):
@@ -52,7 +62,7 @@ def interpret_line_tokens(tokens):
 
 def tokenize_line(line) -> list:
     line = line.strip()
-    tokens = line.split(' ')
+    tokens = line.split(' ') #TODO: tokenize also using operators
     tokens = [token for token in tokens if token]
     return interpret_line_tokens(tokens)
 

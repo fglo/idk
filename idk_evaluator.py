@@ -9,17 +9,17 @@ class EvaluatorError(Exception):
 def evaluator_error(line_index, message):
     raise EvaluatorError('Error in line %d: %s' % (line_index, message))
 
-def evaluate_variable(exprvariable, line_index):
+def evaluate_global_variable(expr_var, line_index):
     for type, value, *exprs in EVALUATED_AST:
-        if value == OPERATOR_ASSIGMENT and exprs[0][1] == exprvariable[1]:
+        if value == OPERATOR_ASSIGMENT and exprs[0][1] == expr_var[1]:
             return exprs[1]
-    evaluator_error(line_index, "Could not find assignment for variable %s" % exprvariable[1])
+    evaluator_error(line_index, "Could not find assignment for variable %s" % expr_var[1])
         
 def evaluate_side_of_operator(expr, line_index):
     if expr[0] == TOKEN_INT or expr[0] == TOKEN_CHAR:
         return expr
     if expr[0] == TOKEN_WORD:
-        return evaluate_variable(expr, line_index)
+        return evaluate_global_variable(expr, line_index)
     elif expr[0] == TOKEN_OPERATOR:
         return evaluate_operation(expr, line_index)
     evaluator_error(line_index, "Only literals, words and operations are allowed as a side of a operations")
@@ -50,6 +50,21 @@ def evaluate_operation_division(expr, line_index):
     right = evaluate_side_of_operator(expr[3], line_index)
     return (TOKEN_INT, int(left[1] / right[1]))
 
+def evaluate_operation_eq(expr, line_index):        
+    left = evaluate_side_of_operator(expr[2], line_index)
+    right = evaluate_side_of_operator(expr[3], line_index)
+    return (TOKEN_BOOL, left[1] == right[1])
+
+def evaluate_operation_gt(expr, line_index):        
+    left = evaluate_side_of_operator(expr[2], line_index)
+    right = evaluate_side_of_operator(expr[3], line_index)
+    return (TOKEN_BOOL, left[1] > right[1])
+
+def evaluate_operation_lt(expr, line_index):        
+    left = evaluate_side_of_operator(expr[2], line_index)
+    right = evaluate_side_of_operator(expr[3], line_index)
+    return (TOKEN_BOOL, left[1] < right[1])
+
 def evaluate_operation(expr, line_index):
     token_operator = expr[1]
     if token_operator == OPERATOR_ASSIGMENT:
@@ -62,18 +77,24 @@ def evaluate_operation(expr, line_index):
         expr = evaluate_operation_multiplication(expr, line_index)
     elif token_operator == OPERATOR_DIVISION:
         expr = evaluate_operation_division(expr, line_index)
+    elif token_operator == OPERATOR_EQ:
+        expr = evaluate_operation_eq(expr, line_index)
+    elif token_operator == OPERATOR_GT:
+        expr = evaluate_operation_gt(expr, line_index)
+    elif token_operator == OPERATOR_LT:
+        expr = evaluate_operation_lt(expr, line_index)
     else:
         evaluator_error(line_index, "Unknown operator")
 
     return expr
 
 def evaluate_keyword_action_expression(expr, line_index):
-    if expr[0] == TOKEN_INT or expr[0] == TOKEN_CHAR:
+    if expr[0] == TOKEN_INT or expr[0] == TOKEN_CHAR or expr[0] == TOKEN_BOOL:
         expr = expr
     elif expr[0] == TOKEN_OPERATOR:
         expr = evaluate_operation(expr, line_index)
     elif expr[0] == TOKEN_WORD:
-        expr = evaluate_variable(expr, line_index)
+        expr = evaluate_global_variable(expr, line_index)
     else:
         evaluator_error(line_index, "Unknown token")
     return expr
@@ -84,12 +105,25 @@ def evaluate_keyword_print(expr, line_index):
         print(token_to_print[1])
     elif token_to_print[0] == TOKEN_CHAR:
         print(chr(token_to_print[1]))
+    elif token_to_print[0] == TOKEN_BOOL:
+        print(token_to_print[1])
     else:
         evaluator_error(line_index, "Unknown literal type")
+
+def evaluate_keyword_if(expr, line_index):
+    comparison_result = evaluate_keyword_action_expression(expr[2], line_index)
+    if comparison_result[1] == True or comparison_result[1] == 1:
+        if isinstance(expr[3], list):
+            for internal_expr in expr[3]:
+                evaulate_expr(internal_expr, line_index)
+        else:
+            evaulate_expr(expr[3], line_index)
 
 def evaluate_keyword_action(expr, line_index):
     if expr[1] == KEYWORD_PRINT:
         evaluate_keyword_print(expr, line_index)
+    elif expr[1] == KEYWORD_IF:
+        evaluate_keyword_if(expr, line_index)
     else:
         evaluator_error(line_index, "Unknown keyword")
     return expr
