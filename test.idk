@@ -1,0 +1,23 @@
+print 'a' + 0
+
+a := 1
+b := 2
+c := b
+d := 'a'
+
+x := a + b
+y := b + c + d
+z := b - a * 2
+z1 := 2 + 3 * 2 / 2
+
+print x
+print y
+print z
+
+print z1
+
+print 4
+print c + b
+
+print d
+print 'x'
