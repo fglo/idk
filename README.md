@@ -69,16 +69,28 @@ f := 2 + 1 * 2
 g := 3 - 4 / 2
 ```
 
-IDK keeps chars as ASCII code values, so it's possible to do calculations on chars (and convert them to ints):
+IDK keeps chars and bools as integers (chars as ASCII code values and bool using convention that true is 1 and false is 0), so it's possible to do calculations on them (and doing so convert them to integers):
 ```
-a_code = 'a' + 0
+a_code := 'a' + 0
+true_val := true + 0
+false_val := false + 0
 ```
 
 ### Printing
 
 You can print variables, integers, character and expressions using the `print` keyword:
 ```
+a := 'a'
+a_code := 'a' + 0
+
 print a
+print a_code
+print '0'
+print 'a'
+print 'a' + 0
+print 'a' = 'a'
+print true
+print false
 ```
 
 ### Conditional statements

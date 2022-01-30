@@ -16,7 +16,7 @@ def evaluate_global_variable(expr_var, line_index):
     evaluator_error(line_index, "Could not find assignment for variable %s" % expr_var[1])
         
 def evaluate_side_of_operator(expr, line_index):
-    if expr[0] == TOKEN_INT or expr[0] == TOKEN_CHAR:
+    if expr[0] == TOKEN_INT or expr[0] == TOKEN_CHAR or expr[0] == TOKEN_BOOL:
         return expr
     if expr[0] == TOKEN_WORD:
         return evaluate_global_variable(expr, line_index)
@@ -53,17 +53,17 @@ def evaluate_operation_division(expr, line_index):
 def evaluate_operation_eq(expr, line_index):        
     left = evaluate_side_of_operator(expr[2], line_index)
     right = evaluate_side_of_operator(expr[3], line_index)
-    return (TOKEN_BOOL, left[1] == right[1])
+    return (TOKEN_BOOL, int(left[1] == right[1]))
 
 def evaluate_operation_gt(expr, line_index):        
     left = evaluate_side_of_operator(expr[2], line_index)
     right = evaluate_side_of_operator(expr[3], line_index)
-    return (TOKEN_BOOL, left[1] > right[1])
+    return (TOKEN_BOOL, int(left[1] > right[1]))
 
 def evaluate_operation_lt(expr, line_index):        
     left = evaluate_side_of_operator(expr[2], line_index)
     right = evaluate_side_of_operator(expr[3], line_index)
-    return (TOKEN_BOOL, left[1] < right[1])
+    return (TOKEN_BOOL, int(left[1] < right[1]))
 
 def evaluate_operation(expr, line_index):
     token_operator = expr[1]
@@ -106,7 +106,7 @@ def evaluate_keyword_print(expr, line_index):
     elif token_to_print[0] == TOKEN_CHAR:
         print(chr(token_to_print[1]))
     elif token_to_print[0] == TOKEN_BOOL:
-        print(f'{token_to_print[1]}'.lower())
+        print(f'{token_to_print[1] == 1}'.lower())
     else:
         evaluator_error(line_index, "Unknown literal type")
 
