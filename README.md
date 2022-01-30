@@ -11,15 +11,15 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 ## Features
 
 - int, char and bool variable types
-- addition
-- subtraction
-- multiplication
-- division
+- assignment operator: `:=`
+- arithmetic operators: `+`, `-`, `*`, `/`
+- comparison operators: `=`, `>`, `<`
+- logical operators: `not`, `and`, `or`, `xor`
 - printing
-- conditional statements
+- conditional statements: `if`, `if-else`, `if-else-if`
 
 #TODO: 
-- logical (`not`, `and`, `or`, `xor`) keywors/operators
+- comparison (`>=`, `<=`)
 - local variables (better scopes)
 - comments
 - loops
