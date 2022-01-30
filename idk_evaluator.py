@@ -106,7 +106,7 @@ def evaluate_keyword_print(expr, line_index):
     elif token_to_print[0] == TOKEN_CHAR:
         print(chr(token_to_print[1]))
     elif token_to_print[0] == TOKEN_BOOL:
-        print(token_to_print[1])
+        print(f'{token_to_print[1]}'.lower())
     else:
         evaluator_error(line_index, "Unknown literal type")
 
@@ -134,6 +134,9 @@ def evaluate_expr_list(expr_list, line_index):
         evaulate_single_expr(expr_list, line_index)
 
 def evaulate_single_expr(expr, line_index):
+    if isinstance(expr, list):
+        expr = expr[0]
+        
     if expr[0] == TOKEN_WORD and expr[1][0] == TOKEN_WORD:
         evaluator_error(line_index, 'Unknown construction.')
     
@@ -141,7 +144,6 @@ def evaulate_single_expr(expr, line_index):
         evaluator_error(line_index, 'Unknown construction.')
 
     if expr[0] == TOKEN_KEYWORD:
-        pass
         expr = evaluate_keyword_action(expr, line_index)    
     elif expr[0] == TOKEN_OPERATOR:
         expr = evaluate_operation(expr, line_index)

@@ -1,72 +1,129 @@
-print 'a' + 0
-
 a := 1
 b := 2
 c := b
-d := 'a'
 
 x := a + b
 
-if x = 2
-    print d
-else
-    print 'e'
-end 
-
-y := b + c + d
+y := b + c
 z := b - a * 2
+
+print x
+print y
+print z
+
+print '-'
+
 z1 := 2 + 3 * 2 / 2
+z2 := a * 0 + 2 / 2
 
-if x = 3
-    print 't'
-    print x
-    print y
-    print z
-end 
+print z1
+print z2
 
-if x < 5
-    print z1
-end 
+print '-'
 
-test := a * 0 + 2 / 2
-if x > 2
-    print test = 1
-end 
+char_test := 'a'
+char_to_int := 0 + char_test
 
-if x = 2
-    print d'
-end 
+print 'a'
+print char_test
+print char_to_int
+print 'a' + 0
+
+print '-'
 
 if x < 2
-    print 4
+    print 'f'
     print c + b
 end 
 
 if x > 2
-    print 4
+    print 't'
     print c + b
 end 
 
-if x = 2
-    print d
-else if x = 3
-    print 'i'
+if true
+    print z2 = 1
+end 
+
+print '-'
+
+if x = 3
+    print 'o'
 else
-    print 'e'
+    print 'n'
 end
+
+if x = 2
+    print 'n'
+else
+    print 'o'
+end
+
+if x = 2
+    print 'n'
+else if x = 3
+    print 'o'
+end
+
+print '-'
 
 if x > 1
-    print d
-else if x = 3
-    print 'i'
+    print 'a'
+else if a + b = b + a
+    print 'b'
 else
-    print 'e'
+    print 'c'
 end
 
 if x = 2
-    print d
-else if x < 2
-    print 'i'
+    print 'a'
+else if x = 3
+    print 'b'
 else
-    print 'e'
+    print 'c'
 end
+
+if x = 2
+    print 'a'
+else if x < 2
+    print 'b'
+else
+    print 'c'
+end
+
+print '-'
+
+if 3 > 2
+    if 3 < 4
+        print '1'
+    end
+    print '2'
+end
+
+if x < 1
+    if x < 2
+        print 'f'
+    else
+        print 'f'
+    end
+else
+    print '3'
+    if x < 3
+        print 'f'
+    else
+        print '4'
+        if x < 4
+            print '5'
+        else
+            print 'f'
+        end
+        print '6'
+    end
+    print '7'
+    print '8'
+    if false
+        print 'f'
+    else
+        print '9'
+    end
+end 

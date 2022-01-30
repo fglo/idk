@@ -1,0 +1,91 @@
+print 'a' + 0
+
+a := 1
+b := 2
+c := b
+d := 'a'
+
+x := a + b
+
+y := b + c + d
+z := b - a * 2
+z1 := 2 + 3 * 2 / 2
+
+print '-'
+
+if x = 3
+    print 't'
+    print x
+    print y
+    print z
+end 
+
+if x < 5
+    print z1
+end 
+
+test := a * 0 + 2 / 2
+
+print '-'
+
+if true
+    print test = 1
+end 
+
+if x < 2
+    print 4
+    print c + b
+end 
+
+if x > 2
+    print 4
+    print c + b
+end 
+
+print '-'
+
+if x = 2
+    print d
+else if x = 3
+    print 'i'
+else
+    print 'e'
+end
+
+if x > 1
+    print d
+else if x = 3
+    print 'i'
+else
+    print 'e'
+end
+
+if x = 2
+    print d
+else if x < 2
+    print 'i'
+else
+    print 'e'
+end
+
+print '-'
+
+if x < 2
+    if x < 2
+        print 0
+    else
+        print 1
+    end
+else
+    print 2
+    if x < 2
+        print 3
+    else
+        print 4
+        if x < 2
+            print 5
+        else
+            print 6
+        end
+    end
+end 

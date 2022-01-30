@@ -20,9 +20,10 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - conditional statements
 
 #TODO: 
+- logical (not, and, or, xor) keywors/operators
 - loops
 - strings
-- prcedures
+- procedures
 - functions
 - tokenization not only with spaces but also with operators
 
@@ -93,6 +94,19 @@ else if a > 68
     print f
 else
     print g
+end
+
+```
+
+You can also nest `if` statements:
+```
+if 3 > 2
+    if 3 > 4
+        print '1'
+    else
+        print '2'
+    end
+    print '3'
 end
 ```
 

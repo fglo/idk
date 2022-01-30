@@ -83,6 +83,5 @@ def tokenize(program_file_path) -> list:
         for line in pf:
             line_index += 1
             tokenized_line = tokenize_line(line, line_index)
-            if len(tokenized_line) > 0:
-                tokenized_file_lines.append(tokenized_line) 
+            tokenized_file_lines.append(tokenized_line) 
     return tokenized_file_lines
