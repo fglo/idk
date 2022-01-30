@@ -21,16 +21,23 @@ def get_first_less_important_operator_index(tokens):
     found_operator = None
     for index, token in enumerate(tokens):
         if token[0] == TOKEN_OPERATOR:
-            if token[1] == OPERATOR_ASSIGMENT:
-                found_operator_index = index
-                break
-            if token[1] == OPERATOR_EQ or token[1] == OPERATOR_GT or token[1] == OPERATOR_LT:
+            if token[1] == OPERATOR_ASSIGMENT or token[1] == OPERATOR_NOT:
                 found_operator_index = index
                 break
             if found_operator is None:
                 found_operator_index = index
                 found_operator = token
-            elif found_operator[1] >= OPERATOR_MULTIPLICATION and token[1] <= OPERATOR_MINUS:
+                continue
+            if found_operator[1] <= OPERATOR_DIVISION and token[1] >= OPERATOR_PLUS:
+                found_operator_index = index
+                found_operator = token
+            if found_operator[1] <= OPERATOR_MINUS and token[1] > OPERATOR_EQ:
+                found_operator_index = index
+                found_operator = token
+            if found_operator[1] <= OPERATOR_LT and token[1] > OPERATOR_AND:
+                found_operator_index = index
+                found_operator = token
+            if found_operator[1] == OPERATOR_AND and token[1] <= OPERATOR_OR:
                 found_operator_index = index
                 found_operator = token
                 break
@@ -55,6 +62,12 @@ def handle_operator_assignment(expr, operator_index):
             parser_error(line_index, "You cannot assign value to a variable that already has been assigned.")
     right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
     return (TOKEN_OPERATOR, OPERATOR_ASSIGMENT, left, right)  
+    
+def handle_operator_with_one_side_evaluation(expr, operator_index):
+    tokens, line_index, nesting_lvl = expr        
+    right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
+    __, operator_type = tokens[operator_index]
+    return (TOKEN_OPERATOR, operator_type, right)
     
 def handle_operator_with_two_side_evaluation(expr, operator_index):
     tokens, line_index, nesting_lvl = expr        
@@ -83,6 +96,14 @@ def handle_operator(expr):
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_LT:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_XOR:
+        expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_OR:
+        expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_AND:
+        expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_NOT:
+        expr = handle_operator_with_one_side_evaluation(expr, operator_index)
     else:
         parser_error(line_index, "Unknown operator")
     return expr
@@ -219,7 +240,8 @@ def parse_expr(expr):
         parser_error(line_index, 'Not allowed word on the beginning of the line.')
     return expr
 
-def parse(tokenized_code_lines):
+
+def get_expr_list(tokenized_code_lines):
     expr_list = []
     curr_expr = []
     multilvl_expr = 0
@@ -250,6 +272,24 @@ def parse(tokenized_code_lines):
         if multilvl_expr == 0:
             expr_list.append(curr_expr)
             curr_expr = []
+
+    return expr_list
+
+def parse(tokenized_code_lines):
+    expr_list = get_expr_list(tokenized_code_lines)
+
+    for expr in expr_list:
+        expression_ast = parse_expr(expr)
+        AST.append(expression_ast)
+    return AST
+
+
+def parse_interactive(tokenized_code_lines):
+    global AST
+    
+    expr_list = get_expr_list(tokenized_code_lines)
+
+    AST = [expr for expr in AST if expr[0] != TOKEN_KEYWORD and expr[1] != KEYWORD_PRINT]
 
     for expr in expr_list:
         expression_ast = parse_expr(expr)

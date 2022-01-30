@@ -8,5 +8,22 @@ def run(program_file_path):
     ast = parse(tokenized_file_lines)
     evaluate(ast)
 
+def run_interactive():
+    print('Welcome to IDK interactive!')
+    value = input("$ ")
+    line_index = 1
+    while value != 'exit':
+        try:
+            tokenized_file_lines = [tokenize_line(value, line_index)]
+            ast = parse_interactive(tokenized_file_lines)
+            evaluate(ast)
+        except Exception as e:
+            print(e)
+        value = input("$ ")
+        line_index += 1
+    
 if __name__ == "__main__":
-    run(argv[1])
+    if argv[1] == '-it':
+        run_interactive()
+    else:
+        run(argv[1])

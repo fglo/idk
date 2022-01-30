@@ -78,6 +78,25 @@ true_val := true + 0
 false_val := false + 0
 ```
 
+### Comparison
+
+IDK supports following comparison operators: `=`, `>` and `<`:
+```
+eq := 1 = 1
+gt := 2 > 1
+lt := 1 < 2
+```
+
+### Logical operators
+
+Following logical operators are supported: `xor`, `or`, `and`, `not`:
+```
+negated := not true
+anded := true and false
+ored := true or false
+xored := true xor false
+```
+
 ### Printing
 
 You can print variables, integers, character and expressions using the `print` keyword:
@@ -97,7 +116,7 @@ print false
 
 ### Conditional statements
 
-You can write simple `if`, `if-else` and `if-else-if` statements:
+You can write `if`, `if-else` and `if-else-if` statements:
 ```
 a := 67
 b := 't'
@@ -147,9 +166,50 @@ if 3 > 2
 end
 ```
 
+Logical operators are also supported:
+```
+if 1 < 2 and 2 > 1
+    print 1
+end
+if 1 < 2 or 2 < 1
+    print 2
+end
+if 1 < 2 xor 2 < 1
+    print 3
+end
+if not 1 < 2 xor 2 > 1
+    print 4
+end
+```
+
 ## Running programs
 
 You can run an IDK program by calling the idk.py script and providing a path to a file with an IDK program:
 ```bash
 python idk.py test.idk
+```
+
+## Running interactive interpreter
+
+IDK interpreter provides simple interactive mode. Only oneline statements are currently supported.
+
+You can run it using following command:
+```bash
+python idk.py -it
+```
+
+if everything went as it should, you should see following text and prompt:
+```
+Welcome to IDK interactive!
+$ 
+```
+
+You can assign variables and do oneline calculations. if you want to exit just type 'exit' and click enter:
+```
+$ print 1
+1 
+$ x := 2
+$ print x + 3
+5 
+$ exit
 ```

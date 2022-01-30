@@ -43,6 +43,14 @@ def try_parse_operator(token):
         return OPERATOR_GT
     if token == '<':
         return OPERATOR_LT
+    if token == 'not':
+        return OPERATOR_NOT
+    if token == 'and':
+        return OPERATOR_AND
+    if token == 'or':
+        return OPERATOR_OR
+    if token == 'xor':
+        return OPERATOR_XOR
     return -1
 
 def interpret_line_tokens(tokens, line_index):
