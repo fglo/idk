@@ -113,11 +113,9 @@ def evaluate_keyword_print(expr, line_index):
 def evaluate_keyword_if(expr, line_index):
     comparison_result = evaluate_keyword_action_expression(expr[2], line_index)
     if comparison_result[1] == True or comparison_result[1] == 1:
-        if isinstance(expr[3], list):
-            for internal_expr in expr[3]:
-                evaulate_expr(internal_expr, line_index)
-        else:
-            evaulate_expr(expr[3], line_index)
+        evaluate_expr_list(expr[3], line_index)
+    elif len(expr) > 4 and comparison_result[1] == False or comparison_result[1] == 0:
+        evaluate_expr_list(expr[4], line_index)
 
 def evaluate_keyword_action(expr, line_index):
     if expr[1] == KEYWORD_PRINT:
@@ -128,7 +126,14 @@ def evaluate_keyword_action(expr, line_index):
         evaluator_error(line_index, "Unknown keyword")
     return expr
 
-def evaulate_expr(expr, line_index):
+def evaluate_expr_list(expr_list, line_index):
+    if isinstance(expr_list, list):
+        for internal_expr in expr_list:
+            evaulate_single_expr(internal_expr, line_index)
+    else:
+        evaulate_single_expr(expr_list, line_index)
+
+def evaulate_single_expr(expr, line_index):
     if expr[0] == TOKEN_WORD and expr[1][0] == TOKEN_WORD:
         evaluator_error(line_index, 'Unknown construction.')
     
@@ -150,5 +155,5 @@ def evaluate(ast):
     line_index = 0
     for expr in AST:
         line_index += 1
-        EVALUATED_AST.append(evaulate_expr(expr, line_index))
+        EVALUATED_AST.append(evaulate_single_expr(expr, line_index))
     return EVALUATED_AST

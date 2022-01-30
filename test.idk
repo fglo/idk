@@ -6,11 +6,19 @@ c := b
 d := 'a'
 
 x := a + b
+
+if x = 2
+    print d
+else
+    print 'e'
+end 
+
 y := b + c + d
 z := b - a * 2
 z1 := 2 + 3 * 2 / 2
 
 if x = 3
+    print 't'
     print x
     print y
     print z
@@ -26,7 +34,7 @@ if x > 2
 end 
 
 if x = 2
-    print d
+    print d'
 end 
 
 if x < 2
@@ -38,3 +46,27 @@ if x > 2
     print 4
     print c + b
 end 
+
+if x = 2
+    print d
+else if x = 3
+    print 'i'
+else
+    print 'e'
+end
+
+if x > 1
+    print d
+else if x = 3
+    print 'i'
+else
+    print 'e'
+end
+
+if x = 2
+    print d
+else if x < 2
+    print 'i'
+else
+    print 'e'
+end

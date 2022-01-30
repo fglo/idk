@@ -89,19 +89,44 @@ def handle_keyword_print(tokens, line_index):
     else:
         parser_error(line_index, 'You can print only literals, variables or operations.')
     return (TOKEN_KEYWORD, KEYWORD_PRINT, expr_value)
-    
-def handle_keyword_if(expr):
-    tokens, line_index = expr[0]
+
+def handle_keyword_else(expr_list):
+    first_line_tokens, line_index = expr_list[0]
             
-    operator_index = get_first_operator_index(tokens)
+    if len(first_line_tokens) > 1 and first_line_tokens[1][0] == TOKEN_KEYWORD and first_line_tokens[1][1] == KEYWORD_IF:
+        return handle_keyword_if(expr_list)
+    
+    return [parse_expr(internal_expr) for internal_expr in expr_list[1:]]
+    
+def handle_keyword_if(expr_list):
+    first_line_tokens, line_index = expr_list[0]
+            
+    if first_line_tokens[1][0] == TOKEN_KEYWORD and first_line_tokens[1][1] == KEYWORD_IF:
+        first_line_tokens = first_line_tokens[1:]
+            
+    operator_index = get_first_operator_index(first_line_tokens)
     if operator_index > -1:
-        expr_value = handle_operator(tokens[1:], line_index)
-    elif tokens[1][0] <= TOKEN_WORD:
-        expr_value = tokens[1]
+        expr_value = handle_operator(first_line_tokens[1:], line_index)
+    elif first_line_tokens[1][0] <= TOKEN_WORD:
+        expr_value = first_line_tokens[1]
     else:
-        parser_error(line_index, 'You can print only literals, variables or operations.')
-    internal_expr_list = [parse_expr(internal_expr) for internal_expr in expr[1:] ]
-    expr_ast = (TOKEN_KEYWORD, KEYWORD_IF, expr_value, internal_expr_list)
+        parser_error(line_index, 'You can do operations only on literals, variables or other operations.')
+        
+    if_condition_true = []
+    if_condition_false = []
+    else_found = False
+    for index, internal_expr in enumerate(expr_list[1:]):
+        if internal_expr[0][0][0] == TOKEN_KEYWORD and internal_expr[0][0][1] == KEYWORD_ELSE:
+            else_found = True
+            break
+        if not else_found:
+            if_condition_true.append(parse_expr(internal_expr))
+    
+    else_index = index + 1  
+    if else_found:
+        if_condition_false = handle_keyword_else(expr_list[else_index:])
+            
+    expr_ast = (TOKEN_KEYWORD, KEYWORD_IF, expr_value, if_condition_true, if_condition_false)
     return expr_ast
     
 def handle_keyword_action(expr):  
@@ -114,6 +139,8 @@ def handle_keyword_action(expr):
         expr_ast = handle_keyword_print(tokens, line_index)
     elif tokens[0][1] == KEYWORD_IF:
         expr_ast = handle_keyword_if(expr)
+    elif tokens[0][1] == KEYWORD_ELSE:
+        expr_ast = handle_keyword_else(expr)
     else:
         parser_error(line_index, 'Unknown keyword.') 
     return expr_ast
@@ -126,11 +153,9 @@ def parse_expr(expr):
         first_line_of_expr = expr[0]
         line_index = expr[1]
 
-    first_token = first_line_of_expr[0]
-    second_token = first_line_of_expr[1]
-    if first_token[0] == TOKEN_KEYWORD:
+    if first_line_of_expr[0][0] == TOKEN_KEYWORD:
         expr = handle_keyword_action(expr)    
-    elif first_token[0] == TOKEN_WORD and second_token[0] == TOKEN_OPERATOR:
+    elif first_line_of_expr[0][0] == TOKEN_WORD and len(first_line_of_expr) > 1 and first_line_of_expr[1][0] == TOKEN_OPERATOR:
         expr = handle_operator(first_line_of_expr, line_index)
     else:
         parser_error(line_index, 'Not allowed word on the beginning of the line.')
@@ -139,7 +164,7 @@ def parse_expr(expr):
 def parse(tokenized_code_lines):
     expr_list = []
     curr_expr = []
-    multilvl_expr = False
+    multilvl_expr = 0
     for line_index, line_tokens in enumerate(tokenized_code_lines):
     
         if line_tokens[0][0] == TOKEN_WORD and line_tokens[1][0] == TOKEN_WORD:
@@ -149,13 +174,13 @@ def parse(tokenized_code_lines):
             parser_error(line_index, 'Unknown construction.')
         
         if line_tokens[0][1] == KEYWORD_IF:
-            multilvl_expr = True
+            multilvl_expr += 1
         if line_tokens[0][1] == KEYWORD_END:
-            multilvl_expr = False
+            multilvl_expr -= 1
         else:
             curr_expr.append((line_tokens, line_index + 1))
         
-        if not multilvl_expr:
+        if multilvl_expr == 0:
             expr_list.append(curr_expr)
             curr_expr = []
 

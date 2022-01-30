@@ -1,10 +1,18 @@
 from idk_consts import * 
 
+class LexerError(Exception):
+    pass
+
+def lexer_error(line_index, message):
+    raise LexerError('Error in line %d: %s' % (line_index, message))
+
 def try_parse_literal(token):
     if token.isnumeric():
         return TOKEN_INT
     if len(token) == 3 and token[0] == "'" and token[2] =="'":
         return TOKEN_CHAR
+    if token == "true" or token == "false":
+        return TOKEN_BOOL
     return -1
     
 def try_parse_keyword(token):
@@ -12,8 +20,8 @@ def try_parse_keyword(token):
         return KEYWORD_PRINT
     if token == 'if':
         return KEYWORD_IF
-    if token == 'do':
-        return KEYWORD_DO
+    if token == 'else':
+        return KEYWORD_ELSE
     if token == 'end':
         return KEYWORD_END
     return -1
@@ -37,17 +45,19 @@ def try_parse_operator(token):
         return OPERATOR_LT
     return -1
 
-def interpret_line_tokens(tokens):
+def interpret_line_tokens(tokens, line_index):
     interpreted_line = []
     for token in tokens:
         if not token:
-            assert False, "Empty token!"
+            lexer_error(line_index, "Empty token!")
         literal = try_parse_literal(token)
         if literal > -1:
             if literal == TOKEN_INT:
                 interpreted_line.append((TOKEN_INT, int(token)))
             elif literal == TOKEN_CHAR:
                 interpreted_line.append((TOKEN_CHAR, ord(token[1])))
+            elif literal == TOKEN_BOOL:
+                interpreted_line.append((TOKEN_BOOL, int(token == "true")))
             continue
         keyword = try_parse_keyword(token)
         if keyword > -1:
@@ -60,17 +70,19 @@ def interpret_line_tokens(tokens):
         interpreted_line.append((TOKEN_WORD, token))
     return interpreted_line
 
-def tokenize_line(line) -> list:
+def tokenize_line(line, line_index) -> list:
     line = line.strip()
     tokens = line.split(' ') #TODO: tokenize also using operators
     tokens = [token for token in tokens if token]
-    return interpret_line_tokens(tokens)
+    return interpret_line_tokens(tokens, line_index)
 
 def tokenize(program_file_path) -> list:
     tokenized_file_lines = []
+    line_index = 0
     with open(program_file_path, "r") as pf:
         for line in pf:
-            tokenized_line = tokenize_line(line)
+            line_index += 1
+            tokenized_line = tokenize_line(line, line_index)
             if len(tokenized_line) > 0:
                 tokenized_file_lines.append(tokenized_line) 
     return tokenized_file_lines

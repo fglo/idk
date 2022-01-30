@@ -1,6 +1,6 @@
 ﻿# IDK Programming Language
 
-IDK is a weakly typed language with immutable variables. Its interpreter is currently implemented in Python.
+IDK is a dynamically typed language with immutable variables. Its interpreter is currently implemented in Python.
 
 This is very much a work in progress, so ANYTHING can change any moment.
 
@@ -17,10 +17,17 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - multiplication
 - division
 - printing
+- conditional statements
+
+#TODO: 
+- loops
+- strings
+- prcedures
+- functions
 
 ## Syntax
 
-Currently all tokens in IDK must be separated by the space symbol: ' '.
+Currently all tokens in IDK must be separated by a space symbol: ' '.
 
 Correct code:
 ```
@@ -67,7 +74,7 @@ print a
 
 ### Conditional statements
 
-You can do simple `if` statements:
+You can write simple `if`, `if-else` and `if-else-if` statements:
 ```
 if a < 68
     print b
@@ -75,6 +82,17 @@ end
 
 if a > 67
     print c
+else
+    print d
+end
+
+
+if a > 67
+    print e
+else if a > 68
+    print f
+else
+    print g
 end
 ```
 
