@@ -24,6 +24,7 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - strings
 - prcedures
 - functions
+- tokenization not only with spaces but also with operators
 
 ## Syntax
 
@@ -61,7 +62,7 @@ f := d / 5
 You can also chain operators:
 ```
 g := 3 + 4 - 5
-h := 2 + 1 *2
+h := 2 + 1 * 2
 i := 3 - 4 / 2
 ```
 
@@ -85,7 +86,6 @@ if a > 67
 else
     print d
 end
-
 
 if a > 67
     print e
