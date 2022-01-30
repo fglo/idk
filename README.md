@@ -10,8 +10,7 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 
 ## Features
 
-- integer variables
-- character variables
+- int, char and bool variable types
 - addition
 - subtraction
 - multiplication
@@ -47,6 +46,8 @@ You can assign value to a new variable using the `:=` operator:
 ```
 a := 67
 b := 'b'
+c := true
+d := false
 ```
 
 Only global variables are currently supported (you can't declare variables inside an `if` statement).
@@ -55,17 +56,22 @@ Only global variables are currently supported (you can't declare variables insid
 
 Calculations are done using normal set of operators: `+`, `-`, `*`, `/`:
 ```
-c := 1 + 2
-d := 3 - a
-e := 4 * b
-f := d / 5
+a := 1 + 2
+b := 3 - a
+c := 4 * b
+d := d / 5
 ```
 
 You can also chain operators:
 ```
-g := 3 + 4 - 5
-h := 2 + 1 * 2
-i := 3 - 4 / 2
+e := 3 + 4 - 5
+f := 2 + 1 * 2
+g := 3 - 4 / 2
+```
+
+IDK keeps chars as ASCII code values, so it's possible to do calculations on chars (and convert them to ints):
+```
+a_code = 'a' + 0
 ```
 
 ### Printing
@@ -79,6 +85,14 @@ print a
 
 You can write simple `if`, `if-else` and `if-else-if` statements:
 ```
+a := 67
+b := 't'
+c := 'f'
+
+if a = 67
+    print b
+end
+
 if a < 68
     print b
 end
@@ -86,15 +100,23 @@ end
 if a > 67
     print c
 else
-    print d
+    print b
 end
 
 if a > 67
-    print e
+    print c
 else if a > 68
-    print f
+    print c
 else
-    print g
+    print b
+end
+
+if true
+    print 't'
+end
+
+if false
+    print 'f'
 end
 
 ```
@@ -103,11 +125,11 @@ You can also nest `if` statements:
 ```
 if 3 > 2
     if 3 > 4
-        print '1'
+        print '0'
     else
-        print '2'
+        print '1'
     end
-    print '3'
+    print '2'
 end
 ```
 
