@@ -19,8 +19,9 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - conditional statements
 
 #TODO: 
-- logical (not, and, or, xor) keywors/operators
+- logical (`not`, `and`, `or`, `xor`) keywors/operators
 - local variables (better scopes)
+- comments
 - loops
 - strings
 - procedures
