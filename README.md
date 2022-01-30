@@ -21,6 +21,7 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 
 #TODO: 
 - logical (not, and, or, xor) keywors/operators
+- local variables (better scopes)
 - loops
 - strings
 - procedures
