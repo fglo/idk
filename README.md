@@ -150,6 +150,7 @@ print 'a' = 2   // prints false
 print true      // prints true
 print false     // prints false
 print 1..6      // print 1, 2, 3, 4, 5
+print 6..1      // print 6, 5, 4, 3, 2
 ```
 
 ### Conditional statements
