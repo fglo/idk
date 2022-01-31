@@ -74,7 +74,7 @@ d := false
 
 Only global variables are currently supported (you can't declare variables inside an `if` statement).
 
-### Calculations
+### Arithmetic operators
 
 Calculations are done using normal set of operators: `+`, `-`, `*`, `/`:
 ```
@@ -98,7 +98,7 @@ true_val := true + 0
 false_val := false + 0
 ```
 
-### Comparison
+### Comparison operators
 
 IDK supports following comparison operators: `=`, `>`, `<`, `>=` and `<=`:
 ```
