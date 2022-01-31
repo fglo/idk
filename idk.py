@@ -42,7 +42,6 @@ def run_interactive():
                 reset_ast()
                 ast = parse(assignments + tokenized_expr)
                 evaluate(ast)
-                tokenized_expr = []
         except LexerError as e:
             print('[ERROR]', e)
         except ParserError as e:
@@ -52,6 +51,7 @@ def run_interactive():
         except EvaluatorError as e:
             print('[ERROR]', e)
         if multilvl_expr == 0:
+            tokenized_expr = []
             value = input("$ ")
         else:
             value = input("> ")

@@ -269,12 +269,28 @@ Welcome to IDK interactive!
 $ 
 ```
 
-You can assign variables and do oneline calculations. if you want to exit just type `exit` and click enter:
+If you want to exit just type `exit` and click enter:
 ```
 $ print 1
 1 
+$ exit
+```
+
+Example:
+```
 $ x := 2
 $ print x + 3
-5 
+5
+$ if true
+> i := 1
+> print i
+> end
+1 
+$ for 1..=3
+> print _it
+> end
+1
+2
+3
 $ exit
 ```
