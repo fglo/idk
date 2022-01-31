@@ -25,6 +25,7 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 #TODO (must-have):
 - parentheses in operations
 - loops: while and for with variable
+- nested loops
 - strings (arrays?)
 - procedures
 - functions
@@ -246,6 +247,8 @@ for 1..5
     print _it
 end
 ```
+
+Currently loops cannot be nested.
 
 ## Running programs
 
