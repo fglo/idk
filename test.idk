@@ -211,7 +211,7 @@ for 1..5
     end
 end
 
-print '-' // test of local variables and implicit for _it variable (scopes)
+print '-' // test of local variables (scopes)
 
 if true
     i := 0
@@ -231,6 +231,21 @@ if true
     end
 end
 
+print '-' // test of exclusive range operator and implicit for _it variable
+
 for 1..5
+    print _it
+end
+
+for 5..1
+    print _it
+end
+
+print '-' // test of inclusive range operator and implicit for _it variable
+
+for 1..=5
+    print _it
+end
+for 5..=1
     print _it
 end

@@ -62,6 +62,8 @@ def try_parse_operator(token):
         return OPERATOR_XOR
     if token == '..':
         return OPERATOR_RANGE
+    if token == '..=':
+        return OPERATOR_RANGE_INCLUSIVE
     if token == 'in':
         return OPERATOR_IN
     return -1
@@ -93,7 +95,9 @@ def interpret_line_tokens(tokens, line_index):
 
 #TODO: include other operators
 def add_spaces_to_operators(line):
+    line = line.replace('..=', ' ..= ')
     line = line.replace('..', ' .. ')
+    line = line.replace('.. =', ' ..= ')
     # operators = [':=', '+', '-', '*', '/', '=', '>', '>=', '<', '<=', '..']
     # for op in operators:
     #     if re.match(f'[a-z0-9\s]{op}[a-z0-9\s]', line):

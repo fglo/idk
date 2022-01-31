@@ -121,8 +121,8 @@ def evaluate_operator_in(expr, scope):
     return (TOKEN_BOOL, 1)
 
 def evaluate_operator_range(expr, scope):        
-    left = evaluate_side_of_operator(expr[2], scope)
-    right = evaluate_side_of_operator(expr[3], scope)
+    left = evaluate_side_of_operator(expr[2], expr[-1], scope)
+    right = evaluate_side_of_operator(expr[3], expr[-1], scope)
     
     left_val = left[1]
     right_val = right[1]
@@ -136,6 +136,21 @@ def evaluate_operator_range(expr, scope):
             return (TOKEN_ARRAY, left_val, evaluate_operator_range((expr[0], expr[1], (TOKEN_INT, left_val - 1), right), scope))
         if left_val == right_val + 1:
             return (TOKEN_INT, left_val)
+
+    evaluator_error(expr[-1], "Error evaluating range.")
+
+def evaluate_operator_range_inclusive(expr, scope):        
+    left = evaluate_side_of_operator(expr[2], expr[-1], scope)
+    right = evaluate_side_of_operator(expr[3], expr[-1], scope)
+    
+    left_val = left[1]
+    right_val = right[1]
+    if left_val < right_val:
+        return (TOKEN_ARRAY, left_val, evaluate_operator_range_inclusive((expr[0], expr[1], (TOKEN_INT, left_val + 1), right), scope))
+    elif left_val > right_val:
+        return (TOKEN_ARRAY, left_val, evaluate_operator_range_inclusive((expr[0], expr[1], (TOKEN_INT, left_val - 1), right), scope))
+    else:
+        return (TOKEN_INT, left_val)
 
     evaluator_error(expr[-1], "Error evaluating range.")
 
@@ -173,6 +188,8 @@ def evaluate_operator(expr, scope):
         expr = evaluate_operator_in(expr, scope)
     elif token_operator == OPERATOR_RANGE:
         expr = evaluate_operator_range(expr, scope)
+    elif token_operator == OPERATOR_RANGE_INCLUSIVE:
+        expr = evaluate_operator_range_inclusive(expr, scope)
     else:
         evaluator_error(expr[-1], "Unknown operator")
 

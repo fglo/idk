@@ -126,6 +126,8 @@ def handle_operator(expr):
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_RANGE:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_RANGE_INCLUSIVE:
+        expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     else:
         parser_error(line_index, "Unknown operator")
     return expr
@@ -238,7 +240,7 @@ def handle_keyword_for(expr_list):
     if operator_index > -1:
         expr_value = handle_operator((first_line_tokens[1:], line_index, nesting_lvl))
         
-    if operator_index == -1 or expr_value[1] != OPERATOR_RANGE:
+    if operator_index == -1 or (expr_value[1] != OPERATOR_RANGE and expr_value[1] != OPERATOR_RANGE_INCLUSIVE):
         parser_error(line_index, "Only for range loops are currently supported.")
     
     expr_ast = []

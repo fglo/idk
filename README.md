@@ -15,7 +15,7 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - arithmetic operators: `+`, `-`, `*`, `/`
 - comparison operators: `=`, `>`, `<`, `>=`, `<=`
 - logical operators: `not`, `and`, `or`, `xor`
-- range operator: `..`
+- range operators: `..`, `..=`
 - array `in` operator
 - printing
 - conditional statements: `if`, `if-else`, `if-else-if`
@@ -119,16 +119,24 @@ ored := true or false
 xored := true xor false
 ```
 
+### Range operators
+
+IDK supports exclusive range operator `..` and inclusive range operator `..=`:
+```
+exclusive := 1..3        // creates following array: [1, 2]
+inclusive := 1..=3        // creates following array: [1, 2, 3]
+```
+
 ### Arrays
 
-Currently IDK supports only arrays of digits created by the range operator (`..`). The range operator is exclusive.
+Currently IDK supports only arrays of digits created by the range operators. The range operator is exclusive.
 ```
 x := 1..3        // creates following array: [1, 2]
 ```
 
 IDK supports only one operation on arrays : `in`.  
 ```
-print 1 in 1..3 // prints true
+print 3 in 1..=3 // prints true
 
 x := 1..3
 print 3 in x    // prints false

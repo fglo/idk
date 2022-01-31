@@ -301,6 +301,28 @@ SYNTAX_RULES = {
             ],
             'returns': TOKEN_ARRAY
         },
+        OPERATOR_RANGE_INCLUSIVE: {
+            'operator': 'OPERATOR_RANGE', 
+            'arguments' : [
+                (TOKEN_INT, TOKEN_INT),        
+                (TOKEN_INT, TOKEN_BOOL),        
+                (TOKEN_INT, TOKEN_CHAR),        
+                (TOKEN_INT, TOKEN_WORD),        
+                (TOKEN_CHAR, TOKEN_CHAR),        
+                (TOKEN_CHAR, TOKEN_INT),        
+                (TOKEN_CHAR, TOKEN_BOOL),        
+                (TOKEN_CHAR, TOKEN_WORD),
+                (TOKEN_BOOL, TOKEN_BOOL),        
+                (TOKEN_BOOL, TOKEN_INT),        
+                (TOKEN_BOOL, TOKEN_CHAR),        
+                (TOKEN_BOOL, TOKEN_WORD), 
+                (TOKEN_WORD, TOKEN_WORD),           
+                (TOKEN_WORD, TOKEN_INT),        
+                (TOKEN_WORD, TOKEN_BOOL),        
+                (TOKEN_WORD, TOKEN_CHAR)       
+            ],
+            'returns': TOKEN_ARRAY
+        },
         OPERATOR_AND: {
             'operator': 'OPERATOR_AND',
             'arguments' : [
