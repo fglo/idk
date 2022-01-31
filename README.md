@@ -142,7 +142,7 @@ a := 'a'
 a_code := 'a' + 0
 
 print a         // prints a
-print a_code    //prints 97
+print a_code    // prints 97
 print 'a'       // prints a
 print 'a' + 0   // prints 97
 print 'a' = 'a' // prints true
