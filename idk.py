@@ -5,10 +5,19 @@ from idk_syntax_checker import *
 from idk_evaluator import *
 
 def run(program_file_path):
-    tokenized_file_lines = tokenize(program_file_path)
-    ast = parse(tokenized_file_lines)
-    check_syntax(ast)
-    evaluate(ast)
+    try:
+        tokenized_file_lines = tokenize(program_file_path)
+        ast = parse(tokenized_file_lines)
+        check_syntax(ast)
+        evaluate(ast)
+    except LexerError as e:
+        print('[ERROR]', e)
+    except ParserError as e:
+        print('[ERROR]', e)
+    except SyntaxError as e:
+        print('[ERROR]', e)
+    except EvaluatorError as e:
+        print('[ERROR]', e)
 
 def run_interactive():
     print('Welcome to IDK interactive!')
@@ -19,8 +28,14 @@ def run_interactive():
             tokenized_line = [tokenize_line(value, line_index)]
             ast = parse_interactive(tokenized_line)
             evaluate(ast)
-        except Exception as e:
-            print(e)
+        except LexerError as e:
+            print('[ERROR]', e)
+        except ParserError as e:
+            print('[ERROR]', e)
+        except SyntaxError as e:
+            print('[ERROR]', e)
+        except EvaluatorError as e:
+            print('[ERROR]', e)
         value = input("$ ")
         line_index += 1
     
