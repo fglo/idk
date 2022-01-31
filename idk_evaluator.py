@@ -137,7 +137,7 @@ def evaluate_operator_range(expr, scope):
         if left_val == right_val + 1:
             return (TOKEN_INT, left_val)
 
-    evaluator_error(expr[-1], "Error evaluating range.")
+    evaluator_error(expr[-1], "Arguments of the exclusive range operator cannot be equal.")
 
 def evaluate_operator_range_inclusive(expr, scope):        
     left = evaluate_side_of_operator(expr[2], expr[-1], scope)
@@ -151,8 +151,6 @@ def evaluate_operator_range_inclusive(expr, scope):
         return (TOKEN_ARRAY, left_val, evaluate_operator_range_inclusive((expr[0], expr[1], (TOKEN_INT, left_val - 1), right), scope))
     else:
         return (TOKEN_INT, left_val)
-
-    evaluator_error(expr[-1], "Error evaluating range.")
 
 def evaluate_operator(expr, scope):
     token_operator = expr[1]

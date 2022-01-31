@@ -348,15 +348,6 @@ def parse(tokenized_code_lines):
         AST.append(expression_ast)
     return AST
 
-
-def parse_interactive(tokenized_code_lines):
+def reset_ast():
     global AST
-    
-    expr_list = get_expr_list(tokenized_code_lines)
-
-    AST = [expr for expr in AST if expr[0] != TOKEN_KEYWORD and expr[1] != KEYWORD_PRINT]
-
-    for expr in expr_list:
-        expression_ast = parse_expr(expr)
-        AST.append(expression_ast)
-    return AST
+    AST = []
