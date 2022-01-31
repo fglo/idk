@@ -57,9 +57,9 @@ def handle_operator_assignment(expr, operator_index):
         tokens, line_index, nesting_lvl = expr
 
     left = tokens[0]
-    # for expr in AST:
-    #     if expr[1] == OPERATOR_ASSIGMENT and expr[2][1] == left[1]:
-    #         parser_error(line_index, "You cannot assign value to a variable that already has been assigned.")
+    for expr in AST:
+        if expr[1] == OPERATOR_ASSIGMENT and expr[2][1] == left[1]:
+            parser_error(line_index, "You cannot assign value to a variable that already has been assigned.")
     right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
     return (TOKEN_OPERATOR, OPERATOR_ASSIGMENT, left, right)  
     

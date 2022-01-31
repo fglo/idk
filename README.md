@@ -1,6 +1,6 @@
 ﻿# IDK Programming Language
 
-IDK is a dynamically typed language. Its interpreter is currently implemented in Python.
+IDK is a dynamically typed language with immutable variables. Its interpreter is currently implemented in Python.
 
 This is very much a work in progress, so ANYTHING can change any moment.
 

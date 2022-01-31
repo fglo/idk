@@ -197,8 +197,6 @@ end
 
 print '-' // test of in and range operators and for loop
 
-a:=1
-
 r1 := 1
 r2 := 3
 print 2 in r2..r1 
@@ -214,15 +212,6 @@ for 1..5
 end
 
 print '-' // test of local variables and implicit for _it variable (scopes)
-
-a := -1
-print a
-
-a := -2
-print a
-
-a := 'a'
-print a
 
 if true
     i := 0
