@@ -1,6 +1,6 @@
 ﻿# IDK Programming Language
 
-IDK is a statically typed language with immutable variables. Its interpreter is currently implemented in Python.
+IDK is a dynamically typed language. Its interpreter is currently implemented in Python.
 
 This is very much a work in progress, so ANYTHING can change any moment.
 
@@ -15,21 +15,25 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - arithmetic operators: `+`, `-`, `*`, `/`
 - comparison operators: `=`, `>`, `<`, `>=`, `<=`
 - logical operators: `not`, `and`, `or`, `xor`
+- range operator: `..`
+- array `in` operator
 - printing
 - conditional statements: `if`, `if-else`, `if-else-if`
 - comments
+- for loops
 
 #TODO (must-have):
 - parentheses in operations
-- local variables (better scopes)
-- loops
+- loops: while and for with variable
 - strings (arrays?)
 - procedures
 - functions
 - structs
 - tokenization not only with spaces but also with operators
+- better variables, statically typed
 
 #TODO (maybe):
+- mutable/immutable variable modifiers
 - ternary operators or oneline if expressions: `i := 1 < 2 ? true : false` or `i := if 1 < 2 then true else false`
 - python-like comprehensions (generators)
 - lambdas
@@ -115,6 +119,21 @@ ored := true or false
 xored := true xor false
 ```
 
+### Arrays
+
+Currently IDK supports only arrays of digits created by the range operator (`..`). The range operator is exclusive.
+```
+x := 1..3        // creates following array: [1, 2]
+```
+
+IDK supports only one operation on arrays : `in`.  
+```
+print 1 in 1..3 // prints true
+
+x := 1..3
+print 3 in x    // prints false
+```
+
 ### Printing
 
 You can print variables, integers, character and expressions using the `print` keyword:
@@ -122,14 +141,15 @@ You can print variables, integers, character and expressions using the `print` k
 a := 'a'
 a_code := 'a' + 0
 
-print a
-print a_code
-print '0'
-print 'a'
-print 'a' + 0
-print 'a' = 'a'
-print true
-print false
+print a         // prints a
+print a_code    //prints 97
+print 'a'       // prints a
+print 'a' + 0   // prints 97
+print 'a' = 'a' // prints true
+print 'a' = 2   // prints false
+print true      // prints true
+print false     // prints false
+print 1..6      // print 1, 2, 3, 4, 5
 ```
 
 ### Conditional statements
@@ -197,6 +217,24 @@ if 1 < 2 xor 2 < 1
 end
 if not 1 < 2 xor 2 > 1
     print 4
+end
+```
+
+### Loops
+
+#### For loop
+
+IDK currently supports only simple for loop using range operators `..`:
+```
+for 1..3
+    print 'x'
+end
+```
+
+Each for loop implicitly declater variable `_it` which contains current iterator value:
+```
+for 1..5
+    print _it
 end
 ```
 

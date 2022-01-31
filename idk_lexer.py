@@ -1,3 +1,4 @@
+import re
 from idk_consts import * 
 
 class LexerError(Exception):
@@ -7,7 +8,7 @@ def lexer_error(line_index, message):
     raise LexerError('Error in line %d: %s' % (line_index, message))
 
 def try_parse_literal(token):
-    if token.isnumeric():
+    if token.lstrip("-").isnumeric():
         return TOKEN_INT
     if len(token) == 3 and token[0] == "'" and token[2] =="'":
         return TOKEN_CHAR
@@ -22,6 +23,10 @@ def try_parse_keyword(token):
         return KEYWORD_IF
     if token == 'else':
         return KEYWORD_ELSE
+    if token == 'for':
+        return KEYWORD_FOR
+    if token == 'while':
+        return KEYWORD_WHILE
     if token == 'end':
         return KEYWORD_END
     return -1
@@ -55,6 +60,10 @@ def try_parse_operator(token):
         return OPERATOR_OR
     if token == 'xor':
         return OPERATOR_XOR
+    if token == '..':
+        return OPERATOR_RANGE
+    if token == 'in':
+        return OPERATOR_IN
     return -1
 
 def interpret_line_tokens(tokens, line_index):
@@ -82,23 +91,31 @@ def interpret_line_tokens(tokens, line_index):
         interpreted_line.append((TOKEN_WORD, token))
     return interpreted_line
 
- #TODO: tokenize also using operators
+#TODO: include other operators
+def add_spaces_to_operators(line):
+    line = line.replace('..', ' .. ')
+    # operators = [':=', '+', '-', '*', '/', '=', '>', '>=', '<', '<=', '..']
+    # for op in operators:
+    #     if re.match(f'[a-z0-9\s]{op}[a-z0-9\s]', line):
+    #         line = line.replace(op, f' {op} ')
+    return line
+    
 def tokenize_line(line, line_index) -> list:
     line = line.strip()
-    if not line or line[0] == '/' and line[1] == '/':
+    if not line or (len(line) >= 2 and line[0:2] == '//'):
         return []
     
-    tokens = line.split(' ')
+    tokens = add_spaces_to_operators(line).split(' ')
     
     cleared_tokens = []
     for token in tokens:
-        if len(token) >= 2 and token[0] == '/' and token[1] == '/':
+        if len(token) >= 2 and token[0:2] == '//':
             break
         if token:
             cleared_tokens.append(token)
     
-    # tokens = [token for token in tokens if token]
-    return interpret_line_tokens(cleared_tokens, line_index)
+    interpreted_tokens = interpret_line_tokens(cleared_tokens, line_index)
+    return interpreted_tokens
 
 def tokenize(program_file_path) -> list:
     tokenized_file_lines = []
