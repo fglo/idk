@@ -222,7 +222,7 @@ Welcome to IDK interactive!
 $ 
 ```
 
-You can assign variables and do oneline calculations. if you want to exit just type 'exit' and click enter:
+You can assign variables and do oneline calculations. if you want to exit just type `exit` and click enter:
 ```
 $ print 1
 1 
