@@ -13,20 +13,27 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - int, char and bool variable types
 - assignment operator: `:=`
 - arithmetic operators: `+`, `-`, `*`, `/`
-- comparison operators: `=`, `>`, `<`
+- comparison operators: `=`, `>`, `<`, `>=`, `<=`
 - logical operators: `not`, `and`, `or`, `xor`
 - printing
 - conditional statements: `if`, `if-else`, `if-else-if`
-
-#TODO: 
-- comparison (`>=`, `<=`)
-- local variables (better scopes)
 - comments
+
+#TODO (must-have):
+- parentheses in operations
+- local variables (better scopes)
 - loops
-- strings
+- strings (arrays?)
 - procedures
 - functions
+- structs
 - tokenization not only with spaces but also with operators
+
+#TODO (maybe):
+- ternary operators or oneline if expressions: `i := 1 < 2 ? true : false` or `i := if 1 < 2 then true else false`
+- python-like comprehensions (generators)
+- lambdas
+- c#-like extension methods 
 
 ## Syntax
 
@@ -40,6 +47,15 @@ a := 1 + 2
 Incorrect code:
 ```
 a:=1+2
+```
+
+### Comments
+
+You can write comments in code using the `//`:
+```
+// comment test
+to_print := 1 //assigning variable
+print to_print // printing
 ```
 
 ### Assignment
@@ -80,11 +96,13 @@ false_val := false + 0
 
 ### Comparison
 
-IDK supports following comparison operators: `=`, `>` and `<`:
+IDK supports following comparison operators: `=`, `>`, `<`, `>=` and `<=`:
 ```
 eq := 1 = 1
 gt := 2 > 1
+gte := 2 >= 1
 lt := 1 < 2
+lte := 1 <= 2
 ```
 
 ### Logical operators
@@ -156,7 +174,7 @@ end
 
 You can also nest `if` statements:
 ```
-if 3 > 2
+if 3 >= 2
     if 3 > 4
         print '0'
     else

@@ -41,8 +41,12 @@ def try_parse_operator(token):
         return OPERATOR_EQ
     if token == '>':
         return OPERATOR_GT
+    if token == '>=':
+        return OPERATOR_GTE
     if token == '<':
         return OPERATOR_LT
+    if token == '<=':
+        return OPERATOR_LTE
     if token == 'not':
         return OPERATOR_NOT
     if token == 'and':
@@ -78,11 +82,23 @@ def interpret_line_tokens(tokens, line_index):
         interpreted_line.append((TOKEN_WORD, token))
     return interpreted_line
 
+ #TODO: tokenize also using operators
 def tokenize_line(line, line_index) -> list:
     line = line.strip()
-    tokens = line.split(' ') #TODO: tokenize also using operators
-    tokens = [token for token in tokens if token]
-    return interpret_line_tokens(tokens, line_index)
+    if not line or line[0] == '/' and line[1] == '/':
+        return []
+    
+    tokens = line.split(' ')
+    
+    cleared_tokens = []
+    for token in tokens:
+        if len(token) >= 2 and token[0] == '/' and token[1] == '/':
+            break
+        if token:
+            cleared_tokens.append(token)
+    
+    # tokens = [token for token in tokens if token]
+    return interpret_line_tokens(cleared_tokens, line_index)
 
 def tokenize(program_file_path) -> list:
     tokenized_file_lines = []

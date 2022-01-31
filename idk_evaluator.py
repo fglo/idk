@@ -60,10 +60,20 @@ def evaluate_operation_gt(expr, line_index):
     right = evaluate_side_of_operator(expr[3], line_index)
     return (TOKEN_BOOL, int(left[1] > right[1]))
 
+def evaluate_operation_gte(expr, line_index):        
+    left = evaluate_side_of_operator(expr[2], line_index)
+    right = evaluate_side_of_operator(expr[3], line_index)
+    return (TOKEN_BOOL, int(left[1] >= right[1]))
+
 def evaluate_operation_lt(expr, line_index):        
     left = evaluate_side_of_operator(expr[2], line_index)
     right = evaluate_side_of_operator(expr[3], line_index)
     return (TOKEN_BOOL, int(left[1] < right[1]))
+
+def evaluate_operation_lte(expr, line_index):        
+    left = evaluate_side_of_operator(expr[2], line_index)
+    right = evaluate_side_of_operator(expr[3], line_index)
+    return (TOKEN_BOOL, int(left[1] <= right[1]))
 
 def evaluate_operation_xor(expr, line_index):        
     left = evaluate_side_of_operator(expr[2], line_index)
@@ -100,8 +110,12 @@ def evaluate_operation(expr, line_index):
         expr = evaluate_operation_eq(expr, line_index)
     elif token_operator == OPERATOR_GT:
         expr = evaluate_operation_gt(expr, line_index)
+    elif token_operator == OPERATOR_GTE:
+        expr = evaluate_operation_gte(expr, line_index)
     elif token_operator == OPERATOR_LT:
         expr = evaluate_operation_lt(expr, line_index)
+    elif token_operator == OPERATOR_LTE:
+        expr = evaluate_operation_lte(expr, line_index)
     elif token_operator == OPERATOR_XOR:
         expr = evaluate_operation_xor(expr, line_index)
     elif token_operator == OPERATOR_OR:

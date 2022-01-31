@@ -1,4 +1,7 @@
-print '-'
+// test IDK program
+// it tests each feature that is added
+
+print '-' // test of assignments and arithmetic operators
 
 a := 1
 b := 2
@@ -13,15 +16,17 @@ print x
 print y
 print z
 
-print '-'
+print '-' // test of more complex equations
 
 z1 := 2 + 3 * 2 / 2
 z2 := a * 0 + 2 / 2
+z3 := 1 + 2 * 3
 
 print z1
 print z2
+print z3
 
-print '-'
+print '-' // test of char variables
 
 char_test := 'a'
 char_to_int := 0 + char_test
@@ -31,7 +36,17 @@ print char_test
 print char_to_int
 print 'a' + 0
 
-print '-'
+print '-' // test of bool variables
+
+bool_test := true
+bool_to_int := 0 + bool_test
+
+print bool_test
+print bool_to_int
+print false
+print false + 0
+
+print '-' // test of if statements
 
 if x < 2
     print 'f'
@@ -43,11 +58,21 @@ if x > 2
     print c + b
 end 
 
+if x >= 3
+    print 't'
+    print c + b
+end 
+
+if x <= 3
+    print 't'
+    print c + b
+end 
+
 if true
     print z2 = 1
 end 
 
-print '-'
+print '-' // test of if-else and if-else-if statements
 
 if x = 3
     print 'o'
@@ -93,7 +118,7 @@ else
     print 'c'
 end
 
-print '-'
+print '-' // test of nested if statements
 
 if 3 > 2
     if 3 < 4
@@ -130,7 +155,7 @@ else
     end
 end 
 
-print '-'
+print '-' // test of logical operators
 
 if true and true
     print 1
@@ -146,11 +171,11 @@ if true and false or true
     print 3
 end
 
-if 1 > 2 or 2 > 1 and true
+if 1 > 2 or 2 >= 1 and true
     print 4
 end
 
-if 1 < 2 and 2 > 1
+if 1 <= 2 and 2 > 1
     print 5
 end
 

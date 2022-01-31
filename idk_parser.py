@@ -34,7 +34,7 @@ def get_first_less_important_operator_index(tokens):
             if found_operator[1] <= OPERATOR_MINUS and token[1] > OPERATOR_EQ:
                 found_operator_index = index
                 found_operator = token
-            if found_operator[1] <= OPERATOR_LT and token[1] > OPERATOR_AND:
+            if found_operator[1] <= OPERATOR_LTE and token[1] > OPERATOR_AND:
                 found_operator_index = index
                 found_operator = token
             if found_operator[1] == OPERATOR_AND and token[1] <= OPERATOR_OR:
@@ -94,7 +94,11 @@ def handle_operator(expr):
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_GT:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_GTE:
+        expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_LT:
+        expr = handle_operator_with_two_side_evaluation(expr, operator_index)
+    elif token_operator == OPERATOR_LTE:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_XOR:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
@@ -107,7 +111,7 @@ def handle_operator(expr):
     else:
         parser_error(line_index, "Unknown operator")
     return expr
-    
+
 def handle_keyword_print(expr):
     if isinstance(expr, list):
         tokens, line_index, nesting_lvl = expr[0]

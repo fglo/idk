@@ -14,8 +14,8 @@ def run_interactive():
     line_index = 1
     while value != 'exit':
         try:
-            tokenized_file_lines = [tokenize_line(value, line_index)]
-            ast = parse_interactive(tokenized_file_lines)
+            tokenized_line = [tokenize_line(value, line_index)]
+            ast = parse_interactive(tokenized_line)
             evaluate(ast)
         except Exception as e:
             print(e)
