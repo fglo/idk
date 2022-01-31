@@ -20,27 +20,22 @@ def get_first_less_important_operator_index(tokens):
     found_operator_index = -1
     found_operator = None
     for index, token in enumerate(tokens):
-        if token[0] == TOKEN_OPERATOR:
-            if token[1] == OPERATOR_ASSIGMENT or token[1] == OPERATOR_NOT:
-                found_operator_index = index
-                break
-            if found_operator is None:
-                found_operator_index = index
-                found_operator = token
-                continue
-            if found_operator[1] <= OPERATOR_DIVISION and token[1] >= OPERATOR_PLUS:
-                found_operator_index = index
-                found_operator = token
-            if found_operator[1] <= OPERATOR_MINUS and token[1] > OPERATOR_EQ:
-                found_operator_index = index
-                found_operator = token
-            if found_operator[1] <= OPERATOR_LTE and token[1] > OPERATOR_AND:
-                found_operator_index = index
-                found_operator = token
-            if found_operator[1] == OPERATOR_AND and token[1] <= OPERATOR_OR:
-                found_operator_index = index
-                found_operator = token
-                break
+        if token[0] != TOKEN_OPERATOR:
+            continue
+        if token[1] == OPERATOR_ASSIGMENT:
+            found_operator_index = index
+            break
+        if found_operator is None:
+            found_operator_index = index
+            found_operator = token
+            continue
+        if ((found_operator[1] == OPERATOR_MULTIPLICATION or found_operator[1] == OPERATOR_DIVISION) and token[1] >= OPERATOR_PLUS) \
+            or ((found_operator[1] == OPERATOR_PLUS or found_operator[1] == OPERATOR_MINUS) and token[1] >= OPERATOR_EQ) \
+            or ((found_operator[1] <= OPERATOR_LTE) and token[1] >= OPERATOR_AND) \
+            or ((found_operator[1] == OPERATOR_AND) and (token[1] == OPERATOR_OR or token[1] == OPERATOR_XOR)):
+            found_operator_index = index
+            found_operator = token
+            continue
     return found_operator_index
         
 def handle_side_of_operator(side, line_index, nesting_lvl):
