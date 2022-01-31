@@ -6,7 +6,7 @@ class ParserError(Exception):
     pass
 
 def parser_error(line_index, message):
-    raise ParserError('Error in line %d: %s' % (line_index, message))
+    raise ParserError('Parser error in line %d: %s' % (line_index, message))
 
 def get_first_operator_index(tokens):
     operator_index = -1
@@ -29,7 +29,7 @@ def get_first_less_important_operator_index(tokens):
             found_operator_index = index
             found_operator = token
             continue
-        if ((found_operator[1] == OPERATOR_MULTIPLICATION or found_operator[1] == OPERATOR_DIVISION) and token[1] >= OPERATOR_PLUS) \
+        if ((found_operator[1] == OPERATOR_ASTERISK or found_operator[1] == OPERATOR_SLASH) and token[1] >= OPERATOR_PLUS) \
             or ((found_operator[1] == OPERATOR_PLUS or found_operator[1] == OPERATOR_MINUS) and token[1] >= OPERATOR_EQ) \
             or ((found_operator[1] <= OPERATOR_LTE) and token[1] >= OPERATOR_AND) \
             or ((found_operator[1] == OPERATOR_AND) and (token[1] == OPERATOR_OR or token[1] == OPERATOR_XOR)):
@@ -56,27 +56,31 @@ def handle_operator_assignment(expr, operator_index):
         if expr[1] == OPERATOR_ASSIGMENT and expr[2][1] == left[1]:
             parser_error(line_index, "You cannot assign value to a variable that already has been assigned.")
     right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
-    return (TOKEN_OPERATOR, OPERATOR_ASSIGMENT, left, right)  
+    expr_ast = (TOKEN_OPERATOR, OPERATOR_ASSIGMENT, left, right, line_index)
+    return expr_ast
     
 def handle_operator_with_one_side_evaluation(expr, operator_index):
     tokens, line_index, nesting_lvl = expr        
     right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
     __, operator_type = tokens[operator_index]
-    return (TOKEN_OPERATOR, operator_type, right)
+    expr_ast = (TOKEN_OPERATOR, operator_type, right, line_index)
+    return expr_ast
     
 def handle_operator_with_two_side_evaluation(expr, operator_index):
     tokens, line_index, nesting_lvl = expr        
     left = handle_side_of_operator(tokens[0:operator_index], line_index, nesting_lvl)
     right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
     __, operator_type = tokens[operator_index]
-    return (TOKEN_OPERATOR, operator_type, left, right)
+    expr_ast = (TOKEN_OPERATOR, operator_type, left, right, line_index)
+    return expr_ast
     
 def handle_operator_in_with_range(expr, operator_index):
     tokens, line_index, nesting_lvl = expr        
     left = handle_side_of_operator(tokens[0:operator_index], line_index, nesting_lvl)
     right = handle_side_of_operator(tokens[operator_index + 1:], line_index, nesting_lvl)
     __, operator_type = tokens[operator_index]
-    return (TOKEN_OPERATOR, operator_type, left, right)
+    expr_ast = (TOKEN_OPERATOR, operator_type, left, right, line_index)
+    return expr_ast
 
 def handle_operator(expr):
     if isinstance(expr, list):
@@ -92,9 +96,9 @@ def handle_operator(expr):
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_MINUS:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
-    elif token_operator == OPERATOR_MULTIPLICATION:
+    elif token_operator == OPERATOR_ASTERISK:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
-    elif token_operator == OPERATOR_DIVISION:
+    elif token_operator == OPERATOR_SLASH:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
     elif token_operator == OPERATOR_EQ:
         expr = handle_operator_with_two_side_evaluation(expr, operator_index)
@@ -139,7 +143,9 @@ def handle_keyword_print(expr):
         expr_value = tokens[1]
     else:
         parser_error(line_index, 'You can print only literals, variables or operations.')
-    return (TOKEN_KEYWORD, KEYWORD_PRINT, expr_value)
+
+    expr_ast = (TOKEN_KEYWORD, KEYWORD_PRINT, expr_value, line_index)
+    return expr_ast
 
 def handle_keyword_else(expr_list):
     tokens, __, nesting_lvl = expr_list[0]
@@ -222,7 +228,7 @@ def handle_keyword_if(expr_list):
     if else_found:
         expr_ast_alt = handle_keyword_else(expr_ast_alt)
             
-    expr_ast = (TOKEN_KEYWORD, KEYWORD_IF, expr_value, expr_ast_prim, expr_ast_alt)
+    expr_ast = (TOKEN_KEYWORD, KEYWORD_IF, expr_value, expr_ast_prim, expr_ast_alt, line_index)
     return expr_ast
 
 def handle_keyword_for(expr_list):
@@ -259,7 +265,7 @@ def handle_keyword_for(expr_list):
     for expr in expr_ast:
         expr_ast_prim.append(parse_expr(expr))
             
-    expr_ast = (TOKEN_KEYWORD, KEYWORD_FOR, expr_value, expr_ast_prim)
+    expr_ast = (TOKEN_KEYWORD, KEYWORD_FOR, expr_value, expr_ast_prim, line_index)
     return expr_ast
     
 def handle_keyword_action(expr):

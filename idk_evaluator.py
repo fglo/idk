@@ -7,7 +7,7 @@ class EvaluatorError(Exception):
     pass
 
 def evaluator_error(line_index, message):
-    raise EvaluatorError('Error in line %d: %s' % (line_index, message))
+    raise EvaluatorError('Evaluator error in line %d: %s' % (line_index, message))
 
 def try_evaluate_variable(expr_var, scope):
     for type, value, *exprs in reversed(scope):
@@ -147,9 +147,9 @@ def evaluate_operator(expr, line_index, scope):
         expr = evaluate_operator_plus(expr, line_index, scope)
     elif token_operator == OPERATOR_MINUS:
         expr = evaluate_operator_minus(expr, line_index, scope)
-    elif token_operator == OPERATOR_MULTIPLICATION:
+    elif token_operator == OPERATOR_ASTERISK:
         expr = evaluate_operator_multiplication(expr, line_index, scope)
-    elif token_operator == OPERATOR_DIVISION:
+    elif token_operator == OPERATOR_SLASH:
         expr = evaluate_operator_division(expr, line_index, scope)
     elif token_operator == OPERATOR_EQ:
         expr = evaluate_operator_eq(expr, line_index, scope)

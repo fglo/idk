@@ -1,11 +1,13 @@
 from sys import argv
 from idk_lexer import *
 from idk_parser import *
+from idk_syntax_checker import *
 from idk_evaluator import *
 
 def run(program_file_path):
     tokenized_file_lines = tokenize(program_file_path)
     ast = parse(tokenized_file_lines)
+    check_syntax(ast)
     evaluate(ast)
 
 def run_interactive():

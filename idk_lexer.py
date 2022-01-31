@@ -5,7 +5,7 @@ class LexerError(Exception):
     pass
 
 def lexer_error(line_index, message):
-    raise LexerError('Error in line %d: %s' % (line_index, message))
+    raise LexerError('Lexer error in line %d: %s' % (line_index, message))
 
 def try_parse_literal(token):
     if token.lstrip("-").isnumeric():
@@ -39,9 +39,9 @@ def try_parse_operator(token):
     if token == '-':
         return OPERATOR_MINUS
     if token == '*':
-        return OPERATOR_MULTIPLICATION
+        return OPERATOR_ASTERISK
     if token == '/':
-        return OPERATOR_DIVISION
+        return OPERATOR_SLASH
     if token == '=':
         return OPERATOR_EQ
     if token == '>':
