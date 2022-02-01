@@ -4,6 +4,8 @@ IDK is a dynamically typed language with immutable variables. Its interpreter is
 
 This is very much a work in progress, so ANYTHING can change any moment.
 
+**Note:** I started with almost zero knowledge of language development and interpreter writing. This project is about trying my own ideas and testing my intuition. Maybe the next one will be backed by an actuall knowledge about languages, interpreters and compilers.
+
 ## The Name
 
 IDK means literally I Don't Know. The name is a placeholder. If I decide to work on it further I will think of a better name.
@@ -124,23 +126,23 @@ xored := true xor false
 
 IDK supports exclusive range operator `..` and inclusive range operator `..=`:
 ```
-exclusive := 1..3        // creates following array: [1, 2]
-inclusive := 1..=3        // creates following array: [1, 2, 3]
+exclusive := 1..3  // creates following array: [1, 2]
+inclusive := 1..=3 // creates following array: [1, 2, 3]
 ```
 
 ### Arrays
 
 Currently IDK supports only arrays of digits created by the range operators. The range operator is exclusive.
 ```
-x := 1..3        // creates following array: [1, 2]
+x := 1..3          // creates following array: [1, 2]
 ```
 
 IDK supports only one operation on arrays : `in`.  
 ```
-print 3 in 1..=3 // prints true
+print 3 in 1..=3   // prints true
 
 x := 1..3
-print 3 in x    // prints false
+print 3 in x       // prints false
 ```
 
 ### Printing
@@ -150,16 +152,16 @@ You can print variables, integers, character and expressions using the `print` k
 a := 'a'
 a_code := 'a' + 0
 
-print a         // prints a
-print a_code    // prints 97
-print 'a'       // prints a
-print 'a' + 0   // prints 97
-print 'a' = 'a' // prints true
-print 'a' = 2   // prints false
-print true      // prints true
-print false     // prints false
-print 1..6      // print 1, 2, 3, 4, 5
-print 6..1      // print 6, 5, 4, 3, 2
+print a            // prints a
+print a_code       // prints 97
+print 'a'          // prints a
+print 'a' + 0      // prints 97
+print 'a' = 'a'    // prints true
+print 'a' = 2      // prints false
+print true         // prints true
+print false        // prints false
+print 1..6         // prints 1, 2, 3, 4, 5
+print 6..1         // prints 6, 5, 4, 3, 2
 ```
 
 ### Conditional statements
@@ -241,7 +243,7 @@ for 1..3
 end
 ```
 
-Each for loop implicitly declater variable `_it` which contains current iterator value:
+Each for loop implicitly declares variable `_it` which contains current iterator value:
 ```
 for 1..5
     print _it
