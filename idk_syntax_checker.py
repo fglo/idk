@@ -1,4 +1,5 @@
-from idk_consts import * 
+from idk_consts import *
+from idk_types import Expression, KeywordExpression, OperatorExpression 
 
 class SyntaxError(Exception):
     pass
@@ -6,57 +7,62 @@ class SyntaxError(Exception):
 def syntax_error(line_index, message):
     raise SyntaxError('Syntax error in line %d: %s' % (line_index, message))
 
-def get_operator_definition(op):
+def get_operator_definition(op:int):
     return SYNTAX_RULES[TOKEN_OPERATOR][op]
 
-def get_keyword_definition(kw):
+def get_keyword_definition(kw:int):
     return SYNTAX_RULES[TOKEN_KEYWORD][kw]
 
-def get_returned_types(arg_exprs:list) -> list:
-    types = []
-    for expr in arg_exprs:
-        if len(expr) == 0:
+def get_returned_types(exprs:list[Expression]) -> list:
+    types:list[int] = []
+    for expr in exprs:
+        if expr is None:
             continue
-        if expr[0] == TOKEN_INT:
+        if expr.type == TOKEN_INT:
             types.append(TOKEN_INT)
-        elif expr[0] == TOKEN_CHAR:
+        elif expr.type == TOKEN_CHAR:
             types.append(TOKEN_CHAR)
-        elif expr[0] == TOKEN_BOOL:
+        elif expr.type == TOKEN_BOOL:
             types.append(TOKEN_BOOL)
-        elif expr[0] == TOKEN_ARRAY:
+        elif expr.type == TOKEN_ARRAY:
             types.append(TOKEN_ARRAY)
-        elif expr[0] == TOKEN_WORD:
+        elif expr.type == TOKEN_WORD:
             types.append(TOKEN_WORD)
-        elif expr[0] == TOKEN_OPERATOR:
-            rules = get_operator_definition(expr[1])
+        elif expr.type == TOKEN_OPERATOR:
+            rules = get_operator_definition(expr.value)
             types.append(rules['returns'])
     return types
 
-def check_token(expr):
-    if expr[0] != TOKEN_OPERATOR and expr[0] != TOKEN_KEYWORD:
+def check_expression(expr:Expression):
+    if expr.type != TOKEN_OPERATOR and expr.type != TOKEN_KEYWORD:
         return
     
-    token_type, token_value, *arg_exprs, line_index = expr
-    if token_type == TOKEN_OPERATOR:
-        rules = get_operator_definition(token_value)
-        args_return_types = get_returned_types(arg_exprs)
-        if (token_value != OPERATOR_NOT and not (args_return_types[0], args_return_types[1]) in rules['arguments']) \
-            or token_value == OPERATOR_NOT and not args_return_types[0] in rules['arguments']:
-            syntax_error(line_index, f"Wrong argument types for operator {rules['operator']}")
-    elif token_type == TOKEN_KEYWORD:
-        rules = get_keyword_definition(token_value)
-        args_return_types = get_returned_types(arg_exprs)
-        if not args_return_types[0] in rules['arguments']:
-            syntax_error(line_index, f"Wrong operation return type for keyword {rules['keyword']}")
+    exprs:list[Expression] = []
     
-    for expr in arg_exprs:
-        if len(expr) == 0:
+    if expr.type == TOKEN_OPERATOR:
+        rules = get_operator_definition(expr.value)
+        args_return_types = get_returned_types(expr.args)
+        if (expr.value != OPERATOR_NOT and not (args_return_types[0], args_return_types[1]) in rules['arguments']) \
+            or expr.value == OPERATOR_NOT and not args_return_types[0] in rules['arguments']:
+            syntax_error(expr.line_index, f"Wrong argument types for operator {rules['operator']}")
+        exprs += expr.args
+    elif expr.type == TOKEN_KEYWORD:
+        rules = get_keyword_definition(expr.value)
+        args_return_types = get_returned_types([expr.keyword_expr])
+        if not args_return_types[0] in rules['arguments']:
+            syntax_error(expr.line_index, f"Wrong operation return type for keyword {rules['keyword']}")
+        exprs.append(expr.keyword_expr)
+        exprs += expr.prim
+        exprs += expr.alt
+    
+    for expr in exprs:
+        if expr is None:
             continue
-        check_token(expr)
+        check_expression(expr)
     
 def check_syntax(ast):
     for expr in ast:
-        check_token(expr)
+        check_expression(expr)
         
         
         

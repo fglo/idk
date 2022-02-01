@@ -1,15 +1,16 @@
 # ENUM GENERATOR:
 
 current_enum_value = 0
-def nextval():
-    global current_enum_value
-    value = current_enum_value
-    current_enum_value += 1
-    return value        
 
 def NEW_ENUM(name):
     global current_enum_value
     current_enum_value = 0
+    
+def nextval():
+    global current_enum_value
+    value = current_enum_value
+    current_enum_value += 1
+    return value
 
 # ENUMS:
 
@@ -19,6 +20,7 @@ TOKEN_CHAR = nextval()
 TOKEN_BOOL = nextval()
 TOKEN_WORD = nextval()
 TOKEN_ARRAY = nextval()
+TOKEN_STRING = nextval()
 TOKEN_OPERATOR = nextval()
 TOKEN_KEYWORD = nextval()
 COUNT_TOKENS = nextval()
@@ -38,8 +40,6 @@ OPERATOR_OR = nextval()
 OPERATOR_XOR = nextval()
 OPERATOR_NOT = nextval()
 OPERATOR_ASSIGMENT = nextval()
-OPERATOR_INCREMENT = nextval()
-OPERATOR_DECREMENT = nextval()
 OPERATOR_IN = nextval()
 OPERATOR_RANGE = nextval()
 OPERATOR_RANGE_INCLUSIVE = nextval()

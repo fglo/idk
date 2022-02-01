@@ -1,5 +1,6 @@
 import re
-from idk_consts import * 
+from idk_consts import *
+from idk_types import Token
 
 class LexerError(Exception):
     pass
@@ -68,33 +69,33 @@ def try_parse_operator(token):
         return OPERATOR_IN
     return -1
 
-def interpret_line_tokens(tokens, line_index):
-    interpreted_line = []
+def interpret_line_tokens(tokens:list[str], line_index:int) -> list[Token]:
+    interpreted_line:list[Token] = []
     for token in tokens:
         if not token:
             lexer_error(line_index, "Empty token!")
         literal = try_parse_literal(token)
         if literal > -1:
             if literal == TOKEN_INT:
-                interpreted_line.append((TOKEN_INT, int(token)))
+                interpreted_line.append(Token(TOKEN_INT, int(token)))
             elif literal == TOKEN_CHAR:
-                interpreted_line.append((TOKEN_CHAR, ord(token[1])))
+                interpreted_line.append(Token(TOKEN_CHAR, ord(token[1])))
             elif literal == TOKEN_BOOL:
-                interpreted_line.append((TOKEN_BOOL, int(token == "true")))
+                interpreted_line.append(Token(TOKEN_BOOL, int(token == "true")))
             continue
         keyword = try_parse_keyword(token)
         if keyword > -1:
-            interpreted_line.append((TOKEN_KEYWORD, keyword))
+            interpreted_line.append(Token(TOKEN_KEYWORD, keyword))
             continue
         operator = try_parse_operator(token)
         if operator > -1:
-            interpreted_line.append((TOKEN_OPERATOR, operator))
+            interpreted_line.append(Token(TOKEN_OPERATOR, operator))
             continue
-        interpreted_line.append((TOKEN_WORD, token))
+        interpreted_line.append(Token(TOKEN_WORD, token))
     return interpreted_line
 
 #TODO: include other operators
-def add_spaces_to_operators(line):
+def add_spaces_to_operators(line:str)->str:
     line = line.replace('..=', ' ..= ')
     line = line.replace('..', ' .. ')
     line = line.replace('.. =', ' ..= ')
@@ -104,7 +105,7 @@ def add_spaces_to_operators(line):
     #         line = line.replace(op, f' {op} ')
     return line
     
-def tokenize_line(line, line_index) -> list:
+def tokenize_line(line:str, line_index:int) -> list[Token]:
     line = line.strip()
     if not line or (len(line) >= 2 and line[0:2] == '//'):
         return []
@@ -121,8 +122,8 @@ def tokenize_line(line, line_index) -> list:
     interpreted_tokens = interpret_line_tokens(cleared_tokens, line_index)
     return interpreted_tokens
 
-def tokenize(program_file_path) -> list:
-    tokenized_file_lines = []
+def tokenize(program_file_path) -> list[list[Token]]:
+    tokenized_file_lines:list[list[Token]] = []
     line_index = 0
     with open(program_file_path, "r") as pf:
         for line in pf:
