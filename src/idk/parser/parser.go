@@ -11,26 +11,34 @@ const (
 	_ int = iota
 	LOWEST
 	DECLARE_ASSIGN // :=
-	EQUALS         // ==
-	LESSGREATER    // > or <
-	SUM            // +
-	PRODUCT        // *
-	PREFIX         // -X or !X
-	CALL           // myFunction(X)
-	INDEX          // array[index]
+	OR
+	AND
+	XOR
+	NOT
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunction(X)
+	INDEX       // array[index]
 )
 
 var precedences = map[token.TokenType]int{
-	token.DECLARE_ASSIGN:   DECLARE_ASSIGN,
-	token.EQ:               EQUALS,
-	token.NEQ:              EQUALS,
-	token.LT:               LESSGREATER,
-	token.GT:               LESSGREATER,
-	token.PLUS:             SUM,
-	token.MINUS:            SUM,
-	token.SLASH:            PRODUCT,
-	token.ASTERISK:         PRODUCT,
-	token.OPEN_PARENTHESIS: CALL,
+	token.DECLARE_ASSIGN: DECLARE_ASSIGN,
+	token.AND:            AND,
+	token.OR:             OR,
+	token.XOR:            XOR,
+	token.NOT:            NOT,
+	token.EQ:             EQUALS,
+	token.NEQ:            EQUALS,
+	token.LT:             LESSGREATER,
+	token.GT:             LESSGREATER,
+	token.PLUS:           SUM,
+	token.MINUS:          SUM,
+	token.SLASH:          PRODUCT,
+	token.ASTERISK:       PRODUCT,
+	token.LPARENTHESIS:   CALL,
 }
 
 type (
@@ -60,14 +68,32 @@ func NewParser(input string) *Parser {
 	p.registerPrefix(token.MINUS, p.parseUnaryExpression)
 	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
-	p.registerPrefix(token.OPEN_PARENTHESIS, p.parseGroupedExpression)
+	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
+
+	// p.registerPrefix(token.NEGATION, p.parseGroupedExpression)
+	// p.registerPrefix(token.NOT, p.parseGroupedExpression)
+
+	p.registerPrefix(token.IF, p.parseIfExpression)
+	// p.registerPrefix(token.FOR, p.parseGroupedExpression)
 
 	p.infixParseFns = make(map[token.TokenType]binaryParseFn)
 	p.registerBinary(token.PLUS, p.parseBinaryExpression)
 	p.registerBinary(token.MINUS, p.parseBinaryExpression)
 	p.registerBinary(token.SLASH, p.parseBinaryExpression)
 	p.registerBinary(token.ASTERISK, p.parseBinaryExpression)
+
 	p.registerBinary(token.DECLARE_ASSIGN, p.parseBinaryExpression)
+
+	p.registerBinary(token.EQ, p.parseBinaryExpression)
+	p.registerBinary(token.NEQ, p.parseBinaryExpression)
+	p.registerBinary(token.GT, p.parseBinaryExpression)
+	p.registerBinary(token.GTE, p.parseBinaryExpression)
+	p.registerBinary(token.LT, p.parseBinaryExpression)
+	p.registerBinary(token.LTE, p.parseBinaryExpression)
+
+	p.registerBinary(token.AND, p.parseBinaryExpression)
+	p.registerBinary(token.OR, p.parseBinaryExpression)
+	p.registerBinary(token.XOR, p.parseBinaryExpression)
 
 	p.nextToken()
 
@@ -84,6 +110,9 @@ func (p *Parser) registerBinary(tokenType token.TokenType, fn binaryParseFn) {
 
 func (p *Parser) nextToken() token.Token {
 	p.current = p.next
+	if p.current.Type == token.ILLEGAL {
+		p.illegalToken()
+	}
 	p.next = p.lexer.ReadToken()
 	return p.current
 }
@@ -96,22 +125,30 @@ func (p *Parser) nextTokenIs(t token.TokenType) bool {
 	return p.next.Type == t
 }
 
-func (p *Parser) expectNextTokenType(t token.TokenType) bool {
-	if p.nextTokenIs(t) {
-		p.nextToken()
+func (p *Parser) expectCurrentTokenType(t token.TokenType) bool {
+	if p.currentTokenIs(t) {
 		return true
 	} else {
-		p.unexpectedToken(t)
+		p.unexpectedToken(p.current, t)
 		return false
 	}
 }
 
-func (p *Parser) unexpectedToken(expected token.TokenType) {
+func (p *Parser) expectNextTokenType(t token.TokenType) bool {
+	if p.nextTokenIs(t) {
+		return true
+	} else {
+		p.unexpectedToken(p.next, t)
+		return false
+	}
+}
+
+func (p *Parser) unexpectedToken(unexpected token.Token, expectedType token.TokenType) {
 	msg := fmt.Sprintf("Unexpected token <%v> on line %v, position %v. <%v> was expected.",
-		p.next.Type,
-		p.next.Line,
-		p.next.PositionInLine,
-		expected)
+		unexpected.Type,
+		unexpected.Line,
+		unexpected.PositionInLine,
+		expectedType)
 	p.errors = append(p.errors, msg)
 }
 
@@ -153,16 +190,13 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 	for {
 		p.nextToken()
-
 		if p.currentTokenIs(token.EOF) {
 			break
 		}
-
-		stmt := p.parseStatement()
-		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
+		s := p.parseStatement()
+		if s != nil {
+			program.Statements = append(program.Statements, s)
 		}
-
 		p.skipEol()
 	}
 
@@ -197,11 +231,6 @@ func (p *Parser) parseDeclareAssignStatement() *ast.DeclareAssignStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.current}
 	stmt.Expression = p.parseExpression(LOWEST)
-
-	if stmt.Expression == nil {
-		return nil
-	}
-
 	return stmt
 }
 
@@ -213,15 +242,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	expr := parsePrefix()
 
-	if expr == nil {
-		return nil
-	}
-
 	for !p.nextTokenIs(token.EOL) && precedence < p.nextPrecedence() {
 		parseInfix := p.infixParseFns[p.next.Type]
-		fmt.Println(p.next) //TODO: correctly report ILLEGAL Tokens
 		if parseInfix == nil {
-			p.illegalToken()
 			return expr
 		}
 		expr = parseInfix(expr)
@@ -246,6 +269,46 @@ func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
 	return expr
 }
 
+func (p *Parser) parseIfExpression() ast.Expression {
+
+	p.nextToken()
+	condition := p.parseExpression(LOWEST)
+
+	consequence := p.parseBlockStatement()
+
+	var alternative *ast.BlockStatement
+	innerIf := false
+	if p.currentTokenIs(token.ELSE) {
+		innerIf = p.nextTokenIs(token.IF)
+		alternative = p.parseBlockStatement()
+	}
+
+	if !innerIf {
+		if p.expectCurrentTokenType(token.END) {
+			p.skipEol()
+		}
+	}
+
+	return ast.NewIfExpression(condition, consequence, alternative)
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	statements := []ast.Statement{}
+	p.skipEol()
+	p.nextToken()
+
+	for !p.currentTokenIs(token.END) && !p.currentTokenIs(token.EOF) && !p.currentTokenIs(token.ELSE) {
+		s := p.parseStatement()
+		if s != nil {
+			statements = append(statements, s)
+		}
+		p.skipEol()
+		p.nextToken()
+	}
+
+	return ast.NewBlockStatement(statements)
+}
+
 func (p *Parser) parseIdentifier() ast.Expression {
 	return ast.NewIdentifier(p.current)
 }
@@ -258,8 +321,9 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 	exp := p.parseExpression(LOWEST)
-	if !p.expectNextTokenType(token.CLOSE_PARENTHESIS) {
+	if !p.expectNextTokenType(token.RPARENTHESIS) {
 		return nil
 	}
+	p.nextToken()
 	return exp
 }

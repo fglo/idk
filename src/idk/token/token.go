@@ -8,6 +8,8 @@ import (
 type TokenType string
 
 const (
+	NONE TokenType = "\\0"
+
 	ILLEGAL TokenType = "ILLEGAL"
 
 	EOL TokenType = "EOL"
@@ -29,8 +31,8 @@ const (
 	ASTERISK TokenType = "*"
 	SLASH    TokenType = "/"
 
-	OPEN_PARENTHESIS  TokenType = "("
-	CLOSE_PARENTHESIS TokenType = ")"
+	LPARENTHESIS TokenType = "("
+	RPARENTHESIS TokenType = ")"
 
 	EQ  TokenType = "="
 	NEQ TokenType = "!="
@@ -40,6 +42,11 @@ const (
 	LTE TokenType = "<="
 
 	NEGATION TokenType = "!"
+
+	NOT TokenType = "NOT"
+	AND TokenType = "AND"
+	OR  TokenType = "OR"
+	XOR TokenType = "XOR"
 
 	IF    TokenType = "IF"
 	ELSE  TokenType = "ELSE"
@@ -67,7 +74,7 @@ func (e TokenType) String() string {
 	case ARRAY:
 		return "ARRAY"
 	case DECLARE_ASSIGN:
-		return "DECLARE_ASSIGN"
+		return "DECLASSIGN"
 	case PLUS:
 		return "PLUS"
 	case MINUS:
@@ -76,14 +83,14 @@ func (e TokenType) String() string {
 		return "ASTERISK"
 	case SLASH:
 		return "SLASH"
-	case OPEN_PARENTHESIS:
-		return "OPEN_PARENTHESIS"
-	case CLOSE_PARENTHESIS:
-		return "CLOSE_PARENTHESIS"
+	case LPARENTHESIS:
+		return "LPARENT"
+	case RPARENTHESIS:
+		return "RPARENT"
 	case EQ:
-		return "EQUAL"
+		return "EQ"
 	case NEQ:
-		return "NOT_EQUAL"
+		return "NEQ"
 	case GT:
 		return "GT"
 	case GTE:
@@ -93,7 +100,15 @@ func (e TokenType) String() string {
 	case LTE:
 		return "LTE"
 	case NEGATION:
-		return "NEGATION"
+		return "NEG"
+	case NOT:
+		return "NOT"
+	case AND:
+		return "AND"
+	case OR:
+		return "OR"
+	case XOR:
+		return "XOR"
 	case IDENTIFIER:
 		return "IDENTIFIER"
 	default:
@@ -126,6 +141,10 @@ var keywords = map[string]TokenType{
 	"else":  ELSE,
 	"end":   END,
 	"print": PRINT,
+	"not":   NOT,
+	"and":   AND,
+	"or":    OR,
+	"xor":   XOR,
 }
 
 func (t Token) String() string {

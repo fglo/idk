@@ -48,10 +48,10 @@ func (l *Lexer) readChar() byte {
 		l.current = 0
 	} else {
 		l.current = l.input[l.readPosition]
+		l.position = l.readPosition
+		l.positionInLine++
+		l.readPosition++
 	}
-	l.position = l.readPosition
-	l.positionInLine++
-	l.readPosition++
 	return l.current
 }
 
@@ -79,9 +79,9 @@ func (l *Lexer) ReadToken() token.Token {
 	case '/':
 		tok = token.NewToken(token.SLASH, l.position, l.currentLine, l.positionInLine, "/")
 	case '(':
-		tok = token.NewToken(token.OPEN_PARENTHESIS, l.position, l.currentLine, l.positionInLine, "(")
+		tok = token.NewToken(token.LPARENTHESIS, l.position, l.currentLine, l.positionInLine, "(")
 	case ')':
-		tok = token.NewToken(token.CLOSE_PARENTHESIS, l.position, l.currentLine, l.positionInLine, ")")
+		tok = token.NewToken(token.RPARENTHESIS, l.position, l.currentLine, l.positionInLine, ")")
 	case ':':
 		if l.PeekNext() == '=' {
 			tok = token.NewToken(token.DECLARE_ASSIGN, l.position, l.currentLine, l.positionInLine, ":=")

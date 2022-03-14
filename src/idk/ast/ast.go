@@ -36,6 +36,7 @@ func PrettyPrintProgram(program *Program) {
 }
 
 func PrettyPrint(node Node, indent string, isLast bool) {
+
 	marker := "├──"
 	if isLast {
 		marker = "└──"
@@ -43,6 +44,7 @@ func PrettyPrint(node Node, indent string, isLast bool) {
 
 	fmt.Print(indent)
 	fmt.Print(marker)
+
 	fmt.Print(node.GetTokenType())
 	fmt.Print(" ")
 	fmt.Println(node.GetValue())
@@ -67,22 +69,22 @@ type UnaryExpression struct {
 }
 
 func NewUnaryExpression(Operator token.Token, Right Expression) *UnaryExpression {
-	e := new(UnaryExpression)
-	e.Token = Operator
-	e.Right = Right
-	return e
+	ue := new(UnaryExpression)
+	ue.Token = Operator
+	ue.Right = Right
+	return ue
 }
 
-func (e *UnaryExpression) expressionNode()               {}
-func (e *UnaryExpression) GetValue() string              { return "" }
-func (e *UnaryExpression) GetTokenType() token.TokenType { return e.Token.Type }
-func (e *UnaryExpression) GetChildren() []Node           { return []Node{e.Right} }
-func (e *UnaryExpression) String() string {
+func (ue *UnaryExpression) expressionNode()               {}
+func (ue *UnaryExpression) GetValue() string              { return "" }
+func (ue *UnaryExpression) GetTokenType() token.TokenType { return ue.Token.Type }
+func (ue *UnaryExpression) GetChildren() []Node           { return []Node{ue.Right} }
+func (ue *UnaryExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(e.Token.Value)
-	out.WriteString(e.Right.String())
+	out.WriteString(ue.Token.Value)
+	out.WriteString(ue.Right.String())
 	out.WriteString(")")
 
 	return out.String()
@@ -95,25 +97,64 @@ type BinaryExpression struct {
 }
 
 func NewBinaryExpression(Left Expression, Operator token.Token, Right Expression) *BinaryExpression {
-	e := new(BinaryExpression)
-	e.Token = Operator
-	e.Left = Left
-	e.Right = Right
-	return e
+	be := new(BinaryExpression)
+	be.Token = Operator
+	be.Left = Left
+	be.Right = Right
+	return be
 }
 
-func (e *BinaryExpression) expressionNode()               {}
-func (e *BinaryExpression) GetValue() string              { return "" }
-func (e *BinaryExpression) GetTokenType() token.TokenType { return e.Token.Type }
-func (e *BinaryExpression) GetChildren() []Node           { return []Node{e.Left, e.Right} }
-func (e *BinaryExpression) String() string {
+func (be *BinaryExpression) expressionNode()               {}
+func (be *BinaryExpression) GetValue() string              { return "" }
+func (be *BinaryExpression) GetTokenType() token.TokenType { return be.Token.Type }
+func (be *BinaryExpression) GetChildren() []Node           { return []Node{be.Left, be.Right} }
+func (be *BinaryExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(e.Left.String())
-	out.WriteString(" " + e.Token.Value + " ")
-	out.WriteString(e.Right.String())
+	out.WriteString(be.Left.String())
+	out.WriteString(" " + be.Token.Value + " ")
+	out.WriteString(be.Right.String())
 	out.WriteString(")")
+
+	return out.String()
+}
+
+type IfExpression struct {
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func NewIfExpression(Condition Expression, Consequence *BlockStatement, Alternative *BlockStatement) *IfExpression {
+	ie := new(IfExpression)
+	ie.Condition = Condition
+	ie.Consequence = Consequence
+	ie.Alternative = Alternative
+	return ie
+}
+
+func (ie *IfExpression) expressionNode()               {}
+func (ie *IfExpression) GetValue() string              { return "" }
+func (ie *IfExpression) GetTokenType() token.TokenType { return token.IF }
+func (ie *IfExpression) GetChildren() []Node {
+	if ie.Alternative != nil {
+		return []Node{ie.Condition, ie.Consequence, ie.Alternative}
+	}
+	return []Node{ie.Condition, ie.Consequence}
+}
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(ie.Consequence.String())
+
+	if ie.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(ie.Alternative.String())
+	}
 
 	return out.String()
 }
@@ -180,25 +221,58 @@ type DeclareAssignStatement struct {
 }
 
 func NewDeclareAssignStatement(Token token.Token, Identifier *Identifier, Expression Expression) *DeclareAssignStatement {
-	s := new(DeclareAssignStatement)
-	s.Token = Token
-	s.Identifier = Identifier
-	s.Expression = Expression
-	return s
+	das := new(DeclareAssignStatement)
+	das.Token = Token
+	das.Identifier = Identifier
+	das.Expression = Expression
+	return das
 }
 
-func (s *DeclareAssignStatement) statementNode()                {}
-func (s *DeclareAssignStatement) GetValue() string              { return "" }
-func (s *DeclareAssignStatement) GetTokenType() token.TokenType { return s.Token.Type }
-func (s *DeclareAssignStatement) GetChildren() []Node           { return []Node{s.Identifier, s.Expression} }
-func (s *DeclareAssignStatement) String() string {
+func (das *DeclareAssignStatement) statementNode()                {}
+func (das *DeclareAssignStatement) GetValue() string              { return "" }
+func (das *DeclareAssignStatement) GetTokenType() token.TokenType { return das.Token.Type }
+func (das *DeclareAssignStatement) GetChildren() []Node {
+	return []Node{das.Identifier, das.Expression}
+}
+func (das *DeclareAssignStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(s.Identifier.String())
+	out.WriteString(das.Identifier.String())
 	out.WriteString(" := ")
 
-	if s.Expression != nil {
-		out.WriteString(s.Expression.String())
+	if das.Expression != nil {
+		out.WriteString(das.Expression.String())
+	}
+
+	return out.String()
+}
+
+type BlockStatement struct {
+	Statements []Statement
+}
+
+func NewBlockStatement(Statements []Statement) *BlockStatement {
+	bs := new(BlockStatement)
+	bs.Statements = Statements
+	return bs
+}
+
+func (bs *BlockStatement) statementNode()                {}
+func (bs *BlockStatement) GetValue() string              { return "" }
+func (bs *BlockStatement) GetTokenType() token.TokenType { return "─┐" }
+func (bs *BlockStatement) GetChildren() []Node {
+	var nodes []Node
+	for _, s := range bs.Statements {
+		nodes = append(nodes, s)
+	}
+	return nodes
+}
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+		out.WriteString(" ")
 	}
 
 	return out.String()
