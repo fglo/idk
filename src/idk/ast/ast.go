@@ -122,11 +122,12 @@ func (be *BinaryExpression) String() string {
 
 type IfExpression struct {
 	Condition   Expression
-	Consequence *BlockStatement
-	Alternative *BlockStatement
+	Consequence *Expression
+	Alternative *Expression
 }
 
-func NewIfExpression(Condition Expression, Consequence *BlockStatement, Alternative *BlockStatement) *IfExpression {
+//TODO: implement if expression
+func NewIfExpression(Condition Expression, Consequence *Expression, Alternative *Expression) *IfExpression {
 	ie := new(IfExpression)
 	ie.Condition = Condition
 	ie.Consequence = Consequence
@@ -139,9 +140,9 @@ func (ie *IfExpression) GetValue() string              { return "" }
 func (ie *IfExpression) GetTokenType() token.TokenType { return token.IF }
 func (ie *IfExpression) GetChildren() []Node {
 	if ie.Alternative != nil {
-		return []Node{ie.Condition, ie.Consequence, ie.Alternative}
+		return []Node{ie.Condition, *ie.Consequence, *ie.Alternative}
 	}
-	return []Node{ie.Condition, ie.Consequence}
+	return []Node{ie.Condition, *ie.Consequence}
 }
 func (ie *IfExpression) String() string {
 	var out bytes.Buffer
@@ -149,11 +150,11 @@ func (ie *IfExpression) String() string {
 	out.WriteString("if")
 	out.WriteString(ie.Condition.String())
 	out.WriteString(" ")
-	out.WriteString(ie.Consequence.String())
+	out.WriteString((*ie.Consequence).String())
 
 	if ie.Alternative != nil {
 		out.WriteString("else ")
-		out.WriteString(ie.Alternative.String())
+		out.WriteString((*ie.Alternative).String())
 	}
 
 	return out.String()
@@ -199,17 +200,22 @@ func (e *IntegerLiteral) String() string                { return e.Token.Value }
 /// statements
 
 type ExpressionStatement struct {
-	Token      token.Token
 	Expression Expression
 }
 
-func (s *ExpressionStatement) statementNode()                {}
-func (s *ExpressionStatement) GetValue() string              { return "" }
-func (s *ExpressionStatement) GetTokenType() token.TokenType { return s.Expression.GetTokenType() }
-func (s *ExpressionStatement) GetChildren() []Node           { return s.Expression.GetChildren() }
-func (s *ExpressionStatement) String() string {
-	if s.Expression != nil {
-		return s.Expression.String()
+func NewExpressionStatement(Expression Expression) *ExpressionStatement {
+	es := new(ExpressionStatement)
+	es.Expression = Expression
+	return es
+}
+
+func (es *ExpressionStatement) statementNode()                {}
+func (es *ExpressionStatement) GetValue() string              { return "" }
+func (es *ExpressionStatement) GetTokenType() token.TokenType { return es.Expression.GetTokenType() }
+func (es *ExpressionStatement) GetChildren() []Node           { return es.Expression.GetChildren() }
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
 	}
 	return ""
 }
@@ -246,6 +252,49 @@ func (das *DeclareAssignStatement) String() string {
 
 	return out.String()
 }
+
+type IfStatement struct {
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func NewIfStatement(Condition Expression, Consequence *BlockStatement, Alternative *BlockStatement) *IfStatement {
+	ie := new(IfStatement)
+	ie.Condition = Condition
+	ie.Consequence = Consequence
+	ie.Alternative = Alternative
+	return ie
+}
+
+func (ie *IfStatement) statementNode()                {}
+func (ie *IfStatement) GetValue() string              { return "" }
+func (ie *IfStatement) GetTokenType() token.TokenType { return token.IF }
+func (ie *IfStatement) GetChildren() []Node {
+	if ie.Alternative != nil {
+		return []Node{ie.Condition, ie.Consequence, ie.Alternative}
+	}
+	return []Node{ie.Condition, ie.Consequence}
+}
+func (ie *IfStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+	out.WriteString("if")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(ie.Consequence.String())
+
+	if ie.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(ie.Alternative.String())
+	}
+	out.WriteString("}")
+
+	return out.String()
+}
+
+//TODO: implement for statement
 
 type BlockStatement struct {
 	Statements []Statement
