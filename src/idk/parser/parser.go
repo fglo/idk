@@ -73,9 +73,6 @@ func NewParser(input string) *Parser {
 	// p.registerPrefix(token.NEGATION, p.parseGroupedExpression)
 	// p.registerPrefix(token.NOT, p.parseGroupedExpression)
 
-	p.registerPrefix(token.IF, p.parseIfExpression)
-	// p.registerPrefix(token.FOR, p.parseGroupedExpression)
-
 	p.infixParseFns = make(map[token.TokenType]binaryParseFn)
 	p.registerBinary(token.PLUS, p.parseBinaryExpression)
 	p.registerBinary(token.MINUS, p.parseBinaryExpression)
@@ -207,6 +204,10 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch {
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE_ASSIGN):
 		return p.parseDeclareAssignStatement()
+	case p.current.Type == token.IF:
+		return p.parseIfStatement()
+	// case p.current.Type == token.FOR:
+	// 	return p.parseForStatement()
 	// case p.current.Type == token.RETURN:
 	// 	return p.parseReturnStatement()
 	default:
@@ -229,7 +230,7 @@ func (p *Parser) parseDeclareAssignStatement() *ast.DeclareAssignStatement {
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := &ast.ExpressionStatement{Token: p.current}
+	stmt := new(ast.ExpressionStatement)
 	stmt.Expression = p.parseExpression(LOWEST)
 	return stmt
 }
@@ -269,7 +270,7 @@ func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseIfExpression() ast.Expression {
+func (p *Parser) parseIfStatement() *ast.IfStatement {
 
 	p.nextToken()
 	condition := p.parseExpression(LOWEST)
@@ -289,7 +290,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		}
 	}
 
-	return ast.NewIfExpression(condition, consequence, alternative)
+	return ast.NewIfStatement(condition, consequence, alternative)
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
