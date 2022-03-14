@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"idk/ast"
 	"idk/lexer"
 	"idk/parser"
 	"idk/repl"
@@ -25,7 +26,7 @@ func run(sourceCodePath string) {
 	p := parser.NewParser(string(fileContent))
 	program := p.ParseProgram()
 	_ = program
-	// ast.PrettyPrintProgram(program)
+	ast.PrettyPrintProgram(program)
 
 	if len(p.Errors()) != 0 {
 		fmt.Println("Parser errors:")
