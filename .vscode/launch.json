@@ -5,10 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: IDK",
             "type": "python",
             "request": "launch",
-            "program": "idk.py",
+            "program": "PythonInterpreter/idk.py",
+            "console": "integratedTerminal",
+            "args": ["test.idk"]
+        },
+        {
+            "name": "Go: IDK",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "GoInterpreter/idk.go",
             "console": "integratedTerminal",
             "args": ["test.idk"]
         },
