@@ -111,6 +111,14 @@ func (e TokenType) String() string {
 		return "XOR"
 	case IDENTIFIER:
 		return "IDENTIFIER"
+	case IF:
+		return "IF"
+	case ELSE:
+		return "ELSE"
+	case FOR:
+		return "FOR"
+	case END:
+		return "END"
 	default:
 		return string(e)
 	}
@@ -151,7 +159,7 @@ func (t Token) String() string {
 	val := strings.Replace(t.Value, "\n", "\\n", -1)
 	val = strings.Replace(val, "\r", "\\r", -1)
 	val = strings.Replace(val, "\t", "\\t", -1)
-	return fmt.Sprintf("type=%v, value='%v', position=%v", t.Type, val, t.Position) // OK: note conversion.
+	return fmt.Sprintf("type=%v, value='%v', line=%v, position=%v", t.Type, val, t.Line, t.PositionInLine)
 }
 
 func LookupKeyword(word string) TokenType {
@@ -159,4 +167,27 @@ func LookupKeyword(word string) TokenType {
 		return tok
 	}
 	return IDENTIFIER
+}
+
+var operators = map[TokenType]byte{
+	PLUS:     0,
+	MINUS:    0,
+	ASTERISK: 0,
+	SLASH:    0,
+
+	EQ:  0,
+	NEQ: 0,
+	GT:  0,
+	GTE: 0,
+	LT:  0,
+	LTE: 0,
+
+	AND: 0,
+	OR:  0,
+	XOR: 0,
+}
+
+func (t TokenType) IsOperator() bool {
+	_, ok := operators[t]
+	return ok
 }

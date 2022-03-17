@@ -27,7 +27,7 @@ func NewLexer(txt string) *Lexer {
 	return l
 }
 
-func (l *Lexer) Peek(offset int) byte {
+func (l *Lexer) peek(offset int) byte {
 	i := l.readPosition + offset - 1
 	if i >= len(l.input) {
 		return 0
@@ -35,7 +35,7 @@ func (l *Lexer) Peek(offset int) byte {
 	return l.input[i]
 }
 
-func (l *Lexer) PeekNext() byte {
+func (l *Lexer) peekNext() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
 	} else {
@@ -55,6 +55,21 @@ func (l *Lexer) readChar() byte {
 	return l.current
 }
 
+func (l *Lexer) skipWhitespace() {
+	for ch := rune(l.peekNext()); unicode.IsSpace(ch) && ch != '\n'; ch = rune(l.peekNext()) {
+		l.readChar()
+	}
+}
+
+func (l *Lexer) skipEol() {
+	l.skipWhitespace()
+	for l.peekNext() == '\n' {
+		l.readChar()
+		l.currentLine++
+		l.skipWhitespace()
+	}
+}
+
 func (l *Lexer) ReadToken() token.Token {
 	l.skipWhitespace()
 
@@ -67,7 +82,9 @@ func (l *Lexer) ReadToken() token.Token {
 	case 0:
 		tok = token.NewToken(token.EOF, l.position, l.currentLine, l.positionInLine, "EOF")
 	case '\n':
-		tok = token.NewToken(token.EOL, l.position, l.currentLine, l.positionInLine, "EOL")
+		endlineLine := l.currentLine
+		l.skipEol()
+		tok = token.NewToken(token.EOL, l.position, endlineLine, l.positionInLine, "EOL")
 		l.currentLine++
 		l.positionInLine = 0
 	case '+':
@@ -83,28 +100,28 @@ func (l *Lexer) ReadToken() token.Token {
 	case ')':
 		tok = token.NewToken(token.RPARENTHESIS, l.position, l.currentLine, l.positionInLine, ")")
 	case ':':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.DECLARE_ASSIGN, l.position, l.currentLine, l.positionInLine, ":=")
 			l.readChar()
 		}
 	case '=':
 		tok = token.NewToken(token.EQ, l.position, l.currentLine, l.positionInLine, "=")
 	case '!':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.NEQ, l.position, l.currentLine, l.positionInLine, "!=")
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.NEGATION, l.position, l.currentLine, l.positionInLine, "<")
 		}
 	case '<':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.LTE, l.position, l.currentLine, l.positionInLine, "<=")
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.LT, l.position, l.currentLine, l.positionInLine, "<")
 		}
 	case '>':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.GTE, l.position, l.currentLine, l.positionInLine, ">=")
 			l.readChar()
 		} else {
@@ -124,41 +141,38 @@ func (l *Lexer) ReadToken() token.Token {
 	return *tok
 }
 
-func (l *Lexer) skipWhitespace() {
-	for ch := rune(l.PeekNext()); unicode.IsSpace(ch) && ch != '\n'; ch = rune(l.PeekNext()) {
-		l.readChar()
-	}
-}
-
 func (l *Lexer) readNumberToken() *token.Token {
 	start := l.position
-	for ch := rune(l.PeekNext()); unicode.IsDigit(ch); ch = rune(l.PeekNext()) {
+	startInLine := l.positionInLine
+	for ch := rune(l.peekNext()); unicode.IsDigit(ch); ch = rune(l.peekNext()) {
 		l.readChar()
 	}
 	number := substring(l.input, start, l.readPosition)
-	return token.NewToken(token.INT, start, l.currentLine, l.positionInLine, number)
+	return token.NewToken(token.INT, start, l.currentLine, startInLine, number)
 }
 
 func (l *Lexer) readWordToken() *token.Token {
 	start := l.position
-	for ch := rune(l.PeekNext()); unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_'; ch = rune(l.PeekNext()) {
+	startInLine := l.positionInLine
+	for ch := rune(l.peekNext()); unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_'; ch = rune(l.peekNext()) {
 		l.readChar()
 	}
 	word := substring(l.input, start, l.readPosition)
-	return token.NewToken(token.LookupKeyword(word), start, l.currentLine, l.positionInLine, word)
+	return token.NewToken(token.LookupKeyword(word), start, l.currentLine, startInLine, word)
 }
 
 func (l *Lexer) readCharToken() *token.Token {
-	if l.Peek(2) != '\'' {
+	if l.peek(2) != '\'' {
 		panic("not really a character")
 	}
 
 	start := l.readPosition
-	for ch := l.Peek(1); ch != '\''; ch = l.readChar() {
+	startInLine := l.positionInLine
+	for ch := l.peek(1); ch != '\''; ch = l.readChar() {
 	}
 	char := substring(l.input, start, l.readPosition)
 	l.readChar()
-	return token.NewToken(token.CHAR, start, l.currentLine, l.positionInLine, char)
+	return token.NewToken(token.CHAR, start, l.currentLine, startInLine, char)
 }
 
 func substring(s string, start, end int) string {
@@ -166,8 +180,4 @@ func substring(s string, start, end int) string {
 		return string(s[start])
 	}
 	return string(s[start:end])
-}
-
-func isKeyword(word string) bool {
-	return word == "if" || word == "for" || word == "end" || word == "print"
 }
