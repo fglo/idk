@@ -221,14 +221,12 @@ func (es *ExpressionStatement) String() string {
 }
 
 type DeclareAssignStatement struct {
-	Token      token.Token
 	Identifier *Identifier
 	Expression Expression
 }
 
-func NewDeclareAssignStatement(Token token.Token, Identifier *Identifier, Expression Expression) *DeclareAssignStatement {
+func NewDeclareAssignStatement(Identifier *Identifier, Expression Expression) *DeclareAssignStatement {
 	das := new(DeclareAssignStatement)
-	das.Token = Token
 	das.Identifier = Identifier
 	das.Expression = Expression
 	return das
@@ -236,7 +234,7 @@ func NewDeclareAssignStatement(Token token.Token, Identifier *Identifier, Expres
 
 func (das *DeclareAssignStatement) statementNode()                {}
 func (das *DeclareAssignStatement) GetValue() string              { return "" }
-func (das *DeclareAssignStatement) GetTokenType() token.TokenType { return das.Token.Type }
+func (das *DeclareAssignStatement) GetTokenType() token.TokenType { return token.DECLARE_ASSIGN }
 func (das *DeclareAssignStatement) GetChildren() []Node {
 	return []Node{das.Identifier, das.Expression}
 }
@@ -260,41 +258,70 @@ type IfStatement struct {
 }
 
 func NewIfStatement(Condition Expression, Consequence *BlockStatement, Alternative *BlockStatement) *IfStatement {
-	ie := new(IfStatement)
-	ie.Condition = Condition
-	ie.Consequence = Consequence
-	ie.Alternative = Alternative
-	return ie
+	is := new(IfStatement)
+	is.Condition = Condition
+	is.Consequence = Consequence
+	is.Alternative = Alternative
+	return is
 }
 
-func (ie *IfStatement) statementNode()                {}
-func (ie *IfStatement) GetValue() string              { return "" }
-func (ie *IfStatement) GetTokenType() token.TokenType { return token.IF }
-func (ie *IfStatement) GetChildren() []Node {
-	if ie.Alternative != nil {
-		return []Node{ie.Condition, ie.Consequence, ie.Alternative}
+func (is *IfStatement) statementNode()                {}
+func (is *IfStatement) GetValue() string              { return "" }
+func (is *IfStatement) GetTokenType() token.TokenType { return token.IF }
+func (is *IfStatement) GetChildren() []Node {
+	if is.Alternative != nil {
+		return []Node{is.Condition, is.Consequence, is.Alternative}
 	}
-	return []Node{ie.Condition, ie.Consequence}
+	return []Node{is.Condition, is.Consequence}
 }
-func (ie *IfStatement) String() string {
+func (is *IfStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("{")
 	out.WriteString("if")
-	out.WriteString(ie.Condition.String())
+	out.WriteString(is.Condition.String())
 	out.WriteString(" ")
-	out.WriteString(ie.Consequence.String())
+	out.WriteString(is.Consequence.String())
 
-	if ie.Alternative != nil {
+	if is.Alternative != nil {
 		out.WriteString("else ")
-		out.WriteString(ie.Alternative.String())
+		out.WriteString(is.Alternative.String())
 	}
 	out.WriteString("}")
 
 	return out.String()
 }
 
-//TODO: implement for statement
+type ForLoopStatement struct {
+	Condition   Expression
+	Consequence *BlockStatement
+}
+
+func NewForLoopStatement(Condition Expression, Consequence *BlockStatement) *ForLoopStatement {
+	fls := new(ForLoopStatement)
+	fls.Condition = Condition
+	fls.Consequence = Consequence
+	return fls
+}
+
+func (fls *ForLoopStatement) statementNode()                {}
+func (fls *ForLoopStatement) GetValue() string              { return "" }
+func (fls *ForLoopStatement) GetTokenType() token.TokenType { return token.FOR }
+func (fls *ForLoopStatement) GetChildren() []Node {
+	return []Node{fls.Condition, fls.Consequence}
+}
+func (fls *ForLoopStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+	out.WriteString("for")
+	out.WriteString(fls.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(fls.Consequence.String())
+	out.WriteString("}")
+
+	return out.String()
+}
 
 type BlockStatement struct {
 	Statements []Statement

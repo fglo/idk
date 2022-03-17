@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"idk/ast"
-	"idk/lexer"
 	"idk/parser"
 	"idk/repl"
 	"os"
@@ -13,8 +12,8 @@ func run(sourceCodePath string) {
 	fileContent, err := os.ReadFile(sourceCodePath)
 	check(err)
 
-	l := lexer.NewLexer(string(fileContent))
-	_ = l
+	// l := lexer.NewLexer(string(fileContent))
+	// _ = l
 
 	// for {
 	// 	fmt.Println(l.ReadToken())
@@ -26,13 +25,14 @@ func run(sourceCodePath string) {
 	p := parser.NewParser(string(fileContent))
 	program := p.ParseProgram()
 	_ = program
-	ast.PrettyPrintProgram(program)
 
 	if len(p.Errors()) != 0 {
 		fmt.Println("Parser errors:")
 		for _, msg := range p.Errors() {
 			fmt.Println("\t" + msg)
 		}
+	} else {
+		ast.PrettyPrintProgram(program)
 	}
 }
 
