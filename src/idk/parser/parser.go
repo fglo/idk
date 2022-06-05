@@ -11,6 +11,7 @@ const (
 	_ int = iota
 	LOWEST
 	DECLARE_ASSIGN // :=
+	IN
 	OR
 	AND
 	XOR
@@ -20,25 +21,29 @@ const (
 	SUM         // +
 	PRODUCT     // *
 	PREFIX      // -X or !X
+	RANGE       // .. or ..=
 	CALL        // myFunction(X)
 	INDEX       // array[index]
 )
 
 var precedences = map[token.TokenType]int{
-	token.DECLARE_ASSIGN: DECLARE_ASSIGN,
-	token.AND:            AND,
-	token.OR:             OR,
-	token.XOR:            XOR,
-	token.NOT:            NOT,
-	token.EQ:             EQUALS,
-	token.NEQ:            EQUALS,
-	token.LT:             LESSGREATER,
-	token.GT:             LESSGREATER,
-	token.PLUS:           SUM,
-	token.MINUS:          SUM,
-	token.SLASH:          PRODUCT,
-	token.ASTERISK:       PRODUCT,
-	token.LPARENTHESIS:   CALL,
+	token.DECLARE_ASSIGN:  DECLARE_ASSIGN,
+	token.IN:              IN,
+	token.AND:             AND,
+	token.OR:              OR,
+	token.XOR:             XOR,
+	token.NOT:             NOT,
+	token.EQ:              EQUALS,
+	token.NEQ:             EQUALS,
+	token.LT:              LESSGREATER,
+	token.GT:              LESSGREATER,
+	token.PLUS:            SUM,
+	token.MINUS:           SUM,
+	token.SLASH:           PRODUCT,
+	token.ASTERISK:        PRODUCT,
+	token.RANGE:           RANGE,
+	token.RANGE_INCLUSIVE: RANGE,
+	token.LPARENTHESIS:    CALL,
 }
 
 type (
@@ -50,8 +55,9 @@ type Parser struct {
 	input string
 	lexer *lexer.Lexer
 
-	current token.Token
-	next    token.Token
+	previous token.Token
+	current  token.Token
+	next     token.Token
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]binaryParseFn
@@ -70,14 +76,16 @@ func NewParser(input string) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
 
-	// p.registerPrefix(token.NEGATION, p.parseGroupedExpression)
-	// p.registerPrefix(token.NOT, p.parseGroupedExpression)
+	// p.registerPrefix(token.NEGATION, p.parseUnaryExpression)
+	// p.registerPrefix(token.NOT, p.parseUnaryExpression)
 
 	p.infixParseFns = make(map[token.TokenType]binaryParseFn)
 	p.registerInfix(token.PLUS, p.parseBinaryExpression)
 	p.registerInfix(token.MINUS, p.parseBinaryExpression)
 	p.registerInfix(token.SLASH, p.parseBinaryExpression)
 	p.registerInfix(token.ASTERISK, p.parseBinaryExpression)
+	p.registerInfix(token.IN, p.parseBinaryExpression)
+	p.registerInfix(token.RANGE, p.parseBinaryExpression)
 
 	p.registerInfix(token.DECLARE_ASSIGN, p.parseBinaryExpression)
 
@@ -110,6 +118,7 @@ func (p *Parser) peekNext() token.Token {
 }
 
 func (p *Parser) consumeToken() token.Token {
+	p.previous = p.current
 	p.current = p.next
 	if p.current.Type == token.ILLEGAL {
 		p.reportIllegalToken()
@@ -118,21 +127,16 @@ func (p *Parser) consumeToken() token.Token {
 	return p.current
 }
 
+func (p *Parser) previousTokenWas(t token.TokenType) bool {
+	return p.previous.Type == t
+}
+
 func (p *Parser) currentTokenIs(t token.TokenType) bool {
 	return p.current.Type == t
 }
 
 func (p *Parser) nextTokenIs(t token.TokenType) bool {
 	return p.next.Type == t
-}
-
-func (p *Parser) expectCurrentTokenType(t token.TokenType) bool {
-	if p.currentTokenIs(t) {
-		return true
-	} else {
-		p.reportUnexpectedToken(p.current, t)
-		return false
-	}
 }
 
 func (p *Parser) expectNextTokenType(t token.TokenType) bool {
@@ -144,11 +148,11 @@ func (p *Parser) expectNextTokenType(t token.TokenType) bool {
 	}
 }
 
-func (p *Parser) expectOperatorOrEol() bool {
-	if p.current.Type.IsOperator() || p.currentTokenIs(token.EOL) {
+func (p *Parser) expectOperatorOrEolOrEof() bool {
+	if p.next.Type.IsOperator() || p.nextTokenIs(token.EOL) || p.nextTokenIs(token.EOF) || p.nextTokenIs(token.RPARENTHESIS) {
 		return true
 	} else {
-		p.reportExpectedOperatorOrEol(p.current)
+		p.reportExpectedOperatorOrEolOrEof(p.next)
 		return false
 	}
 }
@@ -184,8 +188,8 @@ func (p *Parser) reportUnexpectedFirstToken(unexpected token.Token) {
 	p.errors = append(p.errors, msg)
 }
 
-func (p *Parser) reportExpectedOperatorOrEol(unexpected token.Token) {
-	msg := fmt.Sprintf("Unexpected token <%v> on line %v, position %v. Expected operator or the <EOL>.",
+func (p *Parser) reportExpectedOperatorOrEolOrEof(unexpected token.Token) {
+	msg := fmt.Sprintf("Unexpected token <%v> on line %v, position %v. Expected operator, <EOL> or <EOF>.",
 		unexpected.Type,
 		unexpected.Line,
 		unexpected.PositionInLine)
@@ -204,7 +208,7 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) skipEol() {
+func (p *Parser) ifEolIsNextThenSkip() {
 	for p.nextTokenIs(token.EOL) {
 		p.consumeToken()
 	}
@@ -217,6 +221,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program.Statements = []ast.Statement{}
 
 	for !p.nextTokenIs(token.EOF) {
+		p.ifEolIsNextThenSkip()
 		p.consumeToken()
 		s := p.parseStatement()
 		if s != nil {
@@ -233,13 +238,16 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseDeclareAssignStatement()
 	// case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.EQ):
 	// 	return p.parseAssignmentStatement()
+	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.LPARENTHESIS):
+		return p.parseFunctionCallStatement()
 	case p.currentTokenIs(token.IF):
 		return p.parseIfStatement()
 	case p.currentTokenIs(token.FOR):
 		return p.parseForStatement()
 	default:
-		// p.reportUnexpectedFirstToken(p.current)
-		return p.parseExpressionStatement()
+		p.reportUnexpectedFirstToken(p.current)
+		return nil
+		// return p.parseExpressionStatement()
 	}
 }
 
@@ -251,44 +259,41 @@ func (p *Parser) parseDeclareAssignStatement() *ast.DeclareAssignStatement {
 
 	expr := p.parseExpression(LOWEST)
 
+	p.ifEolIsNextThenSkip()
+
 	if expr == nil {
 		return nil
 	}
 
-	s := ast.NewDeclareAssignStatement(identifier, expr)
-
-	return s
+	return ast.NewDeclareAssignStatement(identifier, expr)
 }
 
 func (p *Parser) parseIfStatement() *ast.IfStatement {
+	innerIf := false
+	if p.previousTokenWas(token.ELSE) {
+		innerIf = true
+	}
 	p.consumeToken() // skip the if keyword
 
 	condition := p.parseExpression(LOWEST)
 
-	if p.nextTokenIs(token.EOL) {
-		p.consumeToken()
-	}
+	p.ifEolIsNextThenSkip()
 
 	consequence := p.parseBlockStatement()
 
-	if p.nextTokenIs(token.EOL) {
-		p.consumeToken()
-	}
+	p.ifEolIsNextThenSkip()
 
 	var alternative *ast.BlockStatement
-	innerIf := false
 	if p.nextTokenIs(token.ELSE) {
 		p.consumeToken()
-		innerIf = p.nextTokenIs(token.IF)
+		// innerIf = p.nextTokenIs(token.IF)
 		alternative = p.parseBlockStatement()
 	}
 	if !innerIf && p.expectNextTokenType(token.END) {
 		p.consumeToken()
 	}
 
-	if p.nextTokenIs(token.EOL) {
-		p.consumeToken()
-	}
+	p.ifEolIsNextThenSkip()
 
 	return ast.NewIfStatement(condition, consequence, alternative)
 }
@@ -298,21 +303,33 @@ func (p *Parser) parseForStatement() *ast.ForLoopStatement {
 
 	condition := p.parseExpression(LOWEST)
 
+	p.ifEolIsNextThenSkip()
+
 	consequence := p.parseBlockStatement()
 
-	if p.nextTokenIs(token.EOL) {
-		p.consumeToken()
-	}
+	p.ifEolIsNextThenSkip()
 
 	return ast.NewForLoopStatement(condition, consequence)
+}
+
+func (p *Parser) parseFunctionCallStatement() *ast.ExpressionStatement {
+	stmt := new(ast.ExpressionStatement)
+	stmt.Expression = p.parseFunctionCallExpression()
+	p.ifEolIsNextThenSkip()
+	return stmt
+}
+
+func (p *Parser) parseFunctionCallExpression() ast.Expression {
+	exp := ast.NewFunctionCallExpression(p.current)
+	p.consumeToken()
+	exp.Parameters = p.parseFunctionParametersList()
+	return exp
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	statements := []ast.Statement{}
 
-	if p.nextTokenIs(token.EOL) {
-		p.consumeToken()
-	}
+	p.ifEolIsNextThenSkip()
 
 	for !p.nextTokenIs(token.END) && !p.nextTokenIs(token.EOF) && !p.nextTokenIs(token.ELSE) {
 		p.consumeToken()
@@ -320,9 +337,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		if s != nil {
 			statements = append(statements, s)
 		}
-		if p.nextTokenIs(token.EOL) {
-			p.consumeToken()
-		}
+		p.ifEolIsNextThenSkip()
 	}
 
 	return ast.NewBlockStatement(statements)
@@ -331,9 +346,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := new(ast.ExpressionStatement)
 	stmt.Expression = p.parseExpression(LOWEST)
-	if p.nextTokenIs(token.EOL) {
-		p.consumeToken()
-	}
+	p.ifEolIsNextThenSkip()
 	return stmt
 }
 
@@ -344,6 +357,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	expr := parsePrefix()
 
+	p.expectOperatorOrEolOrEof()
+
 	for !p.nextTokenIs(token.EOL) && precedence < p.nextPrecedence() {
 		parseInfix := p.infixParseFns[p.peekNext().Type]
 		if parseInfix == nil {
@@ -351,9 +366,36 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		}
 		p.consumeToken()
 		expr = parseInfix(expr)
+
+		p.expectOperatorOrEolOrEof()
 	}
 
 	return expr
+}
+
+func (p *Parser) parseFunctionParametersList() []ast.Expression {
+	list := []ast.Expression{}
+
+	if p.nextTokenIs(token.RPARENTHESIS) {
+		p.consumeToken()
+		return list
+	}
+
+	p.consumeToken()
+	list = append(list, p.parseExpression(LOWEST))
+
+	for p.nextTokenIs(token.COMMA) {
+		p.consumeToken()
+		p.consumeToken()
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectNextTokenType(token.RPARENTHESIS) {
+		return nil
+	}
+	p.consumeToken()
+
+	return list
 }
 
 func (p *Parser) parseUnaryExpression() ast.Expression {

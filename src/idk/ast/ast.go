@@ -28,10 +28,23 @@ type Program struct {
 	Statements []Statement
 }
 
+func (p *Program) GetValue() string              { return "" }
+func (p *Program) GetTokenType() token.TokenType { return "" }
+func (p *Program) GetChildren() []Node           { return []Node{} }
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
 func PrettyPrintProgram(program *Program) {
-	for _, s := range program.Statements {
+	for i, s := range program.Statements {
 		fmt.Println(s)
-		PrettyPrint(s, "", true)
+		PrettyPrint(s, "", i == len(program.Statements)-1)
 	}
 }
 
@@ -156,6 +169,36 @@ func (ie *IfExpression) String() string {
 		out.WriteString("else ")
 		out.WriteString((*ie.Alternative).String())
 	}
+
+	return out.String()
+}
+
+type FunctionCallExpression struct {
+	Token      token.Token
+	Identifier Identifier
+	Parameters []Expression
+}
+
+func NewFunctionCallExpression(Identifier token.Token) *FunctionCallExpression {
+	fce := new(FunctionCallExpression)
+	fce.Token = Identifier
+	fce.Identifier = *NewIdentifier(Identifier)
+	return fce
+}
+
+func (fce *FunctionCallExpression) expressionNode()               {}
+func (fce *FunctionCallExpression) GetValue() string              { return "" }
+func (fce *FunctionCallExpression) GetTokenType() token.TokenType { return fce.Token.Type }
+func (fce *FunctionCallExpression) GetChildren() []Node           { return []Node{} }
+func (fce *FunctionCallExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(fce.Token.String())
+	out.WriteString("(")
+	for _, parameter := range fce.Parameters {
+		out.WriteString(parameter.String() + ", ")
+	}
+	out.WriteString(")")
 
 	return out.String()
 }
