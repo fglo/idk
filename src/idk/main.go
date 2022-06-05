@@ -1,14 +1,17 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"idk/ast"
+	"idk/evaluator"
 	"idk/parser"
 	"idk/repl"
+	"idk/symbol"
 	"os"
 )
 
-func run(sourceCodePath string) {
+func run(sourceCodePath string, prettyPrint bool) {
 	fileContent, err := os.ReadFile(sourceCodePath)
 	check(err)
 
@@ -31,8 +34,14 @@ func run(sourceCodePath string) {
 		for _, msg := range p.Errors() {
 			fmt.Println("\t" + msg)
 		}
-	} else {
+	} else if prettyPrint {
 		ast.PrettyPrintProgram(program)
+	}
+
+	scope := symbol.NewScope()
+	evaluated := evaluator.Eval(program, scope)
+	if evaluated != nil {
+		fmt.Println(evaluated.Inspect())
 	}
 }
 
@@ -43,10 +52,15 @@ func check(e error) {
 }
 
 func main() {
-	if len(os.Args) >= 2 {
-		sourceCodePath := os.Args[1]
-		run(sourceCodePath)
+	var sourceCodePath string
+	var prettyPrint bool
+	flag.StringVar(&sourceCodePath, "f", "", "Source code file path.")
+	flag.BoolVar(&prettyPrint, "p", false, "Pretty print the AST.")
+	flag.Parse()
+
+	if sourceCodePath != "" {
+		run(sourceCodePath, prettyPrint)
 	} else {
-		repl.Start(os.Stdin, os.Stdout)
+		repl.Start(os.Stdin, os.Stdout, prettyPrint)
 	}
 }

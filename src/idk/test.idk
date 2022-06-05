@@ -1,17 +1,21 @@
-1+2*3
+a := 0
+b := 0
+c := 0
+d := 2
+y:=(1+2+3)*(4+5)
+puts(y)
 
-if a < 1 or 2 = 3
+if a > 1
     y := 4
-else if b = 5
+else if b > 1
     y := 6
-else if c = 7
+else if c > 7
     y := 8
 else
     y := 9
-    if d = 10
+    if d > 1
         y:=11
-        
     end
-
-    
 end
+
+puts(y)

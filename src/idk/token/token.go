@@ -26,6 +26,9 @@ const (
 
 	DECLARE_ASSIGN TokenType = ":="
 
+	RANGE           TokenType = ".."
+	RANGE_INCLUSIVE TokenType = "..="
+
 	PLUS     TokenType = "+"
 	MINUS    TokenType = "-"
 	ASTERISK TokenType = "*"
@@ -43,6 +46,9 @@ const (
 
 	NEGATION TokenType = "!"
 
+	COMMA TokenType = ","
+	DOT   TokenType = "."
+
 	NOT TokenType = "NOT"
 	AND TokenType = "AND"
 	OR  TokenType = "OR"
@@ -53,6 +59,7 @@ const (
 	FOR   TokenType = "FOR"
 	END   TokenType = "END"
 	PRINT TokenType = "PRINT"
+	IN    TokenType = "IN"
 
 	IDENTIFIER TokenType = "IDENTIFIER"
 )
@@ -75,6 +82,10 @@ func (e TokenType) String() string {
 		return "ARRAY"
 	case DECLARE_ASSIGN:
 		return "DECLASSIGN"
+	case RANGE:
+		return "RANGE"
+	case RANGE_INCLUSIVE:
+		return "RANGE_INCLUSIVE"
 	case PLUS:
 		return "PLUS"
 	case MINUS:
@@ -147,12 +158,14 @@ var keywords = map[string]TokenType{
 	"false": FALSE,
 	"if":    IF,
 	"else":  ELSE,
+	"for":   FOR,
 	"end":   END,
 	"print": PRINT,
 	"not":   NOT,
 	"and":   AND,
 	"or":    OR,
 	"xor":   XOR,
+	"in":    IN,
 }
 
 func (t Token) String() string {

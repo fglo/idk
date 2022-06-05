@@ -249,3 +249,25 @@ end
 for 5..=1
     print _it
 end
+
+print '-' // new interpreter
+
+1+2*3
+
+y:=(1+2+3)*(4+5)
+
+if a < 1 or 2 = 3
+    y := 4
+else if b = 5
+    y := 6
+else if c = 7
+    y := 8
+else
+    y := 9
+    if d = 10
+        y:=11
+        
+    end
+
+    
+end

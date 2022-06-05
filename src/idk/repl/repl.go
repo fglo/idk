@@ -14,7 +14,7 @@ const IDK_LOGO = `╦╔╦╗╦╔═
 ║ ║║╠╩╗
 ╩═╩╝╩ ╩`
 
-func Start(in io.Reader, out io.Writer) {
+func Start(in io.Reader, out io.Writer, prettyPrint bool) {
 	// user, err := user.Current()
 	// if err != nil {
 	// 	panic(err)
@@ -41,11 +41,12 @@ func Start(in io.Reader, out io.Writer) {
 
 		p := parser.NewParser(string(line))
 		program := p.ParseProgram()
-		ast.PrettyPrintProgram(program)
 
 		if len(p.Errors()) != 0 {
 			printParserErrors(out, p.Errors())
 			continue
+		} else if prettyPrint {
+			ast.PrettyPrintProgram(program)
 		}
 
 		// evaluated := evaluator.Eval(program, env)

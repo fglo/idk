@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "idk/main.go",
-            "args": ["test.idk"]
+            "args": ["-f", "test.idk", "-p"]
         },
         {
             "name": "Launch Package",
