@@ -2,9 +2,9 @@ package parser
 
 import (
 	"fmt"
-	"idk/ast"
-	"idk/lexer"
-	"idk/token"
+	"github.com/fglo/idk/pkg/idk/ast"
+	"github.com/fglo/idk/pkg/idk/lexer"
+	"github.com/fglo/idk/pkg/idk/token"
 )
 
 const (
