@@ -3,7 +3,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"idk/token"
+	"github.com/fglo/idk/pkg/idk/token"
 	"strconv"
 )
 

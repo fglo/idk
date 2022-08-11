@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"idk/token"
+	"github.com/fglo/idk/pkg/idk/token"
 	"unicode"
 )
 

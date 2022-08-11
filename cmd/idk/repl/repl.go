@@ -3,8 +3,8 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	"idk/ast"
-	"idk/parser"
+	"github.com/fglo/idk/pkg/idk/ast"
+	"github.com/fglo/idk/pkg/idk/parser"
 	"io"
 )
 

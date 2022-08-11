@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"idk/ast"
-	"idk/evaluator"
-	"idk/parser"
-	"idk/repl"
-	"idk/symbol"
+	"github.com/fglo/idk/cmd/idk/repl"
+	"github.com/fglo/idk/pkg/idk/ast"
+	"github.com/fglo/idk/pkg/idk/evaluator"
+	"github.com/fglo/idk/pkg/idk/parser"
+	"github.com/fglo/idk/pkg/idk/symbol"
 	"os"
 )
 

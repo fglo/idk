@@ -2,7 +2,7 @@ package evaluator
 
 import (
 	"fmt"
-	"idk/symbol"
+	"github.com/fglo/idk/pkg/idk/symbol"
 )
 
 var builtins = map[string]*symbol.Builtin{

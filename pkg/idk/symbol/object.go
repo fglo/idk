@@ -3,8 +3,8 @@ package symbol
 import (
 	"bytes"
 	"fmt"
+	"github.com/fglo/idk/pkg/idk/ast"
 	"hash/fnv"
-	"idk/ast"
 	"strings"
 )
 

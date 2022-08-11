@@ -17,9 +17,8 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "GoInterpreter/idk.go",
-            "console": "integratedTerminal",
-            "args": ["test.idk"]
-        },
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/test_small.idk", "-p"]
+        }
     ]
 }
