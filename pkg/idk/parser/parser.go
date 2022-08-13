@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+
 	"github.com/fglo/idk/pkg/idk/ast"
 	"github.com/fglo/idk/pkg/idk/lexer"
 	"github.com/fglo/idk/pkg/idk/token"
@@ -74,6 +75,7 @@ func NewParser(input string) *Parser {
 	p.registerPrefix(token.MINUS, p.parseUnaryExpression)
 	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BOOL, p.parseBooleanLiteral)
 	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
 
 	// p.registerPrefix(token.NEGATION, p.parseUnaryExpression)
@@ -421,6 +423,11 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit, _ := ast.NewIntegerLiteral(p.current)
+	return lit
+}
+
+func (p *Parser) parseBooleanLiteral() ast.Expression {
+	lit, _ := ast.NewBooleanLiteral(p.current)
 	return lit
 }
 

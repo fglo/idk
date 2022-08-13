@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/fglo/idk/cmd/idk/repl"
 	"github.com/fglo/idk/pkg/idk/ast"
 	"github.com/fglo/idk/pkg/idk/evaluator"
 	"github.com/fglo/idk/pkg/idk/parser"
 	"github.com/fglo/idk/pkg/idk/symbol"
-	"os"
 )
 
 func run(sourceCodePath string, prettyPrint bool) {
@@ -39,10 +40,10 @@ func run(sourceCodePath string, prettyPrint bool) {
 	}
 
 	scope := symbol.NewScope()
-	evaluated := evaluator.Eval(program, scope)
-	if evaluated != nil {
-		fmt.Println(evaluated.Inspect())
-	}
+	evaluator.Eval(program, scope)
+	// if evaluated != nil {
+	// 	fmt.Println(evaluated.Inspect())
+	// }
 }
 
 func check(e error) {

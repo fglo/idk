@@ -54,12 +54,11 @@ const (
 	OR  TokenType = "OR"
 	XOR TokenType = "XOR"
 
-	IF    TokenType = "IF"
-	ELSE  TokenType = "ELSE"
-	FOR   TokenType = "FOR"
-	END   TokenType = "END"
-	PRINT TokenType = "PRINT"
-	IN    TokenType = "IN"
+	IF   TokenType = "IF"
+	ELSE TokenType = "ELSE"
+	FOR  TokenType = "FOR"
+	END  TokenType = "END"
+	IN   TokenType = "IN"
 
 	IDENTIFIER TokenType = "IDENTIFIER"
 )
@@ -154,13 +153,12 @@ func NewToken(tokenType TokenType, position, line, positionInLine int, value str
 }
 
 var keywords = map[string]TokenType{
-	"true":  TRUE,
-	"false": FALSE,
+	"true":  BOOL,
+	"false": BOOL,
 	"if":    IF,
 	"else":  ELSE,
 	"for":   FOR,
 	"end":   END,
-	"print": PRINT,
 	"not":   NOT,
 	"and":   AND,
 	"or":    OR,

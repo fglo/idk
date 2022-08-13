@@ -13,12 +13,28 @@
             "args": ["test.idk"]
         },
         {
-            "name": "Go: IDK",
+            "name": "Go: Run & PP IDK file",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "cmd/idk/main.go",
             "args": ["-f", "../../src/test_small.idk", "-p"]
+        },
+        {
+            "name": "Go: Run IDK file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/test_small.idk"]
+        },
+        {
+            "name": "Go: Run IDK REPL",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": []
         }
     ]
 }

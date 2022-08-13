@@ -3,8 +3,9 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"github.com/fglo/idk/pkg/idk/token"
 	"strconv"
+
+	"github.com/fglo/idk/pkg/idk/token"
 )
 
 type Node interface {
@@ -239,6 +240,25 @@ func (e *IntegerLiteral) GetValue() string              { return e.Token.Value }
 func (e *IntegerLiteral) GetTokenType() token.TokenType { return token.INT }
 func (e *IntegerLiteral) GetChildren() []Node           { return []Node{} }
 func (e *IntegerLiteral) String() string                { return e.Token.Value }
+
+type BooleanLiteral struct {
+	Token token.Token
+	Value bool
+}
+
+func NewBooleanLiteral(Token token.Token) (*BooleanLiteral, error) {
+	l := new(BooleanLiteral)
+	l.Token = Token
+	val, err := strconv.ParseBool(Token.Value)
+	l.Value = val
+	return l, err
+}
+
+func (e *BooleanLiteral) expressionNode()               {}
+func (e *BooleanLiteral) GetValue() string              { return e.Token.Value }
+func (e *BooleanLiteral) GetTokenType() token.TokenType { return token.BOOL }
+func (e *BooleanLiteral) GetChildren() []Node           { return []Node{} }
+func (e *BooleanLiteral) String() string                { return e.Token.Value }
 
 /// statements
 
