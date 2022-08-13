@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+
 	"github.com/fglo/idk/pkg/idk/ast"
 	"github.com/fglo/idk/pkg/idk/symbol"
 )

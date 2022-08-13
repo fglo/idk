@@ -2,11 +2,21 @@ package evaluator
 
 import (
 	"fmt"
+
 	"github.com/fglo/idk/pkg/idk/symbol"
 )
 
 var builtins = map[string]*symbol.Builtin{
-	"len": &symbol.Builtin{Fn: func(args ...symbol.Object) symbol.Object {
+	"print": {
+		Fn: func(args ...symbol.Object) symbol.Object {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+
+			return NULL
+		},
+	},
+	"len": {Fn: func(args ...symbol.Object) symbol.Object {
 		if len(args) != 1 {
 			return newError("wrong number of arguments. got=%d, want=1",
 				len(args))
@@ -23,16 +33,7 @@ var builtins = map[string]*symbol.Builtin{
 		}
 	},
 	},
-	"puts": &symbol.Builtin{
-		Fn: func(args ...symbol.Object) symbol.Object {
-			for _, arg := range args {
-				fmt.Println(arg.Inspect())
-			}
-
-			return NULL
-		},
-	},
-	"first": &symbol.Builtin{
+	"first": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 1 {
 				return newError("wrong number of arguments. got=%d, want=1",
@@ -51,7 +52,7 @@ var builtins = map[string]*symbol.Builtin{
 			return NULL
 		},
 	},
-	"last": &symbol.Builtin{
+	"last": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 1 {
 				return newError("wrong number of arguments. got=%d, want=1",
@@ -71,7 +72,7 @@ var builtins = map[string]*symbol.Builtin{
 			return NULL
 		},
 	},
-	"rest": &symbol.Builtin{
+	"rest": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 1 {
 				return newError("wrong number of arguments. got=%d, want=1",
