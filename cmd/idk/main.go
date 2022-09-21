@@ -16,16 +16,6 @@ func run(sourceCodePath string, prettyPrint bool) {
 	fileContent, err := os.ReadFile(sourceCodePath)
 	check(err)
 
-	// l := lexer.NewLexer(string(fileContent))
-	// _ = l
-
-	// for {
-	// 	fmt.Println(l.ReadToken())
-	// 	if l.PeekNext() == '\000' {
-	// 		break
-	// 	}
-	// }
-
 	p := parser.NewParser(string(fileContent))
 	program := p.ParseProgram()
 	_ = program
@@ -41,9 +31,6 @@ func run(sourceCodePath string, prettyPrint bool) {
 
 	scope := symbol.NewScope()
 	evaluator.Eval(program, scope)
-	// if evaluated != nil {
-	// 	fmt.Println(evaluated.Inspect())
-	// }
 }
 
 func check(e error) {

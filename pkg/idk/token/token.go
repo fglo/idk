@@ -44,12 +44,10 @@ const (
 	LT  TokenType = "<"
 	LTE TokenType = "<="
 
-	NEGATION TokenType = "!"
-
 	COMMA TokenType = ","
 	DOT   TokenType = "."
 
-	NOT TokenType = "NOT"
+	NOT TokenType = "!"
 	AND TokenType = "AND"
 	OR  TokenType = "OR"
 	XOR TokenType = "XOR"
@@ -109,8 +107,6 @@ func (e TokenType) String() string {
 		return "LT"
 	case LTE:
 		return "LTE"
-	case NEGATION:
-		return "NEG"
 	case NOT:
 		return "NOT"
 	case AND:
@@ -193,6 +189,7 @@ var operators = map[TokenType]byte{
 	LT:  0,
 	LTE: 0,
 
+	NOT: 0,
 	AND: 0,
 	OR:  0,
 	XOR: 0,

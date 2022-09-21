@@ -1,8 +1,9 @@
 package lexer
 
 import (
-	"github.com/fglo/idk/pkg/idk/token"
 	"unicode"
+
+	"github.com/fglo/idk/pkg/idk/token"
 )
 
 type Lexer struct {
@@ -111,7 +112,7 @@ func (l *Lexer) ReadToken() token.Token {
 			tok = token.NewToken(token.NEQ, l.position, l.currentLine, l.positionInLine, "!=")
 			l.readChar()
 		} else {
-			tok = token.NewToken(token.NEGATION, l.position, l.currentLine, l.positionInLine, "<")
+			tok = token.NewToken(token.NOT, l.position, l.currentLine, l.positionInLine, "!")
 		}
 	case '<':
 		if l.PeekNext() == '=' {

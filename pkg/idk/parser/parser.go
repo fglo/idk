@@ -60,8 +60,8 @@ type Parser struct {
 	current  token.Token
 	next     token.Token
 
-	prefixParseFns map[token.TokenType]prefixParseFn
-	infixParseFns  map[token.TokenType]binaryParseFn
+	unaryParseFns  map[token.TokenType]prefixParseFn
+	binaryParseFns map[token.TokenType]binaryParseFn
 
 	errors []string
 }
@@ -71,48 +71,46 @@ func NewParser(input string) *Parser {
 	p.input = input
 	p.lexer = lexer.NewLexer(input)
 
-	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
-	p.registerPrefix(token.MINUS, p.parseUnaryExpression)
-	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
-	p.registerPrefix(token.INT, p.parseIntegerLiteral)
-	p.registerPrefix(token.BOOL, p.parseBooleanLiteral)
-	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
+	p.unaryParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerUnary(token.MINUS, p.parseUnaryExpression)
+	p.registerUnary(token.IDENTIFIER, p.parseIdentifier)
+	p.registerUnary(token.INT, p.parseIntegerLiteral)
+	p.registerUnary(token.BOOL, p.parseBooleanLiteral)
+	p.registerUnary(token.LPARENTHESIS, p.parseGroupedExpression)
+	p.registerUnary(token.NOT, p.parseUnaryExpression)
 
-	// p.registerPrefix(token.NEGATION, p.parseUnaryExpression)
-	// p.registerPrefix(token.NOT, p.parseUnaryExpression)
+	p.binaryParseFns = make(map[token.TokenType]binaryParseFn)
+	p.registerBinary(token.PLUS, p.parseBinaryExpression)
+	p.registerBinary(token.MINUS, p.parseBinaryExpression)
+	p.registerBinary(token.SLASH, p.parseBinaryExpression)
+	p.registerBinary(token.ASTERISK, p.parseBinaryExpression)
+	p.registerBinary(token.IN, p.parseBinaryExpression)
+	p.registerBinary(token.RANGE, p.parseBinaryExpression)
 
-	p.infixParseFns = make(map[token.TokenType]binaryParseFn)
-	p.registerInfix(token.PLUS, p.parseBinaryExpression)
-	p.registerInfix(token.MINUS, p.parseBinaryExpression)
-	p.registerInfix(token.SLASH, p.parseBinaryExpression)
-	p.registerInfix(token.ASTERISK, p.parseBinaryExpression)
-	p.registerInfix(token.IN, p.parseBinaryExpression)
-	p.registerInfix(token.RANGE, p.parseBinaryExpression)
+	p.registerBinary(token.DECLARE_ASSIGN, p.parseBinaryExpression)
 
-	p.registerInfix(token.DECLARE_ASSIGN, p.parseBinaryExpression)
+	p.registerBinary(token.EQ, p.parseBinaryExpression)
+	p.registerBinary(token.NEQ, p.parseBinaryExpression)
+	p.registerBinary(token.GT, p.parseBinaryExpression)
+	p.registerBinary(token.GTE, p.parseBinaryExpression)
+	p.registerBinary(token.LT, p.parseBinaryExpression)
+	p.registerBinary(token.LTE, p.parseBinaryExpression)
 
-	p.registerInfix(token.EQ, p.parseBinaryExpression)
-	p.registerInfix(token.NEQ, p.parseBinaryExpression)
-	p.registerInfix(token.GT, p.parseBinaryExpression)
-	p.registerInfix(token.GTE, p.parseBinaryExpression)
-	p.registerInfix(token.LT, p.parseBinaryExpression)
-	p.registerInfix(token.LTE, p.parseBinaryExpression)
-
-	p.registerInfix(token.AND, p.parseBinaryExpression)
-	p.registerInfix(token.OR, p.parseBinaryExpression)
-	p.registerInfix(token.XOR, p.parseBinaryExpression)
+	p.registerBinary(token.AND, p.parseBinaryExpression)
+	p.registerBinary(token.OR, p.parseBinaryExpression)
+	p.registerBinary(token.XOR, p.parseBinaryExpression)
 
 	p.consumeToken()
 
 	return p
 }
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
-	p.prefixParseFns[tokenType] = fn
+func (p *Parser) registerUnary(tokenType token.TokenType, fn prefixParseFn) {
+	p.unaryParseFns[tokenType] = fn
 }
 
-func (p *Parser) registerInfix(tokenType token.TokenType, fn binaryParseFn) {
-	p.infixParseFns[tokenType] = fn
+func (p *Parser) registerBinary(tokenType token.TokenType, fn binaryParseFn) {
+	p.binaryParseFns[tokenType] = fn
 }
 
 func (p *Parser) peekNext() token.Token {
@@ -353,7 +351,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	parsePrefix := p.prefixParseFns[p.current.Type]
+	parsePrefix := p.unaryParseFns[p.current.Type]
 	if parsePrefix == nil {
 		return nil
 	}
@@ -362,7 +360,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	p.expectOperatorOrEolOrEof()
 
 	for !p.nextTokenIs(token.EOL) && precedence < p.nextPrecedence() {
-		parseInfix := p.infixParseFns[p.peekNext().Type]
+		parseInfix := p.binaryParseFns[p.peekNext().Type]
 		if parseInfix == nil {
 			return expr
 		}

@@ -41,40 +41,17 @@ func TestDeclareAssignStatements(t *testing.T) {
 	}
 }
 
-//TODO: lone expressions (need to test them and to have them in the REPL)
-
-// func TestIdentifierExpression(t *testing.T) {
-// 	input := "test_name"
-
-// 	p := NewParser(input)
-// 	program := p.ParseProgram()
-// 	checkParserErrors(t, p)
-
-// 	if len(program.Statements) != 1 {
-// 		t.Fatalf("program has not enough statements. got=%d",
-// 			len(program.Statements))
-// 	}
-// 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-// 	if !ok {
-// 		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
-// 			program.Statements[0])
-// 	}
-
-// 	testIdentifier(t, stmt.Expression, input)
-// }
-
-func TestParsingPrefixExpressions(t *testing.T) {
+func TestParsingUnaryExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
 		operator string
 		value    interface{}
 	}{
-		{"!5;", "!", 5},
-		{"-15;", "-", 15},
-		{"!foobar;", "!", "foobar"},
-		{"-foobar;", "-", "foobar"},
-		{"!true;", "!", true},
-		{"!false;", "!", false},
+		{"t := -15", "-", 15},
+		{"t := -foobar", "-", "foobar"},
+		{"t := !foobar", "!", "foobar"},
+		{"t := !true", "!", true},
+		{"t := !false", "!", false},
 	}
 
 	for _, tt := range prefixTests {
@@ -87,9 +64,9 @@ func TestParsingPrefixExpressions(t *testing.T) {
 				1, len(program.Statements))
 		}
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		stmt, ok := program.Statements[0].(*ast.DeclareAssignStatement)
 		if !ok {
-			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			t.Fatalf("program.Statements[0] is not ast.DeclareAssignStatement. got=%T",
 				program.Statements[0])
 		}
 
@@ -107,32 +84,32 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	}
 }
 
-func TestParsingInfixExpressions(t *testing.T) {
+func TestParsingBinaryExpressions(t *testing.T) {
 	infixTests := []struct {
 		input      string
 		leftValue  interface{}
 		operator   string
 		rightValue interface{}
 	}{
-		{"5 + 5;", 5, "+", 5},
-		{"5 - 5;", 5, "-", 5},
-		{"5 * 5;", 5, "*", 5},
-		{"5 / 5;", 5, "/", 5},
-		{"5 > 5;", 5, ">", 5},
-		{"5 < 5;", 5, "<", 5},
-		{"5 == 5;", 5, "==", 5},
-		{"5 != 5;", 5, "!=", 5},
-		{"foobar + barfoo;", "foobar", "+", "barfoo"},
-		{"foobar - barfoo;", "foobar", "-", "barfoo"},
-		{"foobar * barfoo;", "foobar", "*", "barfoo"},
-		{"foobar / barfoo;", "foobar", "/", "barfoo"},
-		{"foobar > barfoo;", "foobar", ">", "barfoo"},
-		{"foobar < barfoo;", "foobar", "<", "barfoo"},
-		{"foobar == barfoo;", "foobar", "==", "barfoo"},
-		{"foobar != barfoo;", "foobar", "!=", "barfoo"},
-		{"true == true", true, "==", true},
-		{"true != false", true, "!=", false},
-		{"false == false", false, "==", false},
+		{"t := 5 + 5", 5, "+", 5},
+		{"t := 5 - 5", 5, "-", 5},
+		{"t := 5 * 5", 5, "*", 5},
+		{"t := 5 / 5", 5, "/", 5},
+		{"t := 5 > 5", 5, ">", 5},
+		{"t := 5 < 5", 5, "<", 5},
+		{"t := 5 = 5", 5, "=", 5},
+		{"t := 5 != 5", 5, "!=", 5},
+		{"t := foobar + barfoo", "foobar", "+", "barfoo"},
+		{"t := foobar - barfoo", "foobar", "-", "barfoo"},
+		{"t := foobar * barfoo", "foobar", "*", "barfoo"},
+		{"t := foobar / barfoo", "foobar", "/", "barfoo"},
+		{"t := foobar > barfoo", "foobar", ">", "barfoo"},
+		{"t := foobar < barfoo", "foobar", "<", "barfoo"},
+		{"t := foobar = barfoo", "foobar", "=", "barfoo"},
+		{"t := foobar != barfoo", "foobar", "!=", "barfoo"},
+		{"t := true = true", true, "=", true},
+		{"t := true != false", true, "!=", false},
+		{"t := false = false", false, "=", false},
 	}
 
 	for _, tt := range infixTests {
@@ -145,13 +122,13 @@ func TestParsingInfixExpressions(t *testing.T) {
 				1, len(program.Statements))
 		}
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		stmt, ok := program.Statements[0].(*ast.DeclareAssignStatement)
 		if !ok {
-			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			t.Fatalf("program.Statements[0] is not ast.DeclareAssignStatement. got=%T",
 				program.Statements[0])
 		}
 
-		if !testInfixExpression(t, stmt.Expression, tt.leftValue,
+		if !testBinaryExpression(t, stmt.Expression, tt.leftValue,
 			tt.operator, tt.rightValue) {
 			return
 		}
@@ -164,111 +141,111 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		expected string
 	}{
 		{
-			"-a * b",
+			"t := -a * b",
 			"((-a) * b)",
 		},
 		{
-			"!-a",
+			"t := !-a",
 			"(!(-a))",
 		},
 		{
-			"a + b + c",
+			"t := a + b + c",
 			"((a + b) + c)",
 		},
 		{
-			"a + b - c",
+			"t := a + b - c",
 			"((a + b) - c)",
 		},
 		{
-			"a * b * c",
+			"t := a * b * c",
 			"((a * b) * c)",
 		},
 		{
-			"a * b / c",
+			"t := a * b / c",
 			"((a * b) / c)",
 		},
 		{
-			"a + b / c",
+			"t := a + b / c",
 			"(a + (b / c))",
 		},
 		{
-			"a + b * c + d / e - f",
+			"t := a + b * c + d / e - f",
 			"(((a + (b * c)) + (d / e)) - f)",
 		},
 		{
-			"3 + 4; -5 * 5",
-			"(3 + 4)((-5) * 5)",
+			"t := 3 + 4 * -5 * 5",
+			"(3 + ((4 * (-5)) * 5))",
 		},
 		{
-			"5 > 4 == 3 < 4",
-			"((5 > 4) == (3 < 4))",
+			"t := 5 > 4 = 3 < 4",
+			"((5 > 4) = (3 < 4))",
 		},
 		{
-			"5 < 4 != 3 > 4",
+			"t := 5 < 4 != 3 > 4",
 			"((5 < 4) != (3 > 4))",
 		},
 		{
-			"3 + 4 * 5 == 3 * 1 + 4 * 5",
-			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+			"t := 3 + 4 * 5 = 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) = ((3 * 1) + (4 * 5)))",
 		},
 		{
+			"t := true",
 			"true",
-			"true",
 		},
 		{
+			"t := false",
 			"false",
-			"false",
 		},
 		{
-			"3 > 5 == false",
-			"((3 > 5) == false)",
+			"t := 3 > 5 = false",
+			"((3 > 5) = false)",
 		},
 		{
-			"3 < 5 == true",
-			"((3 < 5) == true)",
+			"t := 3 < 5 = true",
+			"((3 < 5) = true)",
 		},
 		{
-			"1 + (2 + 3) + 4",
+			"t := 1 + (2 + 3) + 4",
 			"((1 + (2 + 3)) + 4)",
 		},
 		{
-			"(5 + 5) * 2",
+			"t := (5 + 5) * 2",
 			"((5 + 5) * 2)",
 		},
 		{
-			"2 / (5 + 5)",
+			"t := 2 / (5 + 5)",
 			"(2 / (5 + 5))",
 		},
 		{
-			"(5 + 5) * 2 * (5 + 5)",
+			"t := (5 + 5) * 2 * (5 + 5)",
 			"(((5 + 5) * 2) * (5 + 5))",
 		},
 		{
-			"-(5 + 5)",
+			"t := -(5 + 5)",
 			"(-(5 + 5))",
 		},
 		{
-			"!(true == true)",
-			"(!(true == true))",
+			"t := !(true = true)",
+			"(!(true = true))",
 		},
 		{
-			"a + add(b * c) + d",
+			"t := a + add(b * c) + d",
 			"((a + add((b * c))) + d)",
 		},
 		{
-			"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+			"t := add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
 			"add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
 		},
 		{
-			"add(a + b + c * d / f + g)",
+			"t := add(a + b + c * d / f + g)",
 			"add((((a + b) + ((c * d) / f)) + g))",
 		},
 		{
-			"a * [1, 2, 3, 4][b * c] * d",
+			"t := a * [1, 2, 3, 4][b * c] * d",
 			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
 		},
 		{
-			"add(a * b[2], b[1], 2 * [1, 2][1])",
+			"t := add(a * b[2], b[1], 2 * [1, 2][1])",
 			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
 		},
 	}
@@ -278,7 +255,13 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		program := p.ParseProgram()
 		checkParserErrors(t, p)
 
-		actual := program.String()
+		stmt, ok := program.Statements[0].(*ast.DeclareAssignStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.DeclareAssignStatement. got=%T",
+				program.Statements[0])
+		}
+
+		actual := stmt.Expression.String()
 		if actual != tt.expected {
 			t.Errorf("expected=%q, got=%q", tt.expected, actual)
 		}
@@ -382,7 +365,7 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
-func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
+func testBinaryExpression(t *testing.T, exp ast.Expression, left interface{},
 	operator string, right interface{}) bool {
 
 	opExp, ok := exp.(*ast.BinaryExpression)
