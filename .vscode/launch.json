@@ -13,7 +13,7 @@
             "args": ["test.idk"]
         },
         {
-            "name": "Go: Run & PP IDK file",
+            "name": "Go: Run & Pretty Print IDK file",
             "type": "go",
             "request": "launch",
             "mode": "debug",

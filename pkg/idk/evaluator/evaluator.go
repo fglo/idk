@@ -50,12 +50,12 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	// case *ast.Boolean:
 	// 	return nativeBoolToBooleanObject(node.Value)
 
-	// case *ast.PrefixExpression:
-	// 	right := Eval(node.Right, env)
-	// 	if isError(right) {
-	// 		return right
-	// 	}
-	// 	return evalPrefixExpression(node.Operator, right)
+	case *ast.UnaryExpression:
+		right := Eval(node.Right, scope)
+		if isError(right) {
+			return right
+		}
+		return evalUnaryExpression(node.Token.Value, right)
 
 	case *ast.BinaryExpression:
 		left := Eval(node.Left, scope)
@@ -68,7 +68,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 			return right
 		}
 
-		return evalInfixExpression(node.Token.Value, left, right)
+		return evalBinaryExpression(node.Token.Value, left, right)
 
 	case *ast.IfStatement:
 		return evalIfStatement(node, scope)
@@ -167,7 +167,7 @@ func nativeBoolToBooleanObject(input bool) *symbol.Boolean {
 	return FALSE
 }
 
-func evalPrefixExpression(operator string, right symbol.Object) symbol.Object {
+func evalUnaryExpression(operator string, right symbol.Object) symbol.Object {
 	switch operator {
 	case "!":
 		return evalBangOperatorExpression(right)
@@ -178,7 +178,7 @@ func evalPrefixExpression(operator string, right symbol.Object) symbol.Object {
 	}
 }
 
-func evalInfixExpression(
+func evalBinaryExpression(
 	operator string,
 	left, right symbol.Object,
 ) symbol.Object {
