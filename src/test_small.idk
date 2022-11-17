@@ -56,3 +56,14 @@ end
 
 multiplied := mul(h, 3)
 print(multiplied)
+
+func recursion_test(v:int) int
+    if v < 3
+        return 1
+    else
+        return recursion_test(v-1) + recursion_test(v-2)
+    end
+end
+
+recursed := recursion_test(8)
+print(recursed)
