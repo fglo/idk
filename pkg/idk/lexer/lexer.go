@@ -144,6 +144,8 @@ func (l *Lexer) ReadToken() token.Token {
 		tok = token.NewToken(token.COMMA, l.position, l.currentLine, l.positionInLine)
 	case '\'':
 		tok = l.readCharToken()
+	case '"':
+		tok = l.readStringToken()
 	default:
 		switch {
 		case unicode.IsDigit(rune(ch)):
@@ -185,11 +187,26 @@ func (l *Lexer) readCharToken() *token.Token {
 
 	start := l.readPosition
 	startInLine := l.positionInLine
-	for ch := l.peek(1); ch != '\''; ch = l.readChar() {
+	for ch := l.peek(1); ch != '\''; ch = l.peek(1) {
+		l.readChar()
 	}
 	char := substring(l.input, start, l.readPosition)
 	l.readChar()
 	return token.NewTokenNotDefaultValue(token.CHAR, start, l.currentLine, startInLine, char)
+}
+
+func (l *Lexer) readStringToken() *token.Token {
+	start := l.readPosition
+	startInLine := l.positionInLine
+	for ch := l.peek(1); ch != '"'; ch = l.peek(1) {
+		if !unicode.IsLetter(rune(ch)) && ch != '_' {
+			panic("not really a string")
+		}
+		l.readChar()
+	}
+	str := substring(l.input, start, l.readPosition)
+	l.readChar()
+	return token.NewTokenNotDefaultValue(token.STRING, start, l.currentLine, startInLine, str)
 }
 
 func substring(s string, start, end int) string {
