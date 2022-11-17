@@ -28,6 +28,8 @@ func GetDefaultValue(identifier ast.Identifier) symbol.Object {
 	// 	return &symbol.String{Value: ""}
 	case token.BOOL:
 		return &symbol.Boolean{Value: false}
+	case token.FUNC:
+		return &symbol.Function{}
 	}
 	return &symbol.Null{}
 }
@@ -338,11 +340,9 @@ func evalDeclareStetment(
 	node *ast.DeclareStatement,
 	scope *symbol.Scope,
 ) {
+	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier))
 	if node.Assignment != nil {
-		val := Eval(node.Assignment.Expression, scope)
-		scope.Insert(node.Identifier.Value, val)
-	} else {
-		scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier))
+		evalAssignStatement(node.Assignment, scope)
 	}
 }
 
@@ -420,21 +420,27 @@ func applyFunction(fn symbol.Object, args []symbol.Object) symbol.Object {
 	case *symbol.Function:
 		extendedScope := extendFunctionScope(fn, args)
 		for i, param := range fn.Parameters {
-			var expr ast.Expression
+			// var expr ast.Expression
 
-			switch arg := args[i].(type) {
-			case *symbol.Integer:
-				token := token.NewTokenNotDefaultValue(token.INT, 0, 0, 0, arg.Inspect())
-				expr, _ = ast.NewIntegerLiteral(*token)
-			case *symbol.Boolean:
-				token := token.NewTokenNotDefaultValue(token.BOOL, 0, 0, 0, arg.Inspect())
-				expr, _ = ast.NewBooleanLiteral(*token)
-			default:
-				return newError("argument type not supported, got %s", arg.Type())
-			}
+			// switch arg := args[i].(type) {
+			// case *symbol.Integer:
+			// 	token := token.NewTokenNotDefaultValue(token.INT, 0, 0, 0, arg.Inspect())
+			// 	expr, _ = ast.NewIntegerLiteral(*token)
+			// case *symbol.Boolean:
+			// 	token := token.NewTokenNotDefaultValue(token.BOOL, 0, 0, 0, arg.Inspect())
+			// 	expr, _ = ast.NewBooleanLiteral(*token)
+			// case *symbol.Function:
+			// 	token := token.NewTokenNotDefaultValue(token.FUNC, 0, 0, 0, arg.Inspect())
+			// 	expr = ast.NewIdentifier(*token)
+			// default:
+			// 	return newError("argument type not supported, got %s", arg.Type())
+			// }
 
-			as := ast.NewAssignStatement(param.Identifier, expr)
-			evalAssignStatement(as, extendedScope)
+			arg := args[i]
+			extendedScope.Insert(param.Identifier.Value, arg)
+
+			// as := ast.NewAssignStatement(param.Identifier, expr)
+			// evalAssignStatement(as, extendedScope)
 		}
 		evaluated := Eval(fn.Body, extendedScope)
 		return unwrapReturnValue(evaluated)

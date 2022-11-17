@@ -41,6 +41,10 @@ print(g)
 
 h:int = 1
 
+func call_func_with_two_params(fn: func, a:int, b:int) int
+    return fn(a, b)
+end
+
 func add(a:int, b:int) int
     return a + b
 end
@@ -67,3 +71,9 @@ end
 
 recursed := recursion_test(8)
 print(recursed)
+
+add2:func = add
+print(add2(2, 2))
+
+added = call_func_with_two_params(add2, 3, 3)
+print(added)
