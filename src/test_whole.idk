@@ -49,10 +49,8 @@ added := add(h, 1)
 print(added)
 
 func mul(a:int, b:int) int
-    c := a * b
-    print(c)
-    return c
+    return a * b
 end
 
-multiplied := mul(h, 3)
+multiplied := mul(h, 2)
 print(multiplied)

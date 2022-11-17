@@ -5,6 +5,7 @@ import (
 
 	"github.com/fglo/idk/pkg/idk/ast"
 	"github.com/fglo/idk/pkg/idk/symbol"
+	"github.com/fglo/idk/pkg/idk/token"
 )
 
 var (
@@ -12,6 +13,24 @@ var (
 	TRUE  = &symbol.Boolean{Value: true}
 	FALSE = &symbol.Boolean{Value: false}
 )
+
+func GetDefaultValue(identifier ast.Identifier) symbol.Object {
+	switch identifier.Type {
+	case token.INT:
+		return &symbol.Integer{Value: int64(0)}
+	// case token.FLOAT:
+	// 	return &symbol.Float{Value: float64(0)}
+	// case token.CHAR:
+	// 	return &symbol.Char{Value: ''}
+	// case token.STRING:
+	// 	return &symbol.String{Value: ""}
+	// case token.ARRAY:
+	// 	return &symbol.String{Value: ""}
+	case token.BOOL:
+		return &symbol.Boolean{Value: false}
+	}
+	return &symbol.Null{}
+}
 
 func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	switch node := node.(type) {
@@ -26,19 +45,28 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, scope)
 
-	// case *ast.ReturnStatement:
-	// 	val := Eval(node.ReturnValue, env)
-	// 	if isError(val) {
-	// 		return val
-	// 	}
-	// 	return &symbol.ReturnValue{Value: val}
+	case *ast.ReturnStatement:
+		val := Eval(node.Expression, scope)
+		if symbol.IsError(val) {
+			return val
+		}
+		return &symbol.ReturnValue{Value: val}
 
 	case *ast.DeclareAssignStatement:
 		val := Eval(node.Expression, scope)
-		if isError(val) {
+		if symbol.IsError(val) {
 			return val
 		}
 		scope.Insert(node.Identifier.Value, val)
+
+	case *ast.DeclareStatement:
+		evalDeclareStetment(node, scope)
+
+	case *ast.AssignStatement:
+		result := evalAssignStatement(node, scope)
+		if result != nil {
+			return result
+		}
 
 	// Expressions
 	case *ast.IntegerLiteral:
@@ -52,19 +80,19 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 
 	case *ast.UnaryExpression:
 		right := Eval(node.Right, scope)
-		if isError(right) {
+		if symbol.IsError(right) {
 			return right
 		}
 		return evalUnaryExpression(node.Token.Value, right)
 
 	case *ast.BinaryExpression:
 		left := Eval(node.Left, scope)
-		if isError(left) {
+		if symbol.IsError(left) {
 			return left
 		}
 
 		right := Eval(node.Right, scope)
-		if isError(right) {
+		if symbol.IsError(right) {
 			return right
 		}
 
@@ -84,14 +112,17 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	// 	body := node.Body
 	// 	return &symbol.Function{Parameters: params, Env: env, Body: body}
 
+	case *ast.FunctionDefinitionStatement:
+		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body})
+
 	case *ast.FunctionCallExpression:
 		function := evalIdentifier(&node.Identifier, scope)
-		if isError(function) {
+		if symbol.IsError(function) {
 			return function
 		}
 
 		args := evalExpressions(node.Parameters, scope)
-		if len(args) == 1 && isError(args[0]) {
+		if len(args) == 1 && symbol.IsError(args[0]) {
 			return args[0]
 		}
 
@@ -99,18 +130,18 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 
 		// case *ast.ArrayLiteral:
 		// 	elements := evalExpressions(node.Elements, env)
-		// 	if len(elements) == 1 && isError(elements[0]) {
+		// 	if len(elements) == 1 && symbol.IsError(elements[0]) {
 		// 		return elements[0]
 		// 	}
 		// 	return &symbol.Array{Elements: elements}
 
 		// case *ast.IndexExpression:
 		// 	left := Eval(node.Left, env)
-		// 	if isError(left) {
+		// 	if symbol.IsError(left) {
 		// 		return left
 		// 	}
 		// 	index := Eval(node.Index, env)
-		// 	if isError(index) {
+		// 	if symbol.IsError(index) {
 		// 		return index
 		// 	}
 		// 	return evalIndexExpression(left, index)
@@ -268,17 +299,18 @@ func evalStringInfixExpression(
 
 func evalIfStatement(
 	ie *ast.IfStatement,
-	env *symbol.Scope,
+	scope *symbol.Scope,
 ) symbol.Object {
-	condition := Eval(ie.Condition, env)
-	if isError(condition) {
+	condition := Eval(ie.Condition, scope)
+	if symbol.IsError(condition) {
 		return condition
 	}
 
+	extendedScope := symbol.NewInnerScope(scope)
 	if isTruthy(condition) {
-		return Eval(ie.Consequence, env)
+		return Eval(ie.Consequence, extendedScope)
 	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative, env)
+		return Eval(ie.Alternative, extendedScope)
 	} else {
 		return NULL
 	}
@@ -286,27 +318,58 @@ func evalIfStatement(
 
 func evalIfExpression(
 	ie *ast.IfExpression,
-	env *symbol.Scope,
+	scope *symbol.Scope,
 ) symbol.Object {
-	condition := Eval(ie.Condition, env)
-	if isError(condition) {
+	condition := Eval(ie.Condition, scope)
+	if symbol.IsError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(*ie.Consequence, env)
+		return Eval(*ie.Consequence, scope)
 	} else if ie.Alternative != nil {
-		return Eval(*ie.Alternative, env)
+		return Eval(*ie.Alternative, scope)
 	} else {
 		return NULL
 	}
 }
 
+func evalDeclareStetment(
+	node *ast.DeclareStatement,
+	scope *symbol.Scope,
+) {
+	if node.Assignment != nil {
+		val := Eval(node.Assignment.Expression, scope)
+		scope.Insert(node.Identifier.Value, val)
+	} else {
+		scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier))
+	}
+}
+
+func evalAssignStatement(
+	node *ast.AssignStatement,
+	scope *symbol.Scope,
+) symbol.Object {
+	variable := evalIdentifier(node.Identifier, scope)
+	if symbol.IsError(variable) {
+		return variable
+	}
+
+	val := Eval(node.Expression, scope)
+	if symbol.IsError(val) {
+		return val
+	}
+
+	scope.Insert(node.Identifier.Value, val)
+
+	return nil
+}
+
 func evalIdentifier(
 	node *ast.Identifier,
-	env *symbol.Scope,
+	scope *symbol.Scope,
 ) symbol.Object {
-	if val, ok := env.Lookup(node.Value); ok {
+	if val, ok := scope.Lookup(node.Value); ok {
 		return val
 	}
 
@@ -334,13 +397,6 @@ func newError(format string, a ...interface{}) *symbol.Error {
 	return &symbol.Error{Message: fmt.Sprintf(format, a...)}
 }
 
-func isError(obj symbol.Object) bool {
-	if obj != nil {
-		return obj.Type() == symbol.ERROR_OBJ
-	}
-	return false
-}
-
 func evalExpressions(
 	exps []ast.Expression,
 	env *symbol.Scope,
@@ -349,7 +405,7 @@ func evalExpressions(
 
 	for _, e := range exps {
 		evaluated := Eval(e, env)
-		if isError(evaluated) {
+		if symbol.IsError(evaluated) {
 			return []symbol.Object{evaluated}
 		}
 		result = append(result, evaluated)
@@ -362,8 +418,25 @@ func applyFunction(fn symbol.Object, args []symbol.Object) symbol.Object {
 	switch fn := fn.(type) {
 
 	case *symbol.Function:
-		extendedEnv := extendFunctionEnv(fn, args)
-		evaluated := Eval(fn.Body, extendedEnv)
+		extendedScope := extendFunctionScope(fn, args)
+		for i, param := range fn.Parameters {
+			var expr ast.Expression
+
+			switch arg := args[i].(type) {
+			case *symbol.Integer:
+				token := token.NewTokenNotDefaultValue(token.INT, 0, 0, 0, arg.Inspect())
+				expr, _ = ast.NewIntegerLiteral(*token)
+			case *symbol.Boolean:
+				token := token.NewTokenNotDefaultValue(token.BOOL, 0, 0, 0, arg.Inspect())
+				expr, _ = ast.NewBooleanLiteral(*token)
+			default:
+				return newError("argument type not supported, got %s", arg.Type())
+			}
+
+			as := ast.NewAssignStatement(param.Identifier, expr)
+			evalAssignStatement(as, extendedScope)
+		}
+		evaluated := Eval(fn.Body, extendedScope)
 		return unwrapReturnValue(evaluated)
 
 	case *symbol.Builtin:
@@ -374,17 +447,17 @@ func applyFunction(fn symbol.Object, args []symbol.Object) symbol.Object {
 	}
 }
 
-func extendFunctionEnv(
+func extendFunctionScope(
 	fn *symbol.Function,
 	args []symbol.Object,
 ) *symbol.Scope {
-	env := symbol.NewInnerScope(fn.Env)
+	scope := symbol.NewInnerScope(fn.Scope)
 
-	for paramIdx, param := range fn.Parameters {
-		env.Insert(param.Value, args[paramIdx])
+	for _, param := range fn.Parameters {
+		evalDeclareStetment(param, scope)
 	}
 
-	return env
+	return scope
 }
 
 func unwrapReturnValue(obj symbol.Object) symbol.Object {
@@ -426,7 +499,7 @@ func unwrapReturnValue(obj symbol.Object) symbol.Object {
 
 // 	for keyNode, valueNode := range node.Pairs {
 // 		key := Eval(keyNode, env)
-// 		if isError(key) {
+// 		if symbol.IsError(key) {
 // 			return key
 // 		}
 
@@ -436,7 +509,7 @@ func unwrapReturnValue(obj symbol.Object) symbol.Object {
 // 		}
 
 // 		value := Eval(valueNode, env)
-// 		if isError(value) {
+// 		if symbol.IsError(value) {
 // 			return value
 // 		}
 

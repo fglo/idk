@@ -6,19 +6,27 @@ import (
 )
 
 func TestLookupKeyword(t *testing.T) {
-	type args struct {
-		word string
-	}
 	tests := []struct {
-		name string
-		args args
+		word string
 		want TokenType
 	}{
-		// TODO: Add test cases.
+		{"true", BOOL},
+		{"false", BOOL},
+		{"if", IF},
+		{"else", ELSE},
+		{"for", FOR},
+		{"end", END},
+		{"not", NOT},
+		{"and", AND},
+		{"or", OR},
+		{"xor", XOR},
+		{"in", IN},
+		{"return", RETURN},
+		{"func", FUNC},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := LookupKeyword(tt.args.word); got != tt.want {
+		t.Run(fmt.Sprintf("testing %s keyword lookup", tt.word), func(t *testing.T) {
+			if got := LookupKeyword(tt.word); got != tt.want {
 				t.Errorf("LookupKeyword() = %v, want %v", got, tt.want)
 			}
 		})
@@ -40,6 +48,7 @@ func TestTokenType_IsOperator(t *testing.T) {
 		{LT, true},
 		{GTE, true},
 		{LTE, true},
+		{NOT, true},
 		{AND, true},
 		{OR, true},
 		{XOR, true},
@@ -57,8 +66,6 @@ func TestTokenType_IsOperator(t *testing.T) {
 		{RANGE_INCLUSIVE, false},
 		{LPARENTHESIS, false},
 		{RPARENTHESIS, false},
-		{NEGATION, false},
-		{NOT, false},
 		{IF, false},
 		{ELSE, false},
 		{FOR, false},

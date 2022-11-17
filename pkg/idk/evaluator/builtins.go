@@ -94,7 +94,7 @@ var builtins = map[string]*symbol.Builtin{
 			return NULL
 		},
 	},
-	"push": &symbol.Builtin{
+	"push": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 2 {
 				return newError("wrong number of arguments. got=%d, want=2",
