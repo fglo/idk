@@ -30,7 +30,10 @@ func run(sourceCodePath string, prettyPrint bool) {
 	}
 
 	scope := symbol.NewScope()
-	evaluator.Eval(program, scope)
+	result := evaluator.Eval(program, scope)
+	if symbol.IsError(result) {
+		fmt.Println(result.Inspect())
+	}
 }
 
 func check(e error) {

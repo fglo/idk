@@ -15,7 +15,10 @@ const (
 	EOL TokenType = "EOL"
 	EOF TokenType = "EOF"
 
+	TYPE TokenType = "TYPE"
+
 	INT    TokenType = "INT"
+	FLOAT  TokenType = "FLOAT"
 	CHAR   TokenType = "CHAR"
 	STRING TokenType = "STRING"
 	ARRAY  TokenType = "ARRAY"
@@ -25,6 +28,8 @@ const (
 	FALSE TokenType = "FALSE"
 
 	DECLARE_ASSIGN TokenType = ":="
+	DECLARE        TokenType = ":"
+	ASSIGN         TokenType = "="
 
 	RANGE           TokenType = ".."
 	RANGE_INCLUSIVE TokenType = "..="
@@ -37,7 +42,7 @@ const (
 	LPARENTHESIS TokenType = "("
 	RPARENTHESIS TokenType = ")"
 
-	EQ  TokenType = "="
+	EQ  TokenType = "=="
 	NEQ TokenType = "!="
 	GT  TokenType = ">"
 	GTE TokenType = ">="
@@ -58,6 +63,9 @@ const (
 	END  TokenType = "END"
 	IN   TokenType = "IN"
 
+	FUNC   TokenType = "FUNC"
+	RETURN TokenType = "RETURN"
+
 	IDENTIFIER TokenType = "IDENTIFIER"
 )
 
@@ -69,8 +77,12 @@ func (e TokenType) String() string {
 		return "EOF"
 	case ILLEGAL:
 		return "ILLEGAL"
+	case TYPE:
+		return "TYPE"
 	case INT:
 		return "INT"
+	case FLOAT:
+		return "FLOAT"
 	case CHAR:
 		return "CHAR"
 	case BOOL:
@@ -79,6 +91,10 @@ func (e TokenType) String() string {
 		return "ARRAY"
 	case DECLARE_ASSIGN:
 		return "DECLASSIGN"
+	case DECLARE:
+		return "DECLARE"
+	case ASSIGN:
+		return "ASSIGN"
 	case RANGE:
 		return "RANGE"
 	case RANGE_INCLUSIVE:
@@ -107,6 +123,10 @@ func (e TokenType) String() string {
 		return "LT"
 	case LTE:
 		return "LTE"
+	case COMMA:
+		return "COMMA"
+	case DOT:
+		return "DOT"
 	case NOT:
 		return "NOT"
 	case AND:
@@ -125,6 +145,10 @@ func (e TokenType) String() string {
 		return "FOR"
 	case END:
 		return "END"
+	case RETURN:
+		return "RETURN"
+	case FUNC:
+		return "FUNC"
 	default:
 		return string(e)
 	}
@@ -138,7 +162,17 @@ type Token struct {
 	Value          string
 }
 
-func NewToken(tokenType TokenType, position, line, positionInLine int, value string) *Token {
+func NewToken(tokenType TokenType, position, line, positionInLine int) *Token {
+	t := new(Token)
+	t.Type = tokenType
+	t.Position = position
+	t.Line = line
+	t.PositionInLine = positionInLine
+	t.Value = string(tokenType)
+	return t
+}
+
+func NewTokenNotDefaultValue(tokenType TokenType, position, line, positionInLine int, value string) *Token {
 	t := new(Token)
 	t.Type = tokenType
 	t.Position = position
@@ -149,17 +183,37 @@ func NewToken(tokenType TokenType, position, line, positionInLine int, value str
 }
 
 var keywords = map[string]TokenType{
+	"int":    TYPE,
+	"float":  TYPE,
+	"char":   TYPE,
+	"string": TYPE,
+	"bool":   TYPE,
+
 	"true":  BOOL,
 	"false": BOOL,
-	"if":    IF,
-	"else":  ELSE,
-	"for":   FOR,
-	"end":   END,
-	"not":   NOT,
-	"and":   AND,
-	"or":    OR,
-	"xor":   XOR,
-	"in":    IN,
+
+	"if":   IF,
+	"else": ELSE,
+	"for":  FOR,
+	"end":  END,
+
+	"not": NOT,
+	"and": AND,
+	"or":  OR,
+	"xor": XOR,
+
+	"in": IN,
+
+	"func":   FUNC,
+	"return": RETURN,
+}
+
+var types = map[string]TokenType{
+	"int":    INT,
+	"float":  FLOAT,
+	"char":   CHAR,
+	"string": STRING,
+	"bool":   BOOL,
 }
 
 func (t Token) String() string {
@@ -174,6 +228,13 @@ func LookupKeyword(word string) TokenType {
 		return tok
 	}
 	return IDENTIFIER
+}
+
+func LookupType(typeword string) TokenType {
+	if tok, ok := types[typeword]; ok {
+		return tok
+	}
+	return ""
 }
 
 var operators = map[TokenType]byte{

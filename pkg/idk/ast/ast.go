@@ -140,7 +140,7 @@ type IfExpression struct {
 	Alternative *Expression
 }
 
-//TODO: implement if expression
+// TODO: implement if expression
 func NewIfExpression(Condition Expression, Consequence *Expression, Alternative *Expression) *IfExpression {
 	ie := new(IfExpression)
 	ie.Condition = Condition
@@ -188,7 +188,7 @@ func NewFunctionCallExpression(Identifier token.Token) *FunctionCallExpression {
 }
 
 func (fce *FunctionCallExpression) expressionNode()               {}
-func (fce *FunctionCallExpression) GetValue() string              { return "" }
+func (fce *FunctionCallExpression) GetValue() string              { return fce.Token.Value }
 func (fce *FunctionCallExpression) GetTokenType() token.TokenType { return fce.Token.Type }
 func (fce *FunctionCallExpression) GetChildren() []Node           { return []Node{} }
 func (fce *FunctionCallExpression) String() string {
@@ -207,6 +207,7 @@ func (fce *FunctionCallExpression) String() string {
 type Identifier struct {
 	Token token.Token
 	Value string
+	Type  token.TokenType
 }
 
 func NewIdentifier(Token token.Token) *Identifier {
@@ -314,6 +315,75 @@ func (das *DeclareAssignStatement) String() string {
 	return out.String()
 }
 
+type DeclareStatement struct {
+	Identifier *Identifier
+	Assignment *AssignStatement
+}
+
+func NewDeclareStatement(Identifier *Identifier, Assignment *AssignStatement) *DeclareStatement {
+	ds := new(DeclareStatement)
+	ds.Identifier = Identifier
+	ds.Assignment = Assignment
+	return ds
+}
+
+func (ds *DeclareStatement) statementNode()                {}
+func (ds *DeclareStatement) GetValue() string              { return "" }
+func (ds *DeclareStatement) GetTokenType() token.TokenType { return token.DECLARE }
+func (ds *DeclareStatement) GetChildren() []Node {
+	if ds.Assignment != nil {
+		return []Node{ds.Identifier, ds.Assignment}
+	}
+	return []Node{ds.Identifier}
+}
+func (ds *DeclareStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ds.Identifier.String())
+	out.WriteString(" : ")
+	out.WriteString(string(ds.Identifier.Type))
+
+	if ds.Assignment != nil {
+		out.WriteString(" = ")
+		if ds.Assignment.Expression != nil {
+			out.WriteString(ds.Assignment.Expression.String())
+		}
+	}
+
+	return out.String()
+}
+
+type AssignStatement struct {
+	Identifier *Identifier
+	Expression Expression
+}
+
+func NewAssignStatement(Identifier *Identifier, Expression Expression) *AssignStatement {
+	as := new(AssignStatement)
+	as.Identifier = Identifier
+	as.Expression = Expression
+	return as
+}
+
+func (as *AssignStatement) statementNode()                {}
+func (as *AssignStatement) GetValue() string              { return "" }
+func (as *AssignStatement) GetTokenType() token.TokenType { return token.ASSIGN }
+func (as *AssignStatement) GetChildren() []Node {
+	return []Node{as.Identifier, as.Expression}
+}
+func (as *AssignStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(as.Identifier.String())
+	out.WriteString(" = ")
+
+	if as.Expression != nil {
+		out.WriteString(as.Expression.String())
+	}
+
+	return out.String()
+}
+
 type IfStatement struct {
 	Condition   Expression
 	Consequence *BlockStatement
@@ -384,6 +454,68 @@ func (fls *ForLoopStatement) String() string {
 	out.WriteString("}")
 
 	return out.String()
+}
+
+type FunctionDefinitionStatement struct {
+	Identifier Identifier
+	Parameters []*DeclareStatement
+	ReturnType token.Token
+	Body       *BlockStatement
+}
+
+func NewFunctionDefinitionStatement(Identifier Identifier, Parameters []*DeclareStatement, ReturnType token.Token, Body *BlockStatement) *FunctionDefinitionStatement {
+	fds := new(FunctionDefinitionStatement)
+	fds.Identifier = Identifier
+	fds.Parameters = Parameters
+	fds.ReturnType = ReturnType
+	fds.Body = Body
+	return fds
+}
+
+func (fds *FunctionDefinitionStatement) statementNode()                {}
+func (fds *FunctionDefinitionStatement) GetValue() string              { return "" }
+func (fds *FunctionDefinitionStatement) GetTokenType() token.TokenType { return token.FUNC }
+func (fds *FunctionDefinitionStatement) GetChildren() []Node {
+	return []Node{fds.Body}
+}
+func (fds *FunctionDefinitionStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+	out.WriteString("func ")
+	out.WriteString(fds.Identifier.String())
+	out.WriteString(" ")
+	out.WriteString("(")
+	for _, parameter := range fds.Parameters {
+		out.WriteString(parameter.String() + " : " + string(parameter.Identifier.Type) + ", ")
+	}
+	out.WriteString(")")
+	out.WriteString(" ")
+	out.WriteString(fds.Body.String())
+	out.WriteString("}")
+
+	return out.String()
+}
+
+type ReturnStatement struct {
+	Expression Expression
+}
+
+func NewReturnStatement(Expression Expression) *ReturnStatement {
+	rs := new(ReturnStatement)
+	rs.Expression = Expression
+	return rs
+}
+
+func (rs *ReturnStatement) statementNode()                {}
+func (rs *ReturnStatement) GetValue() string              { return "" }
+func (rs *ReturnStatement) GetTokenType() token.TokenType { return token.RETURN }
+func (rs *ReturnStatement) GetChildren() []Node           { return rs.Expression.GetChildren() }
+func (rs *ReturnStatement) String() string {
+	if rs.Expression != nil {
+		return rs.Expression.String()
+	}
+	return ""
 }
 
 type BlockStatement struct {

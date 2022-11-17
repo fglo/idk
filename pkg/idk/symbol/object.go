@@ -3,9 +3,10 @@ package symbol
 import (
 	"bytes"
 	"fmt"
-	"github.com/fglo/idk/pkg/idk/ast"
 	"hash/fnv"
 	"strings"
+
+	"github.com/fglo/idk/pkg/idk/ast"
 )
 
 type BuiltinFunction func(args ...Object) Object
@@ -41,6 +42,13 @@ type Hashable interface {
 type Object interface {
 	Type() ObjectType
 	Inspect() string
+}
+
+func IsError(obj Object) bool {
+	if obj != nil {
+		return obj.Type() == ERROR_OBJ
+	}
+	return false
 }
 
 type Integer struct {
@@ -91,9 +99,9 @@ func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
 
 type Function struct {
-	Parameters []*ast.Identifier
+	Parameters []*ast.DeclareStatement
 	Body       *ast.BlockStatement
-	Env        *Scope
+	Scope      *Scope
 }
 
 func (f *Function) Type() ObjectType { return FUNCTION_OBJ }

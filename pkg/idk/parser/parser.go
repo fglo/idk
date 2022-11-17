@@ -12,6 +12,8 @@ const (
 	_ int = iota
 	LOWEST
 	DECLARE_ASSIGN // :=
+	DECLARE        // :
+	ASSIGN         // =
 	IN
 	OR
 	AND
@@ -29,6 +31,8 @@ const (
 
 var precedences = map[token.TokenType]int{
 	token.DECLARE_ASSIGN:  DECLARE_ASSIGN,
+	token.DECLARE:         DECLARE,
+	token.ASSIGN:          ASSIGN,
 	token.IN:              IN,
 	token.AND:             AND,
 	token.OR:              OR,
@@ -139,6 +143,15 @@ func (p *Parser) nextTokenIs(t token.TokenType) bool {
 	return p.next.Type == t
 }
 
+func (p *Parser) expectCurrentTokenType(t token.TokenType) bool {
+	if p.currentTokenIs(t) {
+		return true
+	} else {
+		p.reportUnexpectedToken(p.next, t)
+		return false
+	}
+}
+
 func (p *Parser) expectNextTokenType(t token.TokenType) bool {
 	if p.nextTokenIs(t) {
 		return true
@@ -236,14 +249,20 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch {
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE_ASSIGN):
 		return p.parseDeclareAssignStatement()
-	// case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.EQ):
-	// 	return p.parseAssignmentStatement()
+	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE):
+		return p.parseDeclareStatement()
+	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.ASSIGN):
+		return p.parseAssignStatement()
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.LPARENTHESIS):
 		return p.parseFunctionCallStatement()
 	case p.currentTokenIs(token.IF):
 		return p.parseIfStatement()
 	case p.currentTokenIs(token.FOR):
 		return p.parseForStatement()
+	case p.currentTokenIs(token.FUNC):
+		return p.parseFunctionDefinitionStatement()
+	case p.currentTokenIs(token.RETURN):
+		return p.parseReturnStatement()
 	default:
 		p.reportUnexpectedFirstToken(p.current)
 		return nil
@@ -257,7 +276,12 @@ func (p *Parser) parseDeclareAssignStatement() *ast.DeclareAssignStatement {
 	p.consumeToken() // declare-assign operator
 	p.consumeToken() // skip the declare-assign operator
 
-	expr := p.parseExpression(LOWEST)
+	var expr ast.Expression
+	if p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.LPARENTHESIS) {
+		expr = p.parseFunctionCallExpression()
+	} else {
+		expr = p.parseExpression(LOWEST)
+	}
 
 	p.ifEolIsNextThenSkip()
 
@@ -266,6 +290,50 @@ func (p *Parser) parseDeclareAssignStatement() *ast.DeclareAssignStatement {
 	}
 
 	return ast.NewDeclareAssignStatement(identifier, expr)
+}
+
+func (p *Parser) parseDeclareStatement() *ast.DeclareStatement {
+	identifier := ast.NewIdentifier(p.current)
+
+	p.consumeToken() // declare operator
+	vartype := p.consumeToken()
+
+	identifier.Type = token.LookupType(vartype.Value)
+
+	p.consumeToken() // skip type declaration
+
+	var ass *ast.AssignStatement
+
+	if p.currentTokenIs(token.ASSIGN) {
+		p.consumeToken() // skip the assign operator
+
+		expr := p.parseExpression(LOWEST)
+		if expr != nil {
+			ass = ast.NewAssignStatement(identifier, expr)
+		}
+
+	}
+
+	p.ifEolIsNextThenSkip()
+
+	return ast.NewDeclareStatement(identifier, ass)
+}
+
+func (p *Parser) parseAssignStatement() *ast.AssignStatement {
+	identifier := ast.NewIdentifier(p.current)
+
+	p.consumeToken() // assign operator
+	p.consumeToken() // skip the assign operator
+
+	expr := p.parseExpression(LOWEST)
+
+	p.ifEolIsNextThenSkip()
+
+	if expr == nil {
+		return nil
+	}
+
+	return ast.NewAssignStatement(identifier, expr)
 }
 
 func (p *Parser) parseIfStatement() *ast.IfStatement {
@@ -286,7 +354,6 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 	var alternative *ast.BlockStatement
 	if p.nextTokenIs(token.ELSE) {
 		p.consumeToken()
-		// innerIf = p.nextTokenIs(token.IF)
 		alternative = p.parseBlockStatement()
 	}
 	if !innerIf && p.expectNextTokenType(token.END) {
@@ -312,6 +379,46 @@ func (p *Parser) parseForStatement() *ast.ForLoopStatement {
 	return ast.NewForLoopStatement(condition, consequence)
 }
 
+func (p *Parser) parseFunctionDefinitionStatement() *ast.FunctionDefinitionStatement {
+	p.consumeToken() // skip func keyword
+
+	identifier := ast.NewIdentifier(p.current)
+
+	p.consumeToken() // parameters
+
+	parameters := p.parseFunctionDefinitionParametersList()
+
+	vartype := p.consumeToken()
+
+	identifier.Type = token.FUNC
+
+	p.ifEolIsNextThenSkip()
+
+	body := p.parseBlockStatement()
+
+	if p.expectNextTokenType(token.END) {
+		p.consumeToken()
+	}
+
+	p.ifEolIsNextThenSkip()
+
+	return ast.NewFunctionDefinitionStatement(*identifier, parameters, vartype, body)
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	p.consumeToken() // return keyword
+
+	expr := p.parseExpression(LOWEST)
+
+	p.ifEolIsNextThenSkip()
+
+	if expr == nil {
+		return nil
+	}
+
+	return ast.NewReturnStatement(expr)
+}
+
 func (p *Parser) parseFunctionCallStatement() *ast.ExpressionStatement {
 	stmt := new(ast.ExpressionStatement)
 	stmt.Expression = p.parseFunctionCallExpression()
@@ -322,7 +429,7 @@ func (p *Parser) parseFunctionCallStatement() *ast.ExpressionStatement {
 func (p *Parser) parseFunctionCallExpression() ast.Expression {
 	exp := ast.NewFunctionCallExpression(p.current)
 	p.consumeToken()
-	exp.Parameters = p.parseFunctionParametersList()
+	exp.Parameters = p.parseFunctionCallParametersList()
 	return exp
 }
 
@@ -357,7 +464,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	expr := parsePrefix()
 
-	p.expectOperatorOrEolOrEof()
+	// p.expectOperatorOrEolOrEof()
 
 	for !p.nextTokenIs(token.EOL) && precedence < p.nextPrecedence() {
 		parseInfix := p.binaryParseFns[p.peekNext().Type]
@@ -373,7 +480,30 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseFunctionParametersList() []ast.Expression {
+func (p *Parser) parseFunctionDefinitionParametersList() []*ast.DeclareStatement {
+	list := []*ast.DeclareStatement{}
+
+	if p.nextTokenIs(token.RPARENTHESIS) {
+		p.consumeToken()
+		return list
+	}
+
+	p.consumeToken()
+	list = append(list, p.parseDeclareStatement())
+
+	for p.currentTokenIs(token.COMMA) {
+		p.consumeToken()
+		list = append(list, p.parseDeclareStatement())
+	}
+
+	if !p.expectCurrentTokenType(token.RPARENTHESIS) {
+		return nil
+	}
+
+	return list
+}
+
+func (p *Parser) parseFunctionCallParametersList() []ast.Expression {
 	list := []ast.Expression{}
 
 	if p.nextTokenIs(token.RPARENTHESIS) {
