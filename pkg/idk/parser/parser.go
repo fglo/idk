@@ -276,12 +276,7 @@ func (p *Parser) parseDeclareAssignStatement() *ast.DeclareAssignStatement {
 	p.consumeToken() // declare-assign operator
 	p.consumeToken() // skip the declare-assign operator
 
-	var expr ast.Expression
-	if p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.LPARENTHESIS) {
-		expr = p.parseFunctionCallExpression()
-	} else {
-		expr = p.parseExpression(LOWEST)
-	}
+	expr := p.parseExpression(LOWEST)
 
 	p.ifEolIsNextThenSkip()
 
@@ -464,8 +459,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	expr := parsePrefix()
 
-	// p.expectOperatorOrEolOrEof()
-
 	for !p.nextTokenIs(token.EOL) && precedence < p.nextPrecedence() {
 		parseInfix := p.binaryParseFns[p.peekNext().Type]
 		if parseInfix == nil {
@@ -546,6 +539,9 @@ func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
+	if p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.LPARENTHESIS) {
+		return p.parseFunctionCallExpression()
+	}
 	return ast.NewIdentifier(p.current)
 }
 
