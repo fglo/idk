@@ -74,11 +74,40 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.IntegerLiteral:
 		return &symbol.Integer{Value: int64(node.Value)}
 
-	// case *ast.StringLiteral:
-	// 	return &symbol.String{Value: node.Value}
-
 	// case *ast.Boolean:
 	// 	return nativeBoolToBooleanObject(node.Value)
+
+	case *ast.CharacterLiteral:
+		return &symbol.Character{Value: node.Value}
+
+	case *ast.StringLiteral:
+		return &symbol.String{Value: node.Value}
+
+	// case *ast.ArrayLiteral:
+	// 	elements := evalExpressions(node.Elements, env)
+	// 	if len(elements) == 1 && symbol.IsError(elements[0]) {
+	// 		return elements[0]
+	// 	}
+	// 	return &symbol.Array{Elements: elements}
+
+	// case *ast.IndexExpression:
+	// 	left := Eval(node.Left, env)
+	// 	if symbol.IsError(left) {
+	// 		return left
+	// 	}
+	// 	index := Eval(node.Index, env)
+	// 	if symbol.IsError(index) {
+	// 		return index
+	// 	}
+	// 	return evalIndexExpression(left, index)
+
+	// case *ast.HashLiteral:
+	// 	return evalHashLiteral(node, env)
+
+	// case *ast.FunctionLiteral:
+	// 	params := node.Parameters
+	// 	body := node.Body
+	// 	return &symbol.Function{Parameters: params, Env: env, Body: body}
 
 	case *ast.UnaryExpression:
 		right := Eval(node.Right, scope)
@@ -109,11 +138,6 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.Identifier:
 		return evalIdentifier(node, scope)
 
-	// case *ast.FunctionLiteral:
-	// 	params := node.Parameters
-	// 	body := node.Body
-	// 	return &symbol.Function{Parameters: params, Env: env, Body: body}
-
 	case *ast.FunctionDefinitionStatement:
 		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body})
 
@@ -129,27 +153,6 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		}
 
 		return applyFunction(function, args)
-
-		// case *ast.ArrayLiteral:
-		// 	elements := evalExpressions(node.Elements, env)
-		// 	if len(elements) == 1 && symbol.IsError(elements[0]) {
-		// 		return elements[0]
-		// 	}
-		// 	return &symbol.Array{Elements: elements}
-
-		// case *ast.IndexExpression:
-		// 	left := Eval(node.Left, env)
-		// 	if symbol.IsError(left) {
-		// 		return left
-		// 	}
-		// 	index := Eval(node.Index, env)
-		// 	if symbol.IsError(index) {
-		// 		return index
-		// 	}
-		// 	return evalIndexExpression(left, index)
-
-		// case *ast.HashLiteral:
-		// 	return evalHashLiteral(node, env)
 
 	}
 
@@ -420,27 +423,8 @@ func applyFunction(fn symbol.Object, args []symbol.Object) symbol.Object {
 	case *symbol.Function:
 		extendedScope := extendFunctionScope(fn, args)
 		for i, param := range fn.Parameters {
-			// var expr ast.Expression
-
-			// switch arg := args[i].(type) {
-			// case *symbol.Integer:
-			// 	token := token.NewTokenNotDefaultValue(token.INT, 0, 0, 0, arg.Inspect())
-			// 	expr, _ = ast.NewIntegerLiteral(*token)
-			// case *symbol.Boolean:
-			// 	token := token.NewTokenNotDefaultValue(token.BOOL, 0, 0, 0, arg.Inspect())
-			// 	expr, _ = ast.NewBooleanLiteral(*token)
-			// case *symbol.Function:
-			// 	token := token.NewTokenNotDefaultValue(token.FUNC, 0, 0, 0, arg.Inspect())
-			// 	expr = ast.NewIdentifier(*token)
-			// default:
-			// 	return newError("argument type not supported, got %s", arg.Type())
-			// }
-
 			arg := args[i]
 			extendedScope.Insert(param.Identifier.Value, arg)
-
-			// as := ast.NewAssignStatement(param.Identifier, expr)
-			// evalAssignStatement(as, extendedScope)
 		}
 		evaluated := Eval(fn.Body, extendedScope)
 		return unwrapReturnValue(evaluated)

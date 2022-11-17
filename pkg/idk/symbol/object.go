@@ -17,17 +17,18 @@ const (
 	NULL_OBJ  = "NULL"
 	ERROR_OBJ = "ERROR"
 
-	INTEGER_OBJ = "INTEGER"
-	BOOLEAN_OBJ = "BOOLEAN"
-	STRING_OBJ  = "STRING"
+	INTEGER_OBJ   = "INTEGER"
+	BOOLEAN_OBJ   = "BOOLEAN"
+	CHARACTER_OBJ = "CHARACTER"
+	STRING_OBJ    = "STRING"
+
+	ARRAY_OBJ = "ARRAY"
+	HASH_OBJ  = "HASH"
 
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 
 	FUNCTION_OBJ = "FUNCTION"
 	BUILTIN_OBJ  = "BUILTIN"
-
-	ARRAY_OBJ = "ARRAY"
-	HASH_OBJ  = "HASH"
 )
 
 type HashKey struct {
@@ -79,6 +80,29 @@ func (b *Boolean) HashKey() HashKey {
 	return HashKey{Type: b.Type(), Value: value}
 }
 
+type Character struct {
+	Value rune
+}
+
+func (c *Character) Type() ObjectType { return CHARACTER_OBJ }
+func (c *Character) Inspect() string  { return fmt.Sprintf("%c", c.Value) }
+func (c *Character) HashKey() HashKey {
+	return HashKey{Type: c.Type(), Value: uint64(c.Value)}
+}
+
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType { return STRING_OBJ }
+func (s *String) Inspect() string  { return s.Value }
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
 type Null struct{}
 
 func (n *Null) Type() ObjectType { return NULL_OBJ }
@@ -121,19 +145,6 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
-}
-
-type String struct {
-	Value string
-}
-
-func (s *String) Type() ObjectType { return STRING_OBJ }
-func (s *String) Inspect() string  { return s.Value }
-func (s *String) HashKey() HashKey {
-	h := fnv.New64a()
-	h.Write([]byte(s.Value))
-
-	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
 
 type Builtin struct {

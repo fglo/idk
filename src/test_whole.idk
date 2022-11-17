@@ -77,3 +77,11 @@ print(add2(2, 2))
 
 added = call_func_with_two_params(add2, 3, 3)
 print(added)
+
+print('x')
+
+ca := 'a'
+simea := "simea"
+
+print(ca)
+print(simea)

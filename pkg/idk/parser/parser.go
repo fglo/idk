@@ -80,6 +80,8 @@ func NewParser(input string) *Parser {
 	p.registerUnary(token.IDENTIFIER, p.parseIdentifier)
 	p.registerUnary(token.INT, p.parseIntegerLiteral)
 	p.registerUnary(token.BOOL, p.parseBooleanLiteral)
+	p.registerUnary(token.CHAR, p.parseCharacterLiteral)
+	p.registerUnary(token.STRING, p.parseStringLiteral)
 	p.registerUnary(token.LPARENTHESIS, p.parseGroupedExpression)
 	p.registerUnary(token.NOT, p.parseUnaryExpression)
 
@@ -552,6 +554,16 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 func (p *Parser) parseBooleanLiteral() ast.Expression {
 	lit, _ := ast.NewBooleanLiteral(p.current)
+	return lit
+}
+
+func (p *Parser) parseCharacterLiteral() ast.Expression {
+	lit := ast.NewCharacterLiteral(p.current)
+	return lit
+}
+
+func (p *Parser) parseStringLiteral() ast.Expression {
+	lit := ast.NewStringLiteral(p.current)
 	return lit
 }
 

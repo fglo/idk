@@ -261,6 +261,43 @@ func (e *BooleanLiteral) GetTokenType() token.TokenType { return token.BOOL }
 func (e *BooleanLiteral) GetChildren() []Node           { return []Node{} }
 func (e *BooleanLiteral) String() string                { return e.Token.Value }
 
+type CharacterLiteral struct {
+	Token token.Token
+	Value rune
+}
+
+func NewCharacterLiteral(Token token.Token) *CharacterLiteral {
+	l := new(CharacterLiteral)
+	l.Token = Token
+	val := []rune(Token.Value)[0]
+	l.Value = val
+	return l
+}
+
+func (e *CharacterLiteral) expressionNode()               {}
+func (e *CharacterLiteral) GetValue() string              { return e.Token.Value }
+func (e *CharacterLiteral) GetTokenType() token.TokenType { return token.CHAR }
+func (e *CharacterLiteral) GetChildren() []Node           { return []Node{} }
+func (e *CharacterLiteral) String() string                { return e.Token.Value }
+
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func NewStringLiteral(Token token.Token) *StringLiteral {
+	l := new(StringLiteral)
+	l.Token = Token
+	l.Value = Token.Value
+	return l
+}
+
+func (e *StringLiteral) expressionNode()               {}
+func (e *StringLiteral) GetValue() string              { return e.Token.Value }
+func (e *StringLiteral) GetTokenType() token.TokenType { return token.STRING }
+func (e *StringLiteral) GetChildren() []Node           { return []Node{} }
+func (e *StringLiteral) String() string                { return e.Token.Value }
+
 /// statements
 
 type ExpressionStatement struct {
