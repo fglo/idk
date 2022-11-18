@@ -24,6 +24,11 @@ func (e *Scope) Lookup(name string) (Object, bool) {
 	return obj, ok
 }
 
+func (e *Scope) LookupInCurrentScope(name string) (Object, bool) {
+	obj, ok := e.symbolTable[name]
+	return obj, ok
+}
+
 func (e *Scope) Insert(name string, val Object) Object {
 	e.symbolTable[name] = val
 	return val
