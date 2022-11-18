@@ -55,20 +55,13 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		return &symbol.ReturnValue{Value: val}
 
 	case *ast.DeclareAssignStatement:
-		val := Eval(node.Expression, scope)
-		if symbol.IsError(val) {
-			return val
-		}
-		scope.Insert(node.Identifier.Value, val)
+		return evalDeclareAssignStetment(node, scope)
 
 	case *ast.DeclareStatement:
-		evalDeclareStetment(node, scope)
+		return evalDeclareStetment(node, scope)
 
 	case *ast.AssignStatement:
-		result := evalAssignStatement(node, scope)
-		if result != nil {
-			return result
-		}
+		return evalAssignStatement(node, scope)
 
 	// Expressions
 	case *ast.IntegerLiteral:
@@ -139,21 +132,14 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		return evalIdentifier(node, scope)
 
 	case *ast.FunctionDefinitionStatement:
+		function := evalIdentifier(&node.Identifier, scope)
+		if !symbol.IsError(function) {
+			return newError("identifier already taken: " + node.Identifier.Value)
+		}
 		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body})
 
 	case *ast.FunctionCallExpression:
-		function := evalIdentifier(&node.Identifier, scope)
-		if symbol.IsError(function) {
-			return function
-		}
-
-		args := evalExpressions(node.Parameters, scope)
-		if len(args) == 1 && symbol.IsError(args[0]) {
-			return args[0]
-		}
-
-		return applyFunction(function, args)
-
+		return evalFunctionCallExpression(node, scope)
 	}
 
 	return nil
@@ -339,14 +325,36 @@ func evalIfExpression(
 	}
 }
 
+func evalDeclareAssignStetment(
+	node *ast.DeclareAssignStatement,
+	scope *symbol.Scope,
+) symbol.Object {
+	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
+	if !symbol.IsError(variable) {
+		return newError("identifier already taken: " + node.Identifier.Value)
+	}
+
+	val := Eval(node.Expression, scope)
+	if symbol.IsError(val) {
+		return val
+	}
+	scope.Insert(node.Identifier.Value, val)
+	return nil
+}
+
 func evalDeclareStetment(
 	node *ast.DeclareStatement,
 	scope *symbol.Scope,
-) {
+) symbol.Object {
+	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
+	if !symbol.IsError(variable) {
+		return newError("identifier already taken: " + node.Identifier.Value)
+	}
 	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier))
 	if node.Assignment != nil {
 		evalAssignStatement(node.Assignment, scope)
 	}
+	return nil
 }
 
 func evalAssignStatement(
@@ -381,6 +389,38 @@ func evalIdentifier(
 	}
 
 	return newError("identifier not found: " + node.Value)
+}
+
+func evalIdentifierInCurrentScope(
+	node *ast.Identifier,
+	scope *symbol.Scope,
+) symbol.Object {
+	if val, ok := scope.LookupInCurrentScope(node.Value); ok {
+		return val
+	}
+
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: " + node.Value)
+}
+
+func evalFunctionCallExpression(
+	node *ast.FunctionCallExpression,
+	scope *symbol.Scope,
+) symbol.Object {
+	function := evalIdentifier(&node.Identifier, scope)
+	if symbol.IsError(function) {
+		return function
+	}
+
+	args := evalExpressions(node.Parameters, scope)
+	if len(args) == 1 && symbol.IsError(args[0]) {
+		return args[0]
+	}
+
+	return applyFunction(function, args)
 }
 
 func isTruthy(obj symbol.Object) bool {
