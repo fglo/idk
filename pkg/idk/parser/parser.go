@@ -373,6 +373,10 @@ func (p *Parser) parseForStatement() *ast.ForLoopStatement {
 
 	p.ifEolIsNextThenSkip()
 
+	if p.expectNextTokenType(token.END) {
+		p.consumeToken()
+	}
+
 	return ast.NewForLoopStatement(condition, consequence)
 }
 

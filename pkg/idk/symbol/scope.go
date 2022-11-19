@@ -16,20 +16,30 @@ func NewInnerScope(outer *Scope) *Scope {
 	return env
 }
 
-func (e *Scope) Lookup(name string) (Object, bool) {
-	obj, ok := e.symbolTable[name]
-	if !ok && e.outer != nil {
-		obj, ok = e.outer.Lookup(name)
+func (s *Scope) Lookup(name string) (Object, bool) {
+	obj, ok := s.symbolTable[name]
+	if !ok && s.outer != nil {
+		obj, ok = s.outer.Lookup(name)
 	}
 	return obj, ok
 }
 
-func (e *Scope) LookupInCurrentScope(name string) (Object, bool) {
-	obj, ok := e.symbolTable[name]
+func (s *Scope) LookupInCurrentScope(name string) (Object, bool) {
+	obj, ok := s.symbolTable[name]
 	return obj, ok
 }
 
-func (e *Scope) Insert(name string, val Object) Object {
-	e.symbolTable[name] = val
+func (s *Scope) Insert(name string, val Object) Object {
+	s.symbolTable[name] = val
 	return val
+}
+
+func (s *Scope) TryToAssign(name string, val Object) bool {
+	if _, ok := s.LookupInCurrentScope(name); ok {
+		s.symbolTable[name] = val
+		return true
+	} else if s.outer != nil {
+		return s.outer.TryToAssign(name, val)
+	}
+	return false
 }
