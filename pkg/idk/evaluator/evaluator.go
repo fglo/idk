@@ -125,6 +125,9 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.IfStatement:
 		return evalIfStatement(node, scope)
 
+	case *ast.ForLoopStatement:
+		return evalForLoopStatement(node, scope)
+
 	case *ast.IfExpression:
 		return evalIfExpression(node, scope)
 
@@ -307,6 +310,28 @@ func evalIfStatement(
 	}
 }
 
+func evalForLoopStatement(
+	ie *ast.ForLoopStatement,
+	scope *symbol.Scope,
+) symbol.Object {
+	condition := Eval(ie.Condition, scope)
+	if symbol.IsError(condition) {
+		return condition
+	}
+
+	extendedScope := symbol.NewInnerScope(scope)
+	for isTruthy(condition) {
+		Eval(ie.Consequence, extendedScope)
+
+		condition = Eval(ie.Condition, scope)
+		if symbol.IsError(condition) {
+			return condition
+		}
+	}
+
+	return NULL
+}
+
 func evalIfExpression(
 	ie *ast.IfExpression,
 	scope *symbol.Scope,
@@ -371,7 +396,7 @@ func evalAssignStatement(
 		return val
 	}
 
-	scope.Insert(node.Identifier.Value, val)
+	scope.TryToAssign(node.Identifier.Value, val)
 
 	return nil
 }
