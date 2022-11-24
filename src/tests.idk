@@ -1,0 +1,32 @@
+func check(condition:bool) string
+    if condition
+        return "OK"
+    else
+        return "FAIL"
+    end
+end
+
+func testDeclassignInt() string
+    a := 1
+    return check(a == 1)
+end
+
+func testDeclassignBool() string
+    a := true
+    return check(a)
+end
+
+func testDeclassignString() string
+    a := "a"
+    return check(a == "a")
+end
+
+func testDeclassignChar() string
+    a := 'a'
+    return check(a == 'a')
+end
+
+print("testDeclassignInt", testDeclassignInt())
+print("testDeclassignBool", testDeclassignBool())
+print("testDeclassignString", testDeclassignString())
+print("testDeclassignChar", testDeclassignChar())

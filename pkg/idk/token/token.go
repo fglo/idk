@@ -23,6 +23,7 @@ const (
 	STRING TokenType = "STRING"
 	ARRAY  TokenType = "ARRAY"
 	BOOL   TokenType = "BOOL"
+	VOID   TokenType = "VOID"
 
 	TRUE  TokenType = "TRUE"
 	FALSE TokenType = "FALSE"
@@ -87,6 +88,8 @@ func (e TokenType) String() string {
 		return "CHAR"
 	case BOOL:
 		return "BOOL"
+	case VOID:
+		return "VOID"
 	case ARRAY:
 		return "ARRAY"
 	case DECLARE_ASSIGN:
@@ -182,12 +185,21 @@ func NewTokenNotDefaultValue(tokenType TokenType, position, line, positionInLine
 	return t
 }
 
+func (t Token) Is(tokenType TokenType) bool {
+	return t.Type == tokenType
+}
+
+func (t Token) Not(tokenType TokenType) bool {
+	return t.Type != tokenType
+}
+
 var keywords = map[string]TokenType{
 	"int":    TYPE,
 	"float":  TYPE,
 	"char":   TYPE,
 	"string": TYPE,
 	"bool":   TYPE,
+	"void":   TYPE,
 
 	"true":  BOOL,
 	"false": BOOL,
@@ -214,6 +226,7 @@ var types = map[string]TokenType{
 	"char":   CHAR,
 	"string": STRING,
 	"bool":   BOOL,
+	"void":   VOID,
 }
 
 func (t Token) String() string {

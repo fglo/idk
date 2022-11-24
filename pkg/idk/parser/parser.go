@@ -236,11 +236,10 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program.Statements = []ast.Statement{}
 
 	for !p.nextTokenIs(token.EOF) {
-		p.ifEolIsNextThenSkip()
-		p.consumeToken()
-		s := p.parseStatement()
-		if s != nil {
-			program.Statements = append(program.Statements, s)
+		if p.consumeToken().Not(token.EOL) {
+			if s := p.parseStatement(); s != nil {
+				program.Statements = append(program.Statements, s)
+			}
 		}
 	}
 
@@ -297,21 +296,16 @@ func (p *Parser) parseDeclareStatement() *ast.DeclareStatement {
 
 	identifier.Type = token.LookupType(vartype.Value)
 
-	p.consumeToken() // skip type declaration
-
 	var ass *ast.AssignStatement
-
-	if p.currentTokenIs(token.ASSIGN) {
+	if p.nextTokenIs(token.ASSIGN) {
+		p.consumeToken() // skip type
 		p.consumeToken() // skip the assign operator
 
 		expr := p.parseExpression(LOWEST)
 		if expr != nil {
 			ass = ast.NewAssignStatement(identifier, expr)
 		}
-
 	}
-
-	p.ifEolIsNextThenSkip()
 
 	return ast.NewDeclareStatement(identifier, ass)
 }
@@ -324,8 +318,6 @@ func (p *Parser) parseAssignStatement() *ast.AssignStatement {
 
 	expr := p.parseExpression(LOWEST)
 
-	p.ifEolIsNextThenSkip()
-
 	if expr == nil {
 		return nil
 	}
@@ -334,11 +326,11 @@ func (p *Parser) parseAssignStatement() *ast.AssignStatement {
 }
 
 func (p *Parser) parseIfStatement() *ast.IfStatement {
-	innerIf := false
-	if p.previousTokenWas(token.ELSE) {
-		innerIf = true
+	innerIf := p.previousTokenWas(token.ELSE)
+
+	if p.expectCurrentTokenType(token.IF) {
+		p.consumeToken() // skip if keyword
 	}
-	p.consumeToken() // skip the if keyword
 
 	condition := p.parseExpression(LOWEST)
 
@@ -354,16 +346,16 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 		alternative = p.parseBlockStatement()
 	}
 	if !innerIf && p.expectNextTokenType(token.END) {
-		p.consumeToken()
+		p.consumeToken() // skip end keyword
 	}
-
-	p.ifEolIsNextThenSkip()
 
 	return ast.NewIfStatement(condition, consequence, alternative)
 }
 
 func (p *Parser) parseForStatement() *ast.ForLoopStatement {
-	p.consumeToken() // skip the for keyword
+	if p.expectCurrentTokenType(token.FOR) {
+		p.consumeToken() // skip for keyword
+	}
 
 	condition := p.parseExpression(LOWEST)
 
@@ -374,22 +366,27 @@ func (p *Parser) parseForStatement() *ast.ForLoopStatement {
 	p.ifEolIsNextThenSkip()
 
 	if p.expectNextTokenType(token.END) {
-		p.consumeToken()
+		p.consumeToken() // skip end keyword
 	}
 
 	return ast.NewForLoopStatement(condition, consequence)
 }
 
 func (p *Parser) parseFunctionDefinitionStatement() *ast.FunctionDefinitionStatement {
-	p.consumeToken() // skip func keyword
+	if p.expectCurrentTokenType(token.FUNC) {
+		p.consumeToken() // skip func keyword
+	}
 
 	identifier := ast.NewIdentifier(p.current)
 
-	p.consumeToken() // parameters
+	p.consumeToken() // skip identifier
 
 	parameters := p.parseFunctionDefinitionParametersList()
 
-	vartype := p.consumeToken()
+	vartype := *token.NewTokenNotDefaultValue(token.TYPE, p.current.Position, p.current.Line, p.current.PositionInLine, string(token.VOID))
+	if p.nextTokenIs(token.TYPE) {
+		vartype = p.consumeToken()
+	}
 
 	identifier.Type = token.FUNC
 
@@ -398,10 +395,8 @@ func (p *Parser) parseFunctionDefinitionStatement() *ast.FunctionDefinitionState
 	body := p.parseBlockStatement()
 
 	if p.expectNextTokenType(token.END) {
-		p.consumeToken()
+		p.consumeToken() // skip end keyword
 	}
-
-	p.ifEolIsNextThenSkip()
 
 	return ast.NewFunctionDefinitionStatement(*identifier, parameters, vartype, body)
 }
@@ -454,7 +449,6 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := new(ast.ExpressionStatement)
 	stmt.Expression = p.parseExpression(LOWEST)
-	p.ifEolIsNextThenSkip()
 	return stmt
 }
 
@@ -490,16 +484,18 @@ func (p *Parser) parseFunctionDefinitionParametersList() []*ast.DeclareStatement
 	p.consumeToken()
 	list = append(list, p.parseDeclareStatement())
 
-	for p.currentTokenIs(token.COMMA) {
+	for p.nextTokenIs(token.COMMA) {
+		p.consumeToken()
 		p.consumeToken()
 		list = append(list, p.parseDeclareStatement())
 	}
 
-	if !p.expectCurrentTokenType(token.RPARENTHESIS) {
-		return nil
+	if p.expectNextTokenType(token.RPARENTHESIS) {
+		p.consumeToken()
+		return list
 	}
 
-	return list
+	return nil
 }
 
 func (p *Parser) parseFunctionCallParametersList() []ast.Expression {

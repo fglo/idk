@@ -10,8 +10,10 @@ var builtins = map[string]*symbol.Builtin{
 	"print": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			for _, arg := range args {
-				fmt.Println(arg.Inspect())
+				fmt.Print(arg.Inspect())
+				fmt.Print(" ")
 			}
+			fmt.Println()
 
 			return NULL
 		},
