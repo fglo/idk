@@ -41,7 +41,7 @@ print(g)
 
 h:int = 1
 
-func call_func_with_two_params(fn: func, a:int, b:int) int
+func call_func_with_two_params(fn:func, a:int, b:int) int
     return fn(a, b)
 end
 
@@ -90,3 +90,22 @@ for a < 4
     print(a)
     a = a + 1
 end
+
+it := 5
+func condition() bool
+    return it > 0
+end
+
+func body() void
+    print(it)
+    it = it - 1
+end
+
+func loop(condition:func, body:func) 
+    if condition()
+        body()
+        loop(condition, body)
+    end
+end
+
+loop(condition, body)

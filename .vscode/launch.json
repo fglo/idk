@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: IDK",
-            "type": "python",
+            "name": "Go: IDK Tests",
+            "type": "go",
             "request": "launch",
-            "program": "PythonInterpreter/idk.py",
-            "console": "integratedTerminal",
-            "args": ["test.idk"]
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/tests.idk"]
         },
         {
             "name": "Go: Run & Pretty Print IDK file",

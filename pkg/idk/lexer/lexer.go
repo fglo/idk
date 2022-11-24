@@ -199,9 +199,6 @@ func (l *Lexer) readStringToken() *token.Token {
 	start := l.readPosition
 	startInLine := l.positionInLine
 	for ch := l.peek(1); ch != '"'; ch = l.peek(1) {
-		if !unicode.IsLetter(rune(ch)) && ch != '_' {
-			panic("not really a string")
-		}
 		l.readChar()
 	}
 	str := substring(l.input, start, l.readPosition)
