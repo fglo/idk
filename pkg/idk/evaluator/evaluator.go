@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fglo/idk/pkg/idk/ast"
+	"github.com/fglo/idk/pkg/idk/common"
 	"github.com/fglo/idk/pkg/idk/symbol"
 	"github.com/fglo/idk/pkg/idk/token"
 )
@@ -67,8 +68,8 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.IntegerLiteral:
 		return &symbol.Integer{Value: int64(node.Value)}
 
-	// case *ast.Boolean:
-	// 	return nativeBoolToBooleanObject(node.Value)
+	case *ast.BooleanLiteral:
+		return nativeBoolToBooleanObject(node.Value)
 
 	case *ast.CharacterLiteral:
 		return &symbol.Character{Value: node.Value}
@@ -139,7 +140,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		if !symbol.IsError(function) {
 			return newError("identifier already taken: " + node.Identifier.Value)
 		}
-		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body})
+		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body}, symbol.FUNCTION_OBJ)
 
 	case *ast.FunctionCallExpression:
 		return evalFunctionCallExpression(node, scope)
@@ -389,7 +390,8 @@ func evalDeclareAssignStetment(
 	if symbol.IsError(val) {
 		return val
 	}
-	scope.Insert(node.Identifier.Value, val)
+
+	scope.Insert(node.Identifier.Value, val, val.Type())
 	return nil
 }
 
@@ -401,9 +403,12 @@ func evalDeclareStetment(
 	if !symbol.IsError(variable) {
 		return newError("identifier already taken: " + node.Identifier.Value)
 	}
-	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier))
+	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.Type))
 	if node.Assignment != nil {
-		evalAssignStatement(node.Assignment, scope)
+		val := evalAssignStatement(node.Assignment, scope)
+		if symbol.IsError(val) {
+			return val
+		}
 	}
 	return nil
 }
@@ -416,13 +421,22 @@ func evalAssignStatement(
 	if symbol.IsError(variable) {
 		return variable
 	}
+	sym, ok := scope.Lookup(node.Identifier.Value)
+	identifierType := symbol.NULL_OBJ
+	if ok {
+		identifierType = sym.Type
+	}
 
 	val := Eval(node.Expression, scope)
 	if symbol.IsError(val) {
 		return val
 	}
 
-	scope.TryToAssign(node.Identifier.Value, val)
+	if val.Type() != identifierType {
+		return newError("type mismatch; identifier: %s, expression: %s", identifierType, val.Type())
+	}
+
+	scope.TryToAssign(node.Identifier.Value, val, val.Type())
 
 	return nil
 }
@@ -432,7 +446,7 @@ func evalIdentifier(
 	scope *symbol.Scope,
 ) symbol.Object {
 	if val, ok := scope.Lookup(node.Value); ok {
-		return val
+		return val.Object
 	}
 
 	if builtin, ok := builtins[node.Value]; ok {
@@ -447,7 +461,7 @@ func evalIdentifierInCurrentScope(
 	scope *symbol.Scope,
 ) symbol.Object {
 	if val, ok := scope.LookupInCurrentScope(node.Value); ok {
-		return val
+		return val.Object
 	}
 
 	if builtin, ok := builtins[node.Value]; ok {
@@ -515,7 +529,7 @@ func applyFunction(fn symbol.Object, args []symbol.Object) symbol.Object {
 		extendedScope := extendFunctionScope(fn, args)
 		for i, param := range fn.Parameters {
 			arg := args[i]
-			extendedScope.Insert(param.Identifier.Value, arg)
+			extendedScope.Insert(param.Identifier.Value, arg, symbol.ObjectType(param.Identifier.Type))
 		}
 		evaluated := Eval(fn.Body, extendedScope)
 		return unwrapReturnValue(evaluated)

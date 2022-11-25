@@ -1,12 +1,17 @@
 package symbol
 
+type Symbol struct {
+	Object Object
+	Type   ObjectType
+}
+
 type Scope struct {
-	symbolTable map[string]Object
+	symbolTable map[string]Symbol
 	outer       *Scope
 }
 
 func NewScope() *Scope {
-	st := make(map[string]Object)
+	st := make(map[string]Symbol)
 	return &Scope{symbolTable: st, outer: nil}
 }
 
@@ -16,7 +21,7 @@ func NewInnerScope(outer *Scope) *Scope {
 	return env
 }
 
-func (s *Scope) Lookup(name string) (Object, bool) {
+func (s *Scope) Lookup(name string) (Symbol, bool) {
 	obj, ok := s.symbolTable[name]
 	if !ok && s.outer != nil {
 		obj, ok = s.outer.Lookup(name)
@@ -24,22 +29,23 @@ func (s *Scope) Lookup(name string) (Object, bool) {
 	return obj, ok
 }
 
-func (s *Scope) LookupInCurrentScope(name string) (Object, bool) {
+func (s *Scope) LookupInCurrentScope(name string) (Symbol, bool) {
 	obj, ok := s.symbolTable[name]
 	return obj, ok
 }
 
-func (s *Scope) Insert(name string, val Object) Object {
-	s.symbolTable[name] = val
-	return val
+func (s *Scope) Insert(name string, val Object, typ ObjectType) Symbol {
+	symbol := Symbol{val, typ}
+	s.symbolTable[name] = symbol
+	return symbol
 }
 
-func (s *Scope) TryToAssign(name string, val Object) bool {
+func (s *Scope) TryToAssign(name string, val Object, typ ObjectType) bool {
 	if _, ok := s.LookupInCurrentScope(name); ok {
-		s.symbolTable[name] = val
+		s.symbolTable[name] = Symbol{val, typ}
 		return true
 	} else if s.outer != nil {
-		return s.outer.TryToAssign(name, val)
+		return s.outer.TryToAssign(name, val, typ)
 	}
 	return false
 }
