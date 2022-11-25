@@ -93,8 +93,6 @@ func NewParser(input string) *Parser {
 	p.registerBinary(token.IN, p.parseBinaryExpression)
 	p.registerBinary(token.RANGE, p.parseBinaryExpression)
 
-	p.registerBinary(token.DECLARE_ASSIGN, p.parseBinaryExpression)
-
 	p.registerBinary(token.EQ, p.parseBinaryExpression)
 	p.registerBinary(token.NEQ, p.parseBinaryExpression)
 	p.registerBinary(token.GT, p.parseBinaryExpression)

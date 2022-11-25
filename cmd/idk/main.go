@@ -25,14 +25,16 @@ func run(sourceCodePath string, prettyPrint bool) {
 		for _, msg := range p.Errors() {
 			fmt.Println("\t" + msg)
 		}
-	} else if prettyPrint {
-		ast.PrettyPrintProgram(program)
-	}
+	} else {
+		if prettyPrint {
+			ast.PrettyPrintProgram(program)
+		}
 
-	scope := symbol.NewScope()
-	result := evaluator.Eval(program, scope)
-	if symbol.IsError(result) {
-		fmt.Println(result.Inspect())
+		scope := symbol.NewScope()
+		result := evaluator.Eval(program, scope)
+		if symbol.IsError(result) {
+			fmt.Println(result.Inspect())
+		}
 	}
 }
 

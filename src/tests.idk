@@ -30,3 +30,78 @@ print("testDeclassignInt", testDeclassignInt())
 print("testDeclassignBool", testDeclassignBool())
 print("testDeclassignString", testDeclassignString())
 print("testDeclassignChar", testDeclassignChar())
+
+func testDeclareInt() string
+    a:int = 1
+    return check(a == 1)
+end
+
+func testDeclareBool() string
+    a:bool = true
+    return check(a)
+end
+
+func testDeclareString() string
+    a:string = "a"
+    return check(a == "a")
+end
+
+func testDeclareChar() string
+    a:char = 'a'
+    return check(a == 'a')
+end
+
+print("testDeclareInt", testDeclareInt())
+print("testDeclareBool", testDeclareBool())
+print("testDeclareString", testDeclareString())
+print("testDeclareChar", testDeclareChar())
+
+func testDeclareAndAssignInt() string
+    a:int
+    a = 1
+    return check(a == 1)
+end
+
+func testDeclareAndAssignBool() string
+    a:bool
+    a = true
+    return check(a)
+end
+
+func testDeclareAndAssignString() string
+    a:string
+    a = "a"
+    return check(a == "a")
+end
+
+func testDeclareAndAssignChar() string
+    a:char
+    a = 'a'
+    return check(a == 'a')
+end
+
+print("testDeclareAndAssignInt", testDeclareAndAssignInt())
+print("testDeclareAndAssignBool", testDeclareAndAssignBool())
+print("testDeclareAndAssignString", testDeclareAndAssignString())
+print("testDeclareAndAssignChar", testDeclareAndAssignChar())
+
+func testFor() string
+    a:int
+    for a < 5
+        a = a + 1
+    end
+    return check(a == 5)
+end
+
+func testIfElse() string
+    a:int
+    if a < 5
+        a = 5
+    else
+        a = 0
+    end
+    return check(a == 5)
+end
+
+print("testFor", testFor())
+print("testIfElse", testIfElse())

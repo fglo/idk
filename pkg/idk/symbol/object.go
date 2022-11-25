@@ -14,21 +14,21 @@ type BuiltinFunction func(args ...Object) Object
 type ObjectType string
 
 const (
-	NULL_OBJ  = "NULL"
-	ERROR_OBJ = "ERROR"
+	NULL_OBJ  ObjectType = "NULL"
+	ERROR_OBJ ObjectType = "ERROR"
 
-	INTEGER_OBJ   = "INTEGER"
-	BOOLEAN_OBJ   = "BOOLEAN"
-	CHARACTER_OBJ = "CHARACTER"
-	STRING_OBJ    = "STRING"
+	INTEGER_OBJ   ObjectType = "INTEGER"
+	BOOLEAN_OBJ   ObjectType = "BOOLEAN"
+	CHARACTER_OBJ ObjectType = "CHARACTER"
+	STRING_OBJ    ObjectType = "STRING"
 
-	ARRAY_OBJ = "ARRAY"
-	HASH_OBJ  = "HASH"
+	ARRAY_OBJ ObjectType = "ARRAY"
+	HASH_OBJ  ObjectType = "HASH"
 
-	RETURN_VALUE_OBJ = "RETURN_VALUE"
+	RETURN_VALUE_OBJ ObjectType = "RETURN_VALUE"
 
-	FUNCTION_OBJ = "FUNCTION"
-	BUILTIN_OBJ  = "BUILTIN"
+	FUNCTION_OBJ ObjectType = "FUNCTION"
+	BUILTIN_OBJ  ObjectType = "BUILTIN"
 )
 
 type HashKey struct {
