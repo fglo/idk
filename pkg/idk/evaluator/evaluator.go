@@ -20,12 +20,12 @@ func GetDefaultValue(identifier ast.Identifier) symbol.Object {
 		return &symbol.Integer{Value: int64(0)}
 	// case token.FLOAT:
 	// 	return &symbol.Float{Value: float64(0)}
-	// case token.CHAR:
-	// 	return &symbol.Char{Value: ''}
-	// case token.STRING:
-	// 	return &symbol.String{Value: ""}
+	case token.CHAR:
+		return &symbol.Character{Value: 0}
+	case token.STRING:
+		return &symbol.String{Value: ""}
 	// case token.ARRAY:
-	// 	return &symbol.String{Value: ""}
+	// 	return &symbol.Array{Value: ""}
 	case token.BOOL:
 		return &symbol.Boolean{Value: false}
 	case token.FUNC:
@@ -210,6 +210,8 @@ func evalBinaryExpression(
 	switch {
 	case left.Type() == symbol.INTEGER_OBJ && right.Type() == symbol.INTEGER_OBJ:
 		return evalIntegerInfixExpression(operator, left, right)
+	case left.Type() == symbol.CHARACTER_OBJ && right.Type() == symbol.CHARACTER_OBJ:
+		return evalCharacterInfixExpression(operator, left, right)
 	case left.Type() == symbol.STRING_OBJ && right.Type() == symbol.STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
 	case operator == "==":
@@ -277,18 +279,42 @@ func evalIntegerInfixExpression(
 	}
 }
 
+func evalCharacterInfixExpression(
+	operator string,
+	left, right symbol.Object,
+) symbol.Object {
+	leftVal := left.(*symbol.Character).Value
+	rightVal := right.(*symbol.Character).Value
+
+	switch operator {
+	case "==":
+		return nativeBoolToBooleanObject(leftVal == rightVal)
+	case "!=":
+		return nativeBoolToBooleanObject(leftVal != rightVal)
+	default:
+		return newError("unknown operator: %s %s %s",
+			left.Type(), operator, right.Type())
+	}
+}
+
 func evalStringInfixExpression(
 	operator string,
 	left, right symbol.Object,
 ) symbol.Object {
-	if operator != "+" {
+	leftVal := left.(*symbol.String).Value
+	rightVal := right.(*symbol.String).Value
+
+	switch operator {
+	case "+":
+		return &symbol.String{Value: leftVal + rightVal}
+	case "==":
+		return nativeBoolToBooleanObject(leftVal == rightVal)
+	case "!=":
+		return nativeBoolToBooleanObject(leftVal != rightVal)
+	default:
 		return newError("unknown operator: %s %s %s",
 			left.Type(), operator, right.Type())
 	}
-
-	leftVal := left.(*symbol.String).Value
-	rightVal := right.(*symbol.String).Value
-	return &symbol.String{Value: leftVal + rightVal}
 }
 
 func evalIfStatement(
