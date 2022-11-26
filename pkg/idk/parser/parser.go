@@ -78,6 +78,7 @@ func NewParser(input string) *Parser {
 	p.unaryParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerUnary(token.MINUS, p.parseUnaryExpression)
 	p.registerUnary(token.IDENTIFIER, p.parseIdentifier)
+	p.registerUnary(token.TYPE, p.parseType)
 	p.registerUnary(token.INT, p.parseIntegerLiteral)
 	p.registerUnary(token.BOOL, p.parseBooleanLiteral)
 	p.registerUnary(token.CHAR, p.parseCharacterLiteral)
@@ -543,6 +544,11 @@ func (p *Parser) parseIdentifier() ast.Expression {
 		return p.parseFunctionCallExpression()
 	}
 	return ast.NewIdentifier(p.current)
+}
+
+func (p *Parser) parseType() ast.Expression {
+	typ := ast.NewType(p.current)
+	return typ
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
