@@ -206,8 +206,8 @@ func (fce *FunctionCallExpression) String() string {
 
 type Identifier struct {
 	Token token.Token
-	Value string
 	Type  token.TokenType
+	Value string
 }
 
 func NewIdentifier(Token token.Token) *Identifier {
@@ -221,7 +221,7 @@ func (e *Identifier) expressionNode()               {}
 func (e *Identifier) GetValue() string              { return e.Token.Value }
 func (e *Identifier) GetTokenType() token.TokenType { return token.IDENTIFIER }
 func (e *Identifier) GetChildren() []Node           { return []Node{} }
-func (e *Identifier) String() string                { return e.Value }
+func (e *Identifier) String() string                { return e.Token.Value }
 
 type Type struct {
 	Token token.Token
