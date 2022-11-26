@@ -223,6 +223,22 @@ func (e *Identifier) GetTokenType() token.TokenType { return token.IDENTIFIER }
 func (e *Identifier) GetChildren() []Node           { return []Node{} }
 func (e *Identifier) String() string                { return e.Value }
 
+type Type struct {
+	Token token.Token
+}
+
+func NewType(Token token.Token) *Type {
+	t := new(Type)
+	t.Token = Token
+	return t
+}
+
+func (t *Type) expressionNode()               {}
+func (t *Type) GetValue() string              { return t.Token.Value }
+func (t *Type) GetTokenType() token.TokenType { return token.TYPE }
+func (t *Type) GetChildren() []Node           { return []Node{} }
+func (t *Type) String() string                { return t.Token.Value }
+
 type IntegerLiteral struct {
 	Token token.Token
 	Value int

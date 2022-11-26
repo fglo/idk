@@ -65,6 +65,9 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		return evalAssignStatement(node, scope)
 
 	// Expressions
+	case *ast.Type:
+		return &symbol.Type{Value: node.Token.Value}
+
 	case *ast.IntegerLiteral:
 		return &symbol.Integer{Value: int64(node.Value)}
 

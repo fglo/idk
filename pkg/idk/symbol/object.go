@@ -17,6 +17,8 @@ const (
 	NULL_OBJ  ObjectType = "NULL"
 	ERROR_OBJ ObjectType = "ERROR"
 
+	TYPE_OBJ ObjectType = "TYPE"
+
 	INTEGER_OBJ   ObjectType = "INTEGER"
 	BOOLEAN_OBJ   ObjectType = "BOOLEAN"
 	CHARACTER_OBJ ObjectType = "CHARACTER"
@@ -50,6 +52,19 @@ func IsError(obj Object) bool {
 		return obj.Type() == ERROR_OBJ
 	}
 	return false
+}
+
+type Type struct {
+	Value string
+}
+
+func (t *Type) Type() ObjectType { return TYPE_OBJ }
+func (t *Type) Inspect() string  { return t.Value }
+func (t *Type) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(t.Value))
+
+	return HashKey{Type: t.Type(), Value: h.Sum64()}
 }
 
 type Integer struct {

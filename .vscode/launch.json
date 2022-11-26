@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "cmd/idk/main.go",
-            "args": ["-f", "../../src/tests.idk"]
+            "args": ["-f", "../../src/tests.idk", "-p"]
         },
         {
             "name": "Go: Run & Pretty Print IDK file",
