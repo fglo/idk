@@ -18,6 +18,15 @@ var builtins = map[string]*symbol.Builtin{
 			return NULL
 		},
 	},
+	"typeof": {
+		Fn: func(args ...symbol.Object) symbol.Object {
+			if len(args) > 1 {
+				return newError("typeof(): too many arguments")
+			}
+
+			return &symbol.String{Value: string(args[0].Type())}
+		},
+	},
 	"len": {Fn: func(args ...symbol.Object) symbol.Object {
 		if len(args) != 1 {
 			return newError("wrong number of arguments. got=%d, want=1",
