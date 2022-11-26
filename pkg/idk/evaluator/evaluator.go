@@ -59,7 +59,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		return evalDeclareAssignStetment(node, scope)
 
 	case *ast.DeclareStatement:
-		return evalDeclareStetment(node, scope)
+		return evalDeclareStatement(node, scope)
 
 	case *ast.AssignStatement:
 		return evalAssignStatement(node, scope)
@@ -138,7 +138,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.FunctionDefinitionStatement:
 		function := evalIdentifier(&node.Identifier, scope)
 		if !symbol.IsError(function) {
-			return newError("identifier already taken: " + node.Identifier.Value)
+			return newError("identifier already taken: %s on line %v, position %v", node.Identifier.Value, node.Identifier.Token.Line, node.Identifier.Token.PositionInLine)
 		}
 		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body}, symbol.FUNCTION_OBJ)
 
@@ -383,7 +383,7 @@ func evalDeclareAssignStetment(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: " + node.Identifier.Value)
+		return newError("identifier already taken: %s on line %v, position %v", node.Identifier.Value, node.Identifier.Token.Line, node.Identifier.Token.PositionInLine)
 	}
 
 	val := Eval(node.Expression, scope)
@@ -395,15 +395,17 @@ func evalDeclareAssignStetment(
 	return nil
 }
 
-func evalDeclareStetment(
+func evalDeclareStatement(
 	node *ast.DeclareStatement,
 	scope *symbol.Scope,
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: " + node.Identifier.Value)
+		return newError("identifier already taken: %s on line %v, position %v", node.Identifier.Value, node.Identifier.Token.Line, node.Identifier.Token.PositionInLine)
 	}
+
 	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.Type))
+
 	if node.Assignment != nil {
 		val := evalAssignStatement(node.Assignment, scope)
 		if symbol.IsError(val) {
@@ -433,7 +435,7 @@ func evalAssignStatement(
 	}
 
 	if val.Type() != identifierType {
-		return newError("type mismatch; identifier: %s, expression: %s", identifierType, val.Type())
+		return newError("type mismatch on line %v, position %v; identifier: %s, expression: %s", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, identifierType, val.Type())
 	}
 
 	scope.TryToAssign(node.Identifier.Value, val, val.Type())
@@ -453,7 +455,7 @@ func evalIdentifier(
 		return builtin
 	}
 
-	return newError("identifier not found: " + node.Value)
+	return newError("identifier not found: %s on line %v, position %v", node.Value, node.Token.Line, node.Token.PositionInLine)
 }
 
 func evalIdentifierInCurrentScope(
@@ -468,7 +470,7 @@ func evalIdentifierInCurrentScope(
 		return builtin
 	}
 
-	return newError("identifier not found: " + node.Value)
+	return newError("identifier not found: %s on line %v, position %v", node.Value, node.Token.Line, node.Token.PositionInLine)
 }
 
 func evalFunctionCallExpression(
@@ -549,7 +551,7 @@ func extendFunctionScope(
 	scope := symbol.NewInnerScope(fn.Scope)
 
 	for _, param := range fn.Parameters {
-		evalDeclareStetment(param, scope)
+		evalDeclareStatement(param, scope)
 	}
 
 	return scope

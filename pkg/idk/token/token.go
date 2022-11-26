@@ -227,6 +227,7 @@ var types = map[string]TokenType{
 	"string": STRING,
 	"bool":   BOOL,
 	"void":   VOID,
+	"func":   FUNC,
 }
 
 func (t Token) String() string {

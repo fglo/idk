@@ -105,3 +105,15 @@ end
 
 print("testFor", testFor())
 print("testIfElse", testIfElse())
+
+func testPassingFunction()
+    func test()
+        return true
+    end
+
+    f:func = test
+
+    return check(f())
+end
+
+print("testPassingFunction", testPassingFunction())
