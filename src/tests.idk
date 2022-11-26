@@ -120,27 +120,27 @@ print("testPassingFunction", testPassingFunction())
 
 func testTypeofInt() string
     a:int
-    return check(typeof(a) == "INTEGER")
+    return check(typeof(a) == typeof(int))
 end
 
 func testTypeofBool() string
     a:bool
-    return check(typeof(a) == "BOOLEAN")
+    return check(typeof(a) == typeof(bool))
 end
 
 func testTypeofString() string
     a:string
-    return check(typeof(a) == "STRING")
+    return check(typeof(a) == typeof(string))
 end
 
 func testTypeofChar() string
     a:char
-    return check(typeof(a) == "CHARACTER")
+    return check(typeof(a) == typeof(char))
 end
 
 func testTypeofFunc() string
     a:func
-    return check(typeof(a) == "FUNCTION")
+    return check(typeof(a) == typeof(func))
 end
 
 print("testTypeofInt", testTypeofInt())

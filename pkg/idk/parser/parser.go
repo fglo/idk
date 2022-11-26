@@ -79,6 +79,7 @@ func NewParser(input string) *Parser {
 	p.registerUnary(token.MINUS, p.parseUnaryExpression)
 	p.registerUnary(token.IDENTIFIER, p.parseIdentifier)
 	p.registerUnary(token.TYPE, p.parseType)
+	p.registerUnary(token.FUNC, p.parseType)
 	p.registerUnary(token.INT, p.parseIntegerLiteral)
 	p.registerUnary(token.BOOL, p.parseBooleanLiteral)
 	p.registerUnary(token.CHAR, p.parseCharacterLiteral)

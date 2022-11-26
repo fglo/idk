@@ -3,7 +3,9 @@ package evaluator
 import (
 	"fmt"
 
+	"github.com/fglo/idk/pkg/idk/common"
 	"github.com/fglo/idk/pkg/idk/symbol"
+	"github.com/fglo/idk/pkg/idk/token"
 )
 
 var builtins = map[string]*symbol.Builtin{
@@ -24,7 +26,13 @@ var builtins = map[string]*symbol.Builtin{
 				return newError("typeof(): too many arguments")
 			}
 
-			return &symbol.String{Value: string(args[0].Type())}
+			if args[0].Type() == "TYPE" {
+				tokenType := token.LookupType(args[0].Inspect())
+				objType := common.ToObjectType(tokenType)
+				return &symbol.String{Value: string(objType)}
+			} else {
+				return &symbol.String{Value: string(args[0].Type())}
+			}
 		},
 	},
 	"len": {Fn: func(args ...symbol.Object) symbol.Object {
