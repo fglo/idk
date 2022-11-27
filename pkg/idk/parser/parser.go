@@ -187,7 +187,7 @@ func (p *Parser) nextPrecedence() int {
 }
 
 func (p *Parser) reportUnexpectedToken(unexpected token.Token, expectedType token.TokenType) {
-	msg := fmt.Sprintf("Unexpected token <%v> on line %v, position %v. <%v> was expected.",
+	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. <%v> was expected.",
 		unexpected.Type,
 		unexpected.Line,
 		unexpected.PositionInLine,
@@ -196,7 +196,7 @@ func (p *Parser) reportUnexpectedToken(unexpected token.Token, expectedType toke
 }
 
 func (p *Parser) reportUnexpectedFirstToken(unexpected token.Token) {
-	msg := fmt.Sprintf("Unexpected token <%v> on line %v, position %v. Expected declaration or a statement.",
+	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. Expected declaration or a statement.",
 		unexpected.Type,
 		unexpected.Line,
 		unexpected.PositionInLine)
@@ -204,7 +204,7 @@ func (p *Parser) reportUnexpectedFirstToken(unexpected token.Token) {
 }
 
 func (p *Parser) reportExpectedOperatorOrEolOrEof(unexpected token.Token) {
-	msg := fmt.Sprintf("Unexpected token <%v> on line %v, position %v. Expected operator, <EOL> or <EOF>.",
+	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. Expected operator, <EOL> or <EOF>.",
 		unexpected.Type,
 		unexpected.Line,
 		unexpected.PositionInLine)
@@ -212,7 +212,7 @@ func (p *Parser) reportExpectedOperatorOrEolOrEof(unexpected token.Token) {
 }
 
 func (p *Parser) reportIllegalToken() {
-	msg := fmt.Sprintf("Illegal token '%v' on line %v, position %v.",
+	msg := fmt.Sprintf("ERROR: Illegal token '%v' on line %v, position %v.",
 		p.next.Value,
 		p.next.Line,
 		p.next.PositionInLine)

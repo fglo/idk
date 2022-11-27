@@ -53,16 +53,32 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		if symbol.IsError(val) {
 			return val
 		}
+
 		return &symbol.ReturnValue{Value: val}
 
 	case *ast.DeclareAssignStatement:
-		return evalDeclareAssignStetment(node, scope)
+		result := evalDeclareAssignStetment(node, scope)
+		if symbol.IsError(result) {
+			return newEvaluatorError(node.Identifier.Token.Line, result.Inspect())
+		}
+
+		return result
 
 	case *ast.DeclareStatement:
-		return evalDeclareStatement(node, scope)
+		result := evalDeclareStatement(node, scope)
+		if symbol.IsError(result) {
+			return newEvaluatorError(node.Identifier.Token.Line, result.Inspect())
+		}
+
+		return result
 
 	case *ast.AssignStatement:
-		return evalAssignStatement(node, scope)
+		result := evalAssignStatement(node, scope)
+		if symbol.IsError(result) {
+			return newEvaluatorError(node.Identifier.Token.Line, result.Inspect())
+		}
+
+		return result
 
 	// Expressions
 	case *ast.Type:
@@ -113,7 +129,13 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		if symbol.IsError(right) {
 			return right
 		}
-		return evalUnaryExpression(node.Token.Value, right)
+
+		result := evalUnaryExpression(node.Token.Value, right)
+		if symbol.IsError(result) {
+			return newEvaluatorError(node.Token.Line, result.Inspect())
+		}
+
+		return result
 
 	case *ast.BinaryExpression:
 		left := Eval(node.Left, scope)
@@ -126,7 +148,12 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 			return right
 		}
 
-		return evalBinaryExpression(node.Token.Value, left, right)
+		result := evalBinaryExpression(node.Token.Value, left, right)
+		if symbol.IsError(result) {
+			return newEvaluatorError(node.Token.Line, result.Inspect())
+		}
+
+		return result
 
 	case *ast.IfStatement:
 		return evalIfStatement(node, scope)
@@ -143,7 +170,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.FunctionDefinitionStatement:
 		function := evalIdentifier(&node.Identifier, scope)
 		if !symbol.IsError(function) {
-			return newError("identifier already taken: %s on line %v, position %v", node.Identifier.Value, node.Identifier.Token.Line, node.Identifier.Token.PositionInLine)
+			return newError("Evaluator error on line %v, position %v: identifier %s is already taken", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, node.Identifier.Value)
 		}
 		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body}, symbol.FUNCTION_OBJ)
 
@@ -432,7 +459,7 @@ func evalDeclareAssignStetment(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: %s on line %v, position %v", node.Identifier.Value, node.Identifier.Token.Line, node.Identifier.Token.PositionInLine)
+		return newError("identifier already taken: %s", node.Identifier.Value)
 	}
 
 	val := Eval(node.Expression, scope)
@@ -450,7 +477,7 @@ func evalDeclareStatement(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: %s on line %v, position %v", node.Identifier.Value, node.Identifier.Token.Line, node.Identifier.Token.PositionInLine)
+		return newError("identifier already taken: %s", node.Identifier.Value)
 	}
 
 	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.Type))
@@ -484,7 +511,7 @@ func evalAssignStatement(
 	}
 
 	if val.Type() != identifierType {
-		return newError("type mismatch on line %v, position %v; identifier: %s, expression: %s", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, identifierType, val.Type())
+		return newError("type mismatch: %s = %s", identifierType, val.Type())
 	}
 
 	scope.TryToAssign(node.Identifier.Value, val, val.Type())
@@ -504,7 +531,7 @@ func evalIdentifier(
 		return builtin
 	}
 
-	return newError("identifier not found: %s on line %v, position %v", node.Value, node.Token.Line, node.Token.PositionInLine)
+	return newError("identifier not found: %s", node.Value)
 }
 
 func evalIdentifierInCurrentScope(
@@ -519,7 +546,7 @@ func evalIdentifierInCurrentScope(
 		return builtin
 	}
 
-	return newError("identifier not found: %s on line %v, position %v", node.Value, node.Token.Line, node.Token.PositionInLine)
+	return newError("identifier not found: %s", node.Value)
 }
 
 func evalFunctionCallExpression(
@@ -550,6 +577,10 @@ func isTruthy(obj symbol.Object) bool {
 	default:
 		return true
 	}
+}
+
+func newEvaluatorError(line int, message string) *symbol.Error {
+	return &symbol.Error{Message: fmt.Sprintf("Evaluator error on line %v: %s", line, message)}
 }
 
 func newError(format string, a ...interface{}) *symbol.Error {

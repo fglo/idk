@@ -20,8 +20,9 @@ var builtins = map[string]*symbol.Builtin{
 	},
 	"typeof": {
 		Fn: func(args ...symbol.Object) symbol.Object {
-			if len(args) > 1 {
-				return newError("typeof(): too many arguments")
+			if len(args) != 1 {
+				return newError("typeof: wrong number of arguments. got=%d, want=1",
+					len(args))
 			}
 
 			return &symbol.Type{Value: args[0].Type()}
@@ -29,7 +30,7 @@ var builtins = map[string]*symbol.Builtin{
 	},
 	"len": {Fn: func(args ...symbol.Object) symbol.Object {
 		if len(args) != 1 {
-			return newError("wrong number of arguments. got=%d, want=1",
+			return newError("len: wrong number of arguments. got=%d, want=1",
 				len(args))
 		}
 
@@ -47,7 +48,7 @@ var builtins = map[string]*symbol.Builtin{
 	"first": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 1 {
-				return newError("wrong number of arguments. got=%d, want=1",
+				return newError("first: wrong number of arguments. got=%d, want=1",
 					len(args))
 			}
 			if args[0].Type() != symbol.ARRAY_OBJ {
@@ -66,7 +67,7 @@ var builtins = map[string]*symbol.Builtin{
 	"last": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 1 {
-				return newError("wrong number of arguments. got=%d, want=1",
+				return newError("last: wrong number of arguments. got=%d, want=1",
 					len(args))
 			}
 			if args[0].Type() != symbol.ARRAY_OBJ {
@@ -86,7 +87,7 @@ var builtins = map[string]*symbol.Builtin{
 	"rest": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 1 {
-				return newError("wrong number of arguments. got=%d, want=1",
+				return newError("rest: wrong number of arguments. got=%d, want=1",
 					len(args))
 			}
 			if args[0].Type() != symbol.ARRAY_OBJ {
@@ -108,7 +109,7 @@ var builtins = map[string]*symbol.Builtin{
 	"push": {
 		Fn: func(args ...symbol.Object) symbol.Object {
 			if len(args) != 2 {
-				return newError("wrong number of arguments. got=%d, want=2",
+				return newError("push: wrong number of arguments. got=%d, want=2",
 					len(args))
 			}
 			if args[0].Type() != symbol.ARRAY_OBJ {
