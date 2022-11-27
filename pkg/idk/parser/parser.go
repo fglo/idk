@@ -229,6 +229,12 @@ func (p *Parser) ifEolIsNextThenSkip() {
 	}
 }
 
+func (p *Parser) skipEols() {
+	for p.currentTokenIs(token.EOL) {
+		p.consumeToken()
+	}
+}
+
 /// PARSING
 
 func (p *Parser) ParseProgram() *ast.Program {
@@ -352,7 +358,7 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 	return ast.NewIfStatement(condition, consequence, alternative)
 }
 
-func (p *Parser) parseForStatement() *ast.ForLoopStatement {
+func (p *Parser) parseForStatement() *ast.ForLoopStatement { // TODO: parsing for loop different from while
 	if p.expectCurrentTokenType(token.FOR) {
 		p.consumeToken() // skip for keyword
 	}
@@ -535,6 +541,7 @@ func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
 	operator := p.current
 	precedence := p.currentPrecedence()
 	p.consumeToken() // skip the operator
+	p.skipEols()     // skip EOLs
 	right := p.parseExpression(precedence)
 	expr := ast.NewBinaryExpression(left, operator, right)
 	return expr
