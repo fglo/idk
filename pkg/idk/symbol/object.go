@@ -55,11 +55,11 @@ func IsError(obj Object) bool {
 }
 
 type Type struct {
-	Value string
+	Value ObjectType
 }
 
 func (t *Type) Type() ObjectType { return TYPE_OBJ }
-func (t *Type) Inspect() string  { return t.Value }
+func (t *Type) Inspect() string  { return string(t.Value) }
 func (t *Type) HashKey() HashKey {
 	h := fnv.New64a()
 	h.Write([]byte(t.Value))
