@@ -10,6 +10,8 @@ type TokenType string
 const (
 	NONE TokenType = "\\0"
 
+	LINE_COMMENT TokenType = "LINE_COMMENT"
+
 	ILLEGAL TokenType = "ILLEGAL"
 
 	EOL TokenType = "EOL"

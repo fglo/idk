@@ -129,6 +129,9 @@ func (p *Parser) consumeToken() token.Token {
 	if p.current.Type == token.ILLEGAL {
 		p.reportIllegalToken()
 	}
+	if p.current.Type == token.EOF {
+		return p.current
+	}
 	p.next = p.lexer.ReadToken()
 	return p.current
 }
@@ -254,6 +257,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch {
+	case p.currentTokenIs(token.LINE_COMMENT):
+		p.skipCommentedLine()
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE_ASSIGN):
 		return p.parseDeclareAssignStatement()
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE):
@@ -274,6 +279,14 @@ func (p *Parser) parseStatement() ast.Statement {
 		p.reportUnexpectedFirstToken(p.current)
 		return nil
 		// return p.parseExpressionStatement()
+	}
+	return nil
+}
+
+func (p *Parser) skipCommentedLine() {
+	p.expectCurrentTokenType(token.LINE_COMMENT)
+	for !p.currentTokenIs(token.EOL) && !p.currentTokenIs(token.EOF) {
+		p.consumeToken()
 	}
 }
 
