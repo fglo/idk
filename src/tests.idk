@@ -16,20 +16,20 @@ func testDeclassignBool() string
     return check(a)
 end
 
-func testDeclassignString() string
-    a := "a"
-    return check(a == "a")
-end
-
 func testDeclassignChar() string
     a := 'a'
     return check(a == 'a')
 end
 
+func testDeclassignString() string
+    a := "a"
+    return check(a == "a")
+end
+
 print("testDeclassignInt", testDeclassignInt())
 print("testDeclassignBool", testDeclassignBool())
-print("testDeclassignString", testDeclassignString())
 print("testDeclassignChar", testDeclassignChar())
+print("testDeclassignString", testDeclassignString())
 
 func testDeclareInt() string
     a:int = 1
@@ -41,20 +41,20 @@ func testDeclareBool() string
     return check(a)
 end
 
-func testDeclareString() string
-    a:string = "a"
-    return check(a == "a")
-end
-
 func testDeclareChar() string
     a:char = 'a'
     return check(a == 'a')
 end
 
+func testDeclareString() string
+    a:string = "a"
+    return check(a == "a")
+end
+
 print("testDeclareInt", testDeclareInt())
 print("testDeclareBool", testDeclareBool())
-print("testDeclareString", testDeclareString())
 print("testDeclareChar", testDeclareChar())
+print("testDeclareString", testDeclareString())
 
 func testDeclareAndAssignInt() string
     a:int
@@ -68,22 +68,22 @@ func testDeclareAndAssignBool() string
     return check(a)
 end
 
-func testDeclareAndAssignString() string
-    a:string
-    a = "a"
-    return check(a == "a")
-end
-
 func testDeclareAndAssignChar() string
     a:char
     a = 'a'
     return check(a == 'a')
 end
 
+func testDeclareAndAssignString() string
+    a:string
+    a = "a"
+    return check(a == "a")
+end
+
 print("testDeclareAndAssignInt", testDeclareAndAssignInt())
 print("testDeclareAndAssignBool", testDeclareAndAssignBool())
-print("testDeclareAndAssignString", testDeclareAndAssignString())
 print("testDeclareAndAssignChar", testDeclareAndAssignChar())
+print("testDeclareAndAssignString", testDeclareAndAssignString())
 
 func testFor() string
     a:int
@@ -120,31 +120,31 @@ print("testPassingFunction", testPassingFunction())
 
 func testTypeofInt() string
     a:int
-    return check(typeof(a) == typeof(int))
+    return check(typeof(a) == int and typeof(0) == int)
 end
 
 func testTypeofBool() string
     a:bool
-    return check(typeof(a) == typeof(bool))
-end
-
-func testTypeofString() string
-    a:string
-    return check(typeof(a) == typeof(string))
+    return check(typeof(a) == bool and typeof(false) == bool)
 end
 
 func testTypeofChar() string
     a:char
-    return check(typeof(a) == typeof(char))
+    return check(typeof(a) == char and typeof(' ') == char)
+end
+
+func testTypeofString() string
+    a:string
+    return check(typeof(a) == string and typeof("") == string)
 end
 
 func testTypeofFunc() string
     a:func
-    return check(typeof(a) == typeof(func))
+    return check(typeof(a) == func)
 end
 
 print("testTypeofInt", testTypeofInt())
 print("testTypeofBool", testTypeofBool())
-print("testTypeofString", testTypeofString())
 print("testTypeofChar", testTypeofChar())
+print("testTypeofString", testTypeofString())
 print("testTypeofFunc", testTypeofFunc())

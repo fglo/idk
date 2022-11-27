@@ -6,6 +6,8 @@ import (
 	"github.com/fglo/idk/pkg/idk/token"
 )
 
+// TODO: comments
+
 type Lexer struct {
 	input          string
 	readPosition   int
@@ -182,7 +184,7 @@ func (l *Lexer) readWordToken() *token.Token {
 
 func (l *Lexer) readCharToken() *token.Token {
 	if l.peek(2) != '\'' {
-		panic("not really a character")
+		panic("not really a character") // TODO: proper lexer errors
 	}
 
 	start := l.readPosition
