@@ -6,8 +6,6 @@ import (
 	"github.com/fglo/idk/pkg/idk/token"
 )
 
-// TODO: comments
-
 type Lexer struct {
 	input          string
 	readPosition   int
@@ -97,7 +95,12 @@ func (l *Lexer) ReadToken() token.Token {
 	case '*':
 		tok = token.NewToken(token.ASTERISK, l.position, l.currentLine, l.positionInLine)
 	case '/':
-		tok = token.NewToken(token.SLASH, l.position, l.currentLine, l.positionInLine)
+		if l.PeekNext() == '/' {
+			tok = token.NewToken(token.LINE_COMMENT, l.position, l.currentLine, l.positionInLine)
+			l.readChar()
+		} else {
+			tok = token.NewToken(token.SLASH, l.position, l.currentLine, l.positionInLine)
+		}
 	case '(':
 		tok = token.NewToken(token.LPARENTHESIS, l.position, l.currentLine, l.positionInLine)
 	case ')':
