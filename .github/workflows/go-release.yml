@@ -1,0 +1,142 @@
+name: Go Release
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+
+  build-linux:
+    name: Build on ubuntu-latest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+        cache: true
+
+    - name: Install dependencies
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: libasound2-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev 
+        version: 1.0
+
+    - name: Build (Linux)
+      run: |
+        go build -o out/bin/somelines-linux cmd/somelines/main.go
+
+    - name: Build (Wasm)
+      run: |
+        GOOS=js GOARCH=wasm go build -tags wasm -o out/bin/somelines.wasm cmd/somelines/main.go
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: somelines-linux
+        path: out/bin/somelines-linux
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: somelines-wasm
+        path: out/bin/somelines.wasm
+
+  build-macos:
+    name: Build on macos-latest
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+        cache: true
+
+    - name: Build (macOS)
+      run: |
+        go build -o out/bin/somelines-macos.app cmd/somelines/main.go
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: somelines-macos
+        path: out/bin/somelines-macos.app
+
+  build-windows:
+    name: Build on windows-latest
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+        cache: true
+
+    - name: Build (Windows)
+      run: |
+        go build -o out/bin/somelines-windows.exe cmd/somelines/main.go
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: somelines-windows
+        path: out/bin/somelines-windows.exe
+
+  releases:
+    name: Release
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: out/bin/
+
+    - name: Update CHANGELOG
+      id: changelog
+      uses: Requarks/changelog-action@v1
+      with:
+        token: ${{ github.token }}
+        tag: ${{ github.ref_name }}
+
+    - name: Zip macos artifact for deployment
+      run: |
+        cd ./out/bin/somelines-macos/
+        zip somelines-macos.zip somelines-macos.app
+      
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
+        body: ${{ steps.changelog.outputs.changes }}
+        files: |
+          ./out/bin/somelines-linux/somelines-linux
+          ./out/bin/somelines-macos/somelines-macos.zip
+          ./out/bin/somelines-windows/somelines-windows.exe
+          ./out/bin/somelines-wasm/somelines.wasm
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

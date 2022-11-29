@@ -5,12 +5,36 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
+            "name": "Go: IDK Tests",
+            "type": "go",
             "request": "launch",
-            "program": "idk.py",
-            "console": "integratedTerminal",
-            "args": ["test.idk"]
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/tests.idk"]
         },
+        {
+            "name": "Go: Run & Pretty Print IDK file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/test_small.idk", "-p"]
+        },
+        {
+            "name": "Go: Run IDK file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/test_small.idk"]
+        },
+        {
+            "name": "Go: Run IDK REPL",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": []
+        }
     ]
 }
