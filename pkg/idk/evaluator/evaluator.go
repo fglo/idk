@@ -236,6 +236,7 @@ func evalUnaryExpression(operator string, right symbol.Object) symbol.Object {
 	}
 }
 
+// TODO: adding bool and chars to ints
 func evalBinaryExpression(
 	operator string,
 	left, right symbol.Object,

@@ -173,6 +173,9 @@ cython_debug/
 # Go workspace file
 go.work
 
+out/bin/*
+bin/*
+
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
