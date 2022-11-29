@@ -351,7 +351,7 @@ func NewDeclareAssignStatement(Identifier *Identifier, Expression Expression) *D
 
 func (das *DeclareAssignStatement) statementNode()                {}
 func (das *DeclareAssignStatement) GetValue() string              { return "" }
-func (das *DeclareAssignStatement) GetTokenType() token.TokenType { return token.DECLARE_ASSIGN }
+func (das *DeclareAssignStatement) GetTokenType() token.TokenType { return token.DECLASSIGN }
 func (das *DeclareAssignStatement) GetChildren() []Node {
 	return []Node{das.Identifier, das.Expression}
 }

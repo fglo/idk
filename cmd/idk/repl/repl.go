@@ -15,6 +15,7 @@ const IDK_LOGO = `╦╔╦╗╦╔═
 ║ ║║╠╩╗
 ╩═╩╝╩ ╩`
 
+// TODO: finish/fix REPL
 func Start(in io.Reader, out io.Writer, prettyPrint bool) {
 	// user, err := user.Current()
 	// if err != nil {
@@ -23,12 +24,12 @@ func Start(in io.Reader, out io.Writer, prettyPrint bool) {
 	scanner := bufio.NewScanner(in)
 	// env := object.NewEnvironment()
 
-	fmt.Printf(IDK_LOGO)
+	fmt.Print(IDK_LOGO)
 	fmt.Println("")
 	fmt.Println("")
 
 	for {
-		fmt.Printf(PROMPT)
+		fmt.Print(PROMPT)
 		scanned := scanner.Scan()
 		if !scanned {
 			return
@@ -59,8 +60,8 @@ func Start(in io.Reader, out io.Writer, prettyPrint bool) {
 }
 
 func printParserErrors(out io.Writer, errors []string) {
-	io.WriteString(out, "Parser errors:\n")
+	_, _ = io.WriteString(out, "Parser errors:\n")
 	for _, msg := range errors {
-		io.WriteString(out, "\t"+msg+"\n")
+		_, _ = io.WriteString(out, "\t"+msg+"\n")
 	}
 }
