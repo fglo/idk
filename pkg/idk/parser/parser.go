@@ -11,26 +11,26 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	DECLARE_ASSIGN // :=
-	DECLARE        // :
-	ASSIGN         // =
+	DECLARE_ASSIGN
+	DECLARE
+	ASSIGN
 	IN
 	OR
 	AND
 	XOR
 	NOT
-	EQUALS      // ==
-	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
-	RANGE       // .. or ..=
-	CALL        // myFunction(X)
-	INDEX       // array[index]
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	RANGE
+	CALL
+	INDEX
 )
 
 var precedences = map[token.TokenType]int{
-	token.DECLARE_ASSIGN:  DECLARE_ASSIGN,
+	token.DECLASSIGN:      DECLARE_ASSIGN,
 	token.DECLARE:         DECLARE,
 	token.ASSIGN:          ASSIGN,
 	token.IN:              IN,
@@ -259,7 +259,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch {
 	case p.currentTokenIs(token.LINE_COMMENT):
 		p.skipCommentedLine()
-	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE_ASSIGN):
+	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLASSIGN):
 		return p.parseDeclareAssignStatement()
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE):
 		return p.parseDeclareStatement()
@@ -465,11 +465,12 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	return ast.NewBlockStatement(statements)
 }
 
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := new(ast.ExpressionStatement)
-	stmt.Expression = p.parseExpression(LOWEST)
-	return stmt
-}
+// TODO: expression statements (if and how?)
+// func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+// 	stmt := new(ast.ExpressionStatement)
+// 	stmt.Expression = p.parseExpression(LOWEST)
+// 	return stmt
+// }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	parsePrefix := p.unaryParseFns[p.current.Type]

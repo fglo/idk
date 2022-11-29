@@ -10,7 +10,7 @@ type TokenType string
 const (
 	NONE TokenType = "\\0"
 
-	LINE_COMMENT TokenType = "LINE_COMMENT"
+	LINE_COMMENT TokenType = "//"
 
 	ILLEGAL TokenType = "ILLEGAL"
 
@@ -30,12 +30,12 @@ const (
 	TRUE  TokenType = "TRUE"
 	FALSE TokenType = "FALSE"
 
-	DECLARE_ASSIGN TokenType = ":="
-	DECLARE        TokenType = ":"
-	ASSIGN         TokenType = "="
+	DECLASSIGN TokenType = "DECLASSIGN"
+	DECLARE    TokenType = ":"
+	ASSIGN     TokenType = "="
 
-	RANGE           TokenType = ".."
-	RANGE_INCLUSIVE TokenType = "..="
+	RANGE           TokenType = ".."  // TODO: range
+	RANGE_INCLUSIVE TokenType = "..=" // TODO: range inclusive
 
 	PLUS     TokenType = "+"
 	MINUS    TokenType = "-"
@@ -78,23 +78,11 @@ func (e TokenType) String() string {
 		return "EOL"
 	case EOF:
 		return "EOF"
-	case ILLEGAL:
-		return "ILLEGAL"
-	case TYPE:
-		return "TYPE"
-	case INT:
-		return "INT"
-	case FLOAT:
-		return "FLOAT"
-	case CHAR:
-		return "CHAR"
-	case BOOL:
-		return "BOOL"
-	case VOID:
-		return "VOID"
+	case LINE_COMMENT:
+		return "LINE_COMMENT"
 	case ARRAY:
 		return "ARRAY"
-	case DECLARE_ASSIGN:
+	case DECLASSIGN:
 		return "DECLASSIGN"
 	case DECLARE:
 		return "DECLARE"
@@ -113,9 +101,9 @@ func (e TokenType) String() string {
 	case SLASH:
 		return "SLASH"
 	case LPARENTHESIS:
-		return "LPARENT"
+		return "LPARENTHESIS"
 	case RPARENTHESIS:
-		return "RPARENT"
+		return "RPARENTHESIS"
 	case EQ:
 		return "EQ"
 	case NEQ:
@@ -134,26 +122,6 @@ func (e TokenType) String() string {
 		return "DOT"
 	case NOT:
 		return "NOT"
-	case AND:
-		return "AND"
-	case OR:
-		return "OR"
-	case XOR:
-		return "XOR"
-	case IDENTIFIER:
-		return "IDENTIFIER"
-	case IF:
-		return "IF"
-	case ELSE:
-		return "ELSE"
-	case FOR:
-		return "FOR"
-	case END:
-		return "END"
-	case RETURN:
-		return "RETURN"
-	case FUNC:
-		return "FUNC"
 	default:
 		return string(e)
 	}
@@ -202,22 +170,17 @@ var keywords = map[string]TokenType{
 	"string": TYPE,
 	"bool":   TYPE,
 	"void":   TYPE,
-
-	"true":  BOOL,
-	"false": BOOL,
-
-	"if":   IF,
-	"else": ELSE,
-	"for":  FOR,
-	"end":  END,
-
-	"not": NOT,
-	"and": AND,
-	"or":  OR,
-	"xor": XOR,
-
-	"in": IN,
-
+	"true":   BOOL,
+	"false":  BOOL,
+	"if":     IF,
+	"else":   ELSE,
+	"for":    FOR,
+	"end":    END,
+	"not":    NOT,
+	"and":    AND,
+	"or":     OR,
+	"xor":    XOR,
+	"in":     IN,
 	"func":   FUNC,
 	"return": RETURN,
 }

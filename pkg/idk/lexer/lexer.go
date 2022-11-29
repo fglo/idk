@@ -13,8 +13,6 @@ type Lexer struct {
 	current        byte
 	currentLine    int
 	positionInLine int
-
-	errors []string
 }
 
 func NewLexer(txt string) *Lexer {
@@ -107,7 +105,7 @@ func (l *Lexer) ReadToken() token.Token {
 		tok = token.NewToken(token.RPARENTHESIS, l.position, l.currentLine, l.positionInLine)
 	case ':':
 		if l.PeekNext() == '=' {
-			tok = token.NewToken(token.DECLARE_ASSIGN, l.position, l.currentLine, l.positionInLine)
+			tok = token.NewToken(token.DECLASSIGN, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.DECLARE, l.position, l.currentLine, l.positionInLine)

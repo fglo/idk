@@ -61,7 +61,7 @@ func TestTokenType_IsOperator(t *testing.T) {
 		{BOOL, false},
 		{TRUE, false},
 		{FALSE, false},
-		{DECLARE_ASSIGN, false},
+		{DECLASSIGN, false},
 		{RANGE, false},
 		{RANGE_INCLUSIVE, false},
 		{LPARENTHESIS, false},
