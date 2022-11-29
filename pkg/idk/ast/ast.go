@@ -175,29 +175,31 @@ func (ie *IfExpression) String() string {
 }
 
 type FunctionCallExpression struct {
-	Token      token.Token
 	Identifier Identifier
 	Parameters []Expression
 }
 
 func NewFunctionCallExpression(Identifier token.Token) *FunctionCallExpression {
 	fce := new(FunctionCallExpression)
-	fce.Token = Identifier
 	fce.Identifier = *NewIdentifier(Identifier)
 	return fce
 }
 
 func (fce *FunctionCallExpression) expressionNode()               {}
-func (fce *FunctionCallExpression) GetValue() string              { return fce.Token.Value }
-func (fce *FunctionCallExpression) GetTokenType() token.TokenType { return fce.Token.Type }
+func (fce *FunctionCallExpression) GetValue() string              { return fce.Identifier.Value }
+func (fce *FunctionCallExpression) GetTokenType() token.TokenType { return fce.Identifier.Type }
 func (fce *FunctionCallExpression) GetChildren() []Node           { return []Node{} }
 func (fce *FunctionCallExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(fce.Token.String())
+	out.WriteString(fce.Identifier.String())
 	out.WriteString("(")
-	for _, parameter := range fce.Parameters {
-		out.WriteString(parameter.String() + ", ")
+	for i, parameter := range fce.Parameters {
+		if i < len(fce.Parameters)-1 {
+			out.WriteString(parameter.String() + ", ")
+		} else {
+			out.WriteString(parameter.String())
+		}
 	}
 	out.WriteString(")")
 

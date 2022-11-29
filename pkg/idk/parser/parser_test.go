@@ -97,7 +97,7 @@ func TestParsingBinaryExpressions(t *testing.T) {
 		{"t := 5 / 5", 5, "/", 5},
 		{"t := 5 > 5", 5, ">", 5},
 		{"t := 5 < 5", 5, "<", 5},
-		{"t := 5 = 5", 5, "=", 5},
+		{"t := 5 == 5", 5, "==", 5},
 		{"t := 5 != 5", 5, "!=", 5},
 		{"t := foobar + barfoo", "foobar", "+", "barfoo"},
 		{"t := foobar - barfoo", "foobar", "-", "barfoo"},
@@ -105,11 +105,11 @@ func TestParsingBinaryExpressions(t *testing.T) {
 		{"t := foobar / barfoo", "foobar", "/", "barfoo"},
 		{"t := foobar > barfoo", "foobar", ">", "barfoo"},
 		{"t := foobar < barfoo", "foobar", "<", "barfoo"},
-		{"t := foobar = barfoo", "foobar", "=", "barfoo"},
+		{"t := foobar == barfoo", "foobar", "==", "barfoo"},
 		{"t := foobar != barfoo", "foobar", "!=", "barfoo"},
-		{"t := true = true", true, "=", true},
+		{"t := true == true", true, "==", true},
 		{"t := true != false", true, "!=", false},
-		{"t := false = false", false, "=", false},
+		{"t := false == false", false, "==", false},
 	}
 
 	for _, tt := range infixTests {
@@ -181,16 +181,16 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"(3 + ((4 * (-5)) * 5))",
 		},
 		{
-			"t := 5 > 4 = 3 < 4",
-			"((5 > 4) = (3 < 4))",
+			"t := 5 > 4 == 3 < 4",
+			"((5 > 4) == (3 < 4))",
 		},
 		{
 			"t := 5 < 4 != 3 > 4",
 			"((5 < 4) != (3 > 4))",
 		},
 		{
-			"t := 3 + 4 * 5 = 3 * 1 + 4 * 5",
-			"((3 + (4 * 5)) = ((3 * 1) + (4 * 5)))",
+			"t := 3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
 		},
 		{
 			"t := true",
@@ -201,12 +201,12 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"false",
 		},
 		{
-			"t := 3 > 5 = false",
-			"((3 > 5) = false)",
+			"t := 3 > 5 == false",
+			"((3 > 5) == false)",
 		},
 		{
-			"t := 3 < 5 = true",
-			"((3 < 5) = true)",
+			"t := 3 < 5 == true",
+			"((3 < 5) == true)",
 		},
 		{
 			"t := 1 + (2 + 3) + 4",
@@ -229,21 +229,21 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"(-(5 + 5))",
 		},
 		{
-			"t := !(true = true)",
-			"(!(true = true))",
+			"t := !(true == true)",
+			"(!(true == true))",
 		},
-		// {
-		// 	"t := a + add(b * c) + d",
-		// 	"((a + add((b * c))) + d)",
-		// },
-		// {
-		// 	"t := add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-		// 	"add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
-		// },
-		// {
-		// 	"t := add(a + b + c * d / f + g)",
-		// 	"add((((a + b) + ((c * d) / f)) + g))",
-		// },
+		{
+			"t := a + add(b * c, e + f) + d",
+			"((a + add((b * c), (e + f))) + d)",
+		},
+		{
+			"t := add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+			"add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+		},
+		{
+			"t := add(a + b + c * d / f + g)",
+			"add((((a + b) + ((c * d) / f)) + g))",
+		},
 		// {
 		// 	"t := a * [1, 2, 3, 4][b * c] * d",
 		// 	"((a * ([1, 2, 3, 4][(b * c)])) * d)",
