@@ -166,11 +166,11 @@ func (p *Parser) expectNextTokenType(t token.TokenType) bool {
 	}
 }
 
-func (p *Parser) expectOperatorOrEolOrEof() bool {
-	if p.next.Type.IsOperator() || p.nextTokenIs(token.EOL) || p.nextTokenIs(token.EOF) || p.nextTokenIs(token.RPARENTHESIS) {
+func (p *Parser) expectOperatorOrEndOfExpression() bool {
+	if p.next.Type.IsOperator() || p.nextTokenIs(token.EOL) || p.nextTokenIs(token.EOF) || p.nextTokenIs(token.COMMA) || p.nextTokenIs(token.RPARENTHESIS) {
 		return true
 	} else {
-		p.reportExpectedOperatorOrEolOrEof(p.next)
+		p.reportExpectedOperatorOrEndOfExpression(p.next)
 		return false
 	}
 }
@@ -206,8 +206,8 @@ func (p *Parser) reportUnexpectedFirstToken(unexpected token.Token) {
 	p.errors = append(p.errors, msg)
 }
 
-func (p *Parser) reportExpectedOperatorOrEolOrEof(unexpected token.Token) {
-	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. Expected operator, <EOL> or <EOF>.",
+func (p *Parser) reportExpectedOperatorOrEndOfExpression(unexpected token.Token) {
+	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. Expected operator, <EOL>, <EOF>, ',' or ')'.",
 		unexpected.Type,
 		unexpected.Line,
 		unexpected.PositionInLine)
@@ -479,7 +479,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	expr := parsePrefix()
 
-	for !p.nextTokenIs(token.EOL) && precedence < p.nextPrecedence() {
+	for !p.nextTokenIs(token.EOL) && !p.nextTokenIs(token.COMMA) && precedence < p.nextPrecedence() {
 		parseInfix := p.binaryParseFns[p.peekNext().Type]
 		if parseInfix == nil {
 			return expr
@@ -487,7 +487,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.consumeToken()
 		expr = parseInfix(expr)
 
-		p.expectOperatorOrEolOrEof()
+		p.expectOperatorOrEndOfExpression()
 	}
 
 	return expr

@@ -106,6 +106,30 @@ end
 print("testFor", testFor())
 print("testIfElse", testIfElse())
 
+func testFunctionWithOneParameter()
+    func test(a:int)
+        return a
+    end
+
+    return check(test(1) == 1 and test(1 + 1) == 2)
+end
+
+func testFunctionWithTwoParameters()
+    func test(a:int, b:int)
+        return a + b
+    end
+
+    return check(test(1, 1) == 2 and test(1 + 1, 1) == 3)
+end
+
+func testFunctionCallAsParameter()
+    func test(a:int, b:int)
+        return a + b
+    end
+
+    return check(test(test(1, 1), test(1, 1)) == 4)
+end
+
 func testPassingFunction()
     func test()
         return true
@@ -116,6 +140,9 @@ func testPassingFunction()
     return check(f())
 end
 
+print("testFunctionWithOneParameter", testFunctionWithOneParameter())
+print("testFunctionWithTwoParameters", testFunctionWithTwoParameters())
+print("testFunctionCallAsParameter", testFunctionCallAsParameter())
 print("testPassingFunction", testPassingFunction())
 
 func testTypeofInt() string
