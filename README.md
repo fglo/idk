@@ -1,10 +1,10 @@
 ﻿# IDK Programming Language
 
-IDK is a dynamically typed language with immutable variables. Its interpreter is currently implemented in Python.
+IDK is a statically typed language. Its interpreter is currently implemented in Go.
 
 This is very much a work in progress, so ANYTHING can change any moment.
 
-**Note:** I started with almost zero knowledge of language development and interpreter writing. This project is about trying my own ideas and testing my intuition. Maybe the next one will be backed by an actuall knowledge about languages, interpreters and compilers.
+**Note:** I started with almost zero knowledge of language development and interpreter writing. This project is about trying my own ideas and testing my intuition. Maybe the next one will be backed by an actuall knowledge about languages, interpreters and compilers. It started with experimenting with some ideas in Python, now it's based on a book "writing an INTERPRETER in go" by Thorsten Ball
 
 ## The Name
 
@@ -13,18 +13,22 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 ## Features
 
 - int, char and bool variable types
-- assignment operator: `:=`
+- declassign operator: `:=`
+- declare operator: `:`
+- assignment operator: `=`
 - arithmetic operators: `+`, `-`, `*`, `/`
-- comparison operators: `=`, `>`, `<`, `>=`, `<=`
+- comparison operators: `==`, `>`, `<`, `>=`, `<=`
 - logical operators: `not`, `and`, `or`, `xor`
-- range operators: `..`, `..=`
-- array `in` operator
 - printing
 - conditional statements: `if`, `if-else`, `if-else-if`
 - comments
-- for loops
+- for loops (like while loops)
 
 #TODO (must-have):
+- actual for loops
+- arrays
+- range operators: `..`, `..=`
+- array `in` operator
 - parentheses in operations
 - loops: while and for with variable
 - nested loops
@@ -39,22 +43,10 @@ IDK means literally I Don't Know. The name is a placeholder. If I decide to work
 - mutable/immutable variable modifiers
 - ternary operators or oneline if expressions: `i := 1 < 2 ? true : false` or `i := if 1 < 2 then true else false`
 - python-like comprehensions (generators)
-- lambdas
+- lambdas/function literals
 - c#-like extension methods 
 
 ## Syntax
-
-Currently all tokens in IDK must be separated by a space symbol: ' '.
-
-Correct code:
-```
-a := 1 + 2
-```
-
-Incorrect code:
-```
-a:=1+2
-```
 
 ### Comments
 
@@ -65,17 +57,39 @@ to_print := 1 //assigning variable
 print to_print // printing
 ```
 
-### Assignment
+### Variable Declaration and Assignment
 
-You can assign value to a new variable using the `:=` operator:
+You can declare a variable using the `:` operator:
+```
+a:int
+b:char
+c:bool
+d:string
+```
+
+You can assign value to a declared variable using the `=` operator:
+```
+a = 67
+b = 'b'
+c = true
+d = "false"
+```
+
+You can assign value in the same line as you declared it:
+```
+a:int = 67
+b:char = 'b'
+c:bool = true
+d:string = "false"
+```
+
+You can declare variable and assign value to it using the `:=` operator (it's type will be infered):
 ```
 a := 67
 b := 'b'
 c := true
-d := false
+d := "false"
 ```
-
-Only global variables are currently supported (you can't declare variables inside an `if` statement).
 
 ### Arithmetic operators
 
@@ -87,25 +101,11 @@ c := 4 * b
 d := d / 5
 ```
 
-You can also chain operators:
-```
-e := 3 + 4 - 5
-f := 2 + 1 * 2
-g := 3 - 4 / 2
-```
-
-IDK keeps chars and bools as integers (chars as ASCII code values and bool using convention that true is 1 and false is 0), so it's possible to do calculations on them (and doing so convert them to integers):
-```
-a_code := 'a' + 0
-true_val := true + 0
-false_val := false + 0
-```
-
 ### Comparison operators
 
-IDK supports following comparison operators: `=`, `>`, `<`, `>=` and `<=`:
+IDK supports following comparison operators: `==`, `>`, `<`, `>=` and `<=`:
 ```
-eq := 1 = 1
+eq := 1 == 1
 gt := 2 > 1
 gte := 2 >= 1
 lt := 1 < 2
@@ -114,15 +114,15 @@ lte := 1 <= 2
 
 ### Logical operators
 
-Following logical operators are supported: `xor`, `or`, `and`, `not`:
+Following logical operators are supported: `xor`, `or`, `and`, `!`:
 ```
-negated := not true
+negated := !true
 anded := true and false
 ored := true or false
 xored := true xor false
 ```
 
-### Range operators
+### Range operators // TODO: range operators
 
 IDK supports exclusive range operator `..` and inclusive range operator `..=`:
 ```
@@ -130,7 +130,7 @@ exclusive := 1..3  // creates following array: [1, 2]
 inclusive := 1..=3 // creates following array: [1, 2, 3]
 ```
 
-### Arrays
+### Arrays // TODO: arrays
 
 Currently IDK supports only arrays of digits created by the range operators. The range operator is exclusive.
 ```
@@ -147,10 +147,13 @@ print 3 in x       // prints false
 
 ### Printing
 
-You can print variables, integers, character and expressions using the `print` keyword:
+You can print variables, integers, character and expressions using the `print` keyword: // TODO: add `print` keyword
 ```
 a := 'a'
-a_code := 'a' + 0
+a_code := a + 0
+
+print(a) // prints a
+print(a, 'a') prints a a
 
 print a            // prints a
 print a_code       // prints 97
@@ -172,7 +175,7 @@ a := 67
 b := 't'
 c := 'f'
 
-if a = 67
+if a == 67
     print b
 end
 
@@ -236,6 +239,18 @@ end
 
 #### For loop
 
+IDK currently supports only while loops (using the `for` keyword):
+
+```
+i := 0
+for i < 3
+    i = i + 1
+    print 'x'
+end
+```
+
+// TODO: what's below
+
 IDK currently supports only simple for loop using range operators `..`:
 ```
 for 1..3
@@ -249,6 +264,8 @@ for 1..5
     print _it
 end
 ```
+
+// TODO: update the rest of the README
 
 Currently loops cannot be nested.
 
