@@ -44,6 +44,7 @@ var precedences = map[token.TokenType]int{
 	token.GT:              LESSGREATER,
 	token.PLUS:            SUM,
 	token.MINUS:           SUM,
+	token.MODULO:          PRODUCT,
 	token.SLASH:           PRODUCT,
 	token.ASTERISK:        PRODUCT,
 	token.RANGE:           RANGE,
@@ -53,7 +54,7 @@ var precedences = map[token.TokenType]int{
 
 type (
 	prefixParseFn func() ast.Expression
-	binaryParseFn func(ast.Expression) ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
 )
 
 type Parser struct {
@@ -64,8 +65,8 @@ type Parser struct {
 	current  token.Token
 	next     token.Token
 
-	unaryParseFns  map[token.TokenType]prefixParseFn
-	binaryParseFns map[token.TokenType]binaryParseFn
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 
 	errors []string
 }
@@ -75,48 +76,50 @@ func NewParser(input string) *Parser {
 	p.input = input
 	p.lexer = lexer.NewLexer(input)
 
-	p.unaryParseFns = make(map[token.TokenType]prefixParseFn)
-	p.registerUnary(token.MINUS, p.parseUnaryExpression)
-	p.registerUnary(token.IDENTIFIER, p.parseIdentifier)
-	p.registerUnary(token.TYPE, p.parseType)
-	p.registerUnary(token.FUNC, p.parseType)
-	p.registerUnary(token.INT, p.parseIntegerLiteral)
-	p.registerUnary(token.BOOL, p.parseBooleanLiteral)
-	p.registerUnary(token.CHAR, p.parseCharacterLiteral)
-	p.registerUnary(token.STRING, p.parseStringLiteral)
-	p.registerUnary(token.LPARENTHESIS, p.parseGroupedExpression)
-	p.registerUnary(token.NOT, p.parseUnaryExpression)
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
+	p.registerPrefix(token.TYPE, p.parseType)
+	p.registerPrefix(token.FUNC, p.parseType)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BOOL, p.parseBooleanLiteral)
+	p.registerPrefix(token.CHAR, p.parseCharacterLiteral)
+	p.registerPrefix(token.STRING, p.parseStringLiteral)
+	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
+	p.registerPrefix(token.NOT, p.parsePrefixExpression)
 
-	p.binaryParseFns = make(map[token.TokenType]binaryParseFn)
-	p.registerBinary(token.PLUS, p.parseBinaryExpression)
-	p.registerBinary(token.MINUS, p.parseBinaryExpression)
-	p.registerBinary(token.SLASH, p.parseBinaryExpression)
-	p.registerBinary(token.ASTERISK, p.parseBinaryExpression)
-	p.registerBinary(token.IN, p.parseBinaryExpression)
-	p.registerBinary(token.RANGE, p.parseBinaryExpression)
+	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.registerInfix(token.PLUS, p.parseInfixExpression)
+	p.registerInfix(token.MINUS, p.parseInfixExpression)
+	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.SLASH, p.parseInfixExpression)
+	p.registerInfix(token.MODULO, p.parseInfixExpression)
 
-	p.registerBinary(token.EQ, p.parseBinaryExpression)
-	p.registerBinary(token.NEQ, p.parseBinaryExpression)
-	p.registerBinary(token.GT, p.parseBinaryExpression)
-	p.registerBinary(token.GTE, p.parseBinaryExpression)
-	p.registerBinary(token.LT, p.parseBinaryExpression)
-	p.registerBinary(token.LTE, p.parseBinaryExpression)
+	p.registerInfix(token.IN, p.parseInfixExpression)
+	p.registerInfix(token.RANGE, p.parseInfixExpression)
 
-	p.registerBinary(token.AND, p.parseBinaryExpression)
-	p.registerBinary(token.OR, p.parseBinaryExpression)
-	p.registerBinary(token.XOR, p.parseBinaryExpression)
+	p.registerInfix(token.EQ, p.parseInfixExpression)
+	p.registerInfix(token.NEQ, p.parseInfixExpression)
+	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.GTE, p.parseInfixExpression)
+	p.registerInfix(token.LT, p.parseInfixExpression)
+	p.registerInfix(token.LTE, p.parseInfixExpression)
+
+	p.registerInfix(token.AND, p.parseInfixExpression)
+	p.registerInfix(token.OR, p.parseInfixExpression)
+	p.registerInfix(token.XOR, p.parseInfixExpression)
 
 	p.consumeToken()
 
 	return p
 }
 
-func (p *Parser) registerUnary(tokenType token.TokenType, fn prefixParseFn) {
-	p.unaryParseFns[tokenType] = fn
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
 }
 
-func (p *Parser) registerBinary(tokenType token.TokenType, fn binaryParseFn) {
-	p.binaryParseFns[tokenType] = fn
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
 
 func (p *Parser) peekNext() token.Token {
@@ -473,14 +476,14 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 // }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	parsePrefix := p.unaryParseFns[p.current.Type]
+	parsePrefix := p.prefixParseFns[p.current.Type]
 	if parsePrefix == nil {
 		return nil
 	}
 	expr := parsePrefix()
 
 	for !p.nextTokenIs(token.EOL) && !p.nextTokenIs(token.COMMA) && precedence < p.nextPrecedence() {
-		parseInfix := p.binaryParseFns[p.peekNext().Type]
+		parseInfix := p.infixParseFns[p.peekNext().Type]
 		if parseInfix == nil {
 			return expr
 		}
@@ -543,21 +546,21 @@ func (p *Parser) parseFunctionCallParametersList() []ast.Expression {
 	return list
 }
 
-func (p *Parser) parseUnaryExpression() ast.Expression {
+func (p *Parser) parsePrefixExpression() ast.Expression {
 	operator := p.current
 	p.consumeToken() // skip the operator
 	right := p.parseExpression(PREFIX)
-	expression := ast.NewUnaryExpression(operator, right)
+	expression := ast.NewPrefixExpression(operator, right)
 	return expression
 }
 
-func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	operator := p.current
 	precedence := p.currentPrecedence()
 	p.consumeToken() // skip the operator
 	p.skipEols()     // skip EOLs
 	right := p.parseExpression(precedence)
-	expr := ast.NewBinaryExpression(left, operator, right)
+	expr := ast.NewInfixExpression(left, operator, right)
 	return expr
 }
 

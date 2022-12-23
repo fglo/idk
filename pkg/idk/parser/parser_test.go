@@ -41,7 +41,7 @@ func TestDeclareAssignStatements(t *testing.T) {
 	}
 }
 
-func TestParsingUnaryExpressions(t *testing.T) {
+func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
 		operator string
@@ -70,7 +70,7 @@ func TestParsingUnaryExpressions(t *testing.T) {
 				program.Statements[0])
 		}
 
-		exp, ok := stmt.Expression.(*ast.UnaryExpression)
+		exp, ok := stmt.Expression.(*ast.PrefixExpression)
 		if !ok {
 			t.Fatalf("stmt is not ast.PrefixExpression. got=%T", stmt.Expression)
 		}
@@ -84,7 +84,7 @@ func TestParsingUnaryExpressions(t *testing.T) {
 	}
 }
 
-func TestParsingBinaryExpressions(t *testing.T) {
+func TestParsingInfixExpressions(t *testing.T) {
 	infixTests := []struct {
 		input      string
 		leftValue  interface{}
@@ -128,7 +128,7 @@ func TestParsingBinaryExpressions(t *testing.T) {
 				program.Statements[0])
 		}
 
-		if !testBinaryExpression(t, stmt.Expression, tt.leftValue,
+		if !testInfixExpression(t, stmt.Expression, tt.leftValue,
 			tt.operator, tt.rightValue) {
 			return
 		}
@@ -369,10 +369,10 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
-func testBinaryExpression(t *testing.T, exp ast.Expression, left interface{},
+func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
 	operator string, right interface{}) bool {
 
-	opExp, ok := exp.(*ast.BinaryExpression)
+	opExp, ok := exp.(*ast.InfixExpression)
 	if !ok {
 		t.Errorf("exp is not ast.OperatorExpression. got=%T(%s)", exp, exp)
 		return false

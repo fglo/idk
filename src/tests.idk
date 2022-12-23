@@ -187,3 +187,10 @@ func testComment() string
 end
 
 print("testComment", testComment())
+
+func testModulo() string
+    a:int = 3 % 2
+    return check(a == 1)
+end
+
+print("testModulo", testModulo())

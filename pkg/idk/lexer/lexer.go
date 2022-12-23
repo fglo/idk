@@ -99,6 +99,8 @@ func (l *Lexer) ReadToken() token.Token {
 		} else {
 			tok = token.NewToken(token.SLASH, l.position, l.currentLine, l.positionInLine)
 		}
+	case '%':
+		tok = token.NewToken(token.MODULO, l.position, l.currentLine, l.positionInLine)
 	case '(':
 		tok = token.NewToken(token.LPARENTHESIS, l.position, l.currentLine, l.positionInLine)
 	case ')':

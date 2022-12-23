@@ -124,20 +124,20 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	// 	body := node.Body
 	// 	return &symbol.Function{Parameters: params, Env: env, Body: body}
 
-	case *ast.UnaryExpression:
+	case *ast.PrefixExpression:
 		right := Eval(node.Right, scope)
 		if symbol.IsError(right) {
 			return right
 		}
 
-		result := evalUnaryExpression(node.Token.Value, right)
+		result := evalPrefixExpression(node.Token.Value, right)
 		if symbol.IsError(result) {
 			return newEvaluatorError(node.Token.Line, result.Inspect())
 		}
 
 		return result
 
-	case *ast.BinaryExpression:
+	case *ast.InfixExpression:
 		left := Eval(node.Left, scope)
 		if symbol.IsError(left) {
 			return left
@@ -148,7 +148,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 			return right
 		}
 
-		result := evalBinaryExpression(node.Token.Value, left, right)
+		result := evalInfixExpression(node.Token.Value, left, right)
 		if symbol.IsError(result) {
 			return newEvaluatorError(node.Token.Line, result.Inspect())
 		}
@@ -225,7 +225,7 @@ func nativeBoolToBooleanObject(input bool) *symbol.Boolean {
 	return FALSE
 }
 
-func evalUnaryExpression(operator string, right symbol.Object) symbol.Object {
+func evalPrefixExpression(operator string, right symbol.Object) symbol.Object {
 	switch operator {
 	case "!":
 		return evalBangOperatorExpression(right)
@@ -237,7 +237,7 @@ func evalUnaryExpression(operator string, right symbol.Object) symbol.Object {
 }
 
 // TODO: adding bool and chars to ints
-func evalBinaryExpression(
+func evalInfixExpression(
 	operator string,
 	left, right symbol.Object,
 ) symbol.Object {
@@ -321,6 +321,8 @@ func evalIntegerInfixExpression(
 		return &symbol.Integer{Value: leftVal * rightVal}
 	case "/":
 		return &symbol.Integer{Value: leftVal / rightVal}
+	case "%":
+		return &symbol.Integer{Value: leftVal % rightVal}
 	case "<":
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":

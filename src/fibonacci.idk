@@ -1,0 +1,16 @@
+// This function returns the nth Fibonacci number
+func fibonacci(n:int) int
+    if n == 0
+        return 0
+    else if n == 1
+        return 1
+    else
+        return fibonacci(n - 1) + fibonacci(n - 2)
+    end
+end
+
+// Calculate the 10th Fibonacci number
+fib10 := fibonacci(10)
+
+// Print the result
+print(fib10)

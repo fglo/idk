@@ -77,58 +77,58 @@ func PrettyPrint(node Node, indent string, isLast bool) {
 
 /// expressions
 
-type UnaryExpression struct {
+type PrefixExpression struct {
 	Token token.Token
 	Right Expression
 }
 
-func NewUnaryExpression(Operator token.Token, Right Expression) *UnaryExpression {
-	ue := new(UnaryExpression)
-	ue.Token = Operator
-	ue.Right = Right
-	return ue
+func NewPrefixExpression(Operator token.Token, Right Expression) *PrefixExpression {
+	pe := new(PrefixExpression)
+	pe.Token = Operator
+	pe.Right = Right
+	return pe
 }
 
-func (ue *UnaryExpression) expressionNode()               {}
-func (ue *UnaryExpression) GetValue() string              { return "" }
-func (ue *UnaryExpression) GetTokenType() token.TokenType { return ue.Token.Type }
-func (ue *UnaryExpression) GetChildren() []Node           { return []Node{ue.Right} }
-func (ue *UnaryExpression) String() string {
+func (pe *PrefixExpression) expressionNode()               {}
+func (pe *PrefixExpression) GetValue() string              { return "" }
+func (pe *PrefixExpression) GetTokenType() token.TokenType { return pe.Token.Type }
+func (pe *PrefixExpression) GetChildren() []Node           { return []Node{pe.Right} }
+func (pe *PrefixExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(ue.Token.Value)
-	out.WriteString(ue.Right.String())
+	out.WriteString(pe.Token.Value)
+	out.WriteString(pe.Right.String())
 	out.WriteString(")")
 
 	return out.String()
 }
 
-type BinaryExpression struct {
+type InfixExpression struct {
 	Token token.Token
 	Left  Expression
 	Right Expression
 }
 
-func NewBinaryExpression(Left Expression, Operator token.Token, Right Expression) *BinaryExpression {
-	be := new(BinaryExpression)
-	be.Token = Operator
-	be.Left = Left
-	be.Right = Right
-	return be
+func NewInfixExpression(Left Expression, Operator token.Token, Right Expression) *InfixExpression {
+	ie := new(InfixExpression)
+	ie.Token = Operator
+	ie.Left = Left
+	ie.Right = Right
+	return ie
 }
 
-func (be *BinaryExpression) expressionNode()               {}
-func (be *BinaryExpression) GetValue() string              { return "" }
-func (be *BinaryExpression) GetTokenType() token.TokenType { return be.Token.Type }
-func (be *BinaryExpression) GetChildren() []Node           { return []Node{be.Left, be.Right} }
-func (be *BinaryExpression) String() string {
+func (ie *InfixExpression) expressionNode()               {}
+func (ie *InfixExpression) GetValue() string              { return "" }
+func (ie *InfixExpression) GetTokenType() token.TokenType { return ie.Token.Type }
+func (ie *InfixExpression) GetChildren() []Node           { return []Node{ie.Left, ie.Right} }
+func (ie *InfixExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(be.Left.String())
-	out.WriteString(" " + be.Token.Value + " ")
-	out.WriteString(be.Right.String())
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Token.Value + " ")
+	out.WriteString(ie.Right.String())
 	out.WriteString(")")
 
 	return out.String()

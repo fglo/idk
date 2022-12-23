@@ -37,10 +37,13 @@ const (
 	RANGE           TokenType = ".."  // TODO: range
 	RANGE_INCLUSIVE TokenType = "..=" // TODO: range inclusive
 
+	TO TokenType = "TO"
+
 	PLUS     TokenType = "+"
 	MINUS    TokenType = "-"
 	ASTERISK TokenType = "*"
 	SLASH    TokenType = "/"
+	MODULO   TokenType = "%"
 
 	LPARENTHESIS TokenType = "("
 	RPARENTHESIS TokenType = ")"
@@ -100,6 +103,8 @@ func (e TokenType) String() string {
 		return "ASTERISK"
 	case SLASH:
 		return "SLASH"
+	case MODULO:
+		return "MODULO"
 	case LPARENTHESIS:
 		return "LPARENTHESIS"
 	case RPARENTHESIS:
