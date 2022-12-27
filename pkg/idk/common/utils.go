@@ -9,6 +9,8 @@ func ToObjectType(tt token.TokenType) symbol.ObjectType {
 	switch tt {
 	case token.INT:
 		return symbol.INTEGER_OBJ
+	case token.FLOAT:
+		return symbol.FLOATING_POINT_OBJ
 	case token.BOOL:
 		return symbol.BOOLEAN_OBJ
 	case token.CHAR:
@@ -28,6 +30,8 @@ func ToTokenType(ot symbol.ObjectType) token.TokenType {
 	switch ot {
 	case symbol.INTEGER_OBJ:
 		return token.INT
+	case symbol.FLOATING_POINT_OBJ:
+		return token.FLOAT
 	case symbol.BOOLEAN_OBJ:
 		return token.BOOL
 	case symbol.CHARACTER_OBJ:

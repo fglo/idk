@@ -226,6 +226,7 @@ var operators = map[TokenType]byte{
 	MINUS:    0,
 	ASTERISK: 0,
 	SLASH:    0,
+	MODULO:   0,
 
 	EQ:  0,
 	NEQ: 0,

@@ -28,6 +28,38 @@ var builtins = map[string]*symbol.Builtin{
 			return &symbol.Type{Value: args[0].Type()}
 		},
 	},
+	"int": {
+		Fn: func(args ...symbol.Object) symbol.Object {
+			if len(args) != 1 {
+				return newError("typeof: wrong number of arguments. got=%d, want=1",
+					len(args))
+			}
+
+			arg := args[0]
+			if arg.Type() != symbol.FLOATING_POINT_OBJ {
+				return newError("typeof: wrong argument type. got=%s, want=FLOATING_POINT_OBJ",
+					arg.Type())
+			}
+
+			return &symbol.Integer{Value: int64(arg.(*symbol.FloatingPoint).Value)}
+		},
+	},
+	"float": {
+		Fn: func(args ...symbol.Object) symbol.Object {
+			if len(args) != 1 {
+				return newError("typeof: wrong number of arguments. got=%d, want=1",
+					len(args))
+			}
+
+			arg := args[0]
+			if arg.Type() != symbol.INTEGER_OBJ {
+				return newError("typeof: wrong argument type. got=%s, want=INTEGER_OBJ",
+					arg.Type())
+			}
+
+			return &symbol.FloatingPoint{Value: float64(arg.(*symbol.Integer).Value)}
+		},
+	},
 
 	// TODO: arrays
 

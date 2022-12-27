@@ -19,10 +19,11 @@ const (
 
 	TYPE_OBJ ObjectType = "TYPE"
 
-	INTEGER_OBJ   ObjectType = "INTEGER"
-	BOOLEAN_OBJ   ObjectType = "BOOLEAN"
-	CHARACTER_OBJ ObjectType = "CHARACTER"
-	STRING_OBJ    ObjectType = "STRING"
+	INTEGER_OBJ        ObjectType = "INTEGER"
+	FLOATING_POINT_OBJ ObjectType = "FLOAT"
+	BOOLEAN_OBJ        ObjectType = "BOOLEAN"
+	CHARACTER_OBJ      ObjectType = "CHARACTER"
+	STRING_OBJ         ObjectType = "STRING"
 
 	ARRAY_OBJ ObjectType = "ARRAY"
 	HASH_OBJ  ObjectType = "HASH"
@@ -75,6 +76,16 @@ func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 func (i *Integer) HashKey() HashKey {
 	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
+type FloatingPoint struct {
+	Value float64
+}
+
+func (fp *FloatingPoint) Type() ObjectType { return FLOATING_POINT_OBJ }
+func (fp *FloatingPoint) Inspect() string  { return fmt.Sprintf("%f", fp.Value) }
+func (fp *FloatingPoint) HashKey() HashKey {
+	return HashKey{Type: fp.Type(), Value: uint64(fp.Value)}
 }
 
 type Boolean struct {

@@ -260,6 +260,25 @@ func (e *IntegerLiteral) GetTokenType() token.TokenType { return token.INT }
 func (e *IntegerLiteral) GetChildren() []Node           { return []Node{} }
 func (e *IntegerLiteral) String() string                { return e.Token.Value }
 
+type FloatingPointLiteral struct {
+	Token token.Token
+	Value float64
+}
+
+func NewFloatingPointLiteral(Token token.Token) (*FloatingPointLiteral, error) {
+	l := new(FloatingPointLiteral)
+	l.Token = Token
+	val, err := strconv.ParseFloat(Token.Value, 64)
+	l.Value = val
+	return l, err
+}
+
+func (e *FloatingPointLiteral) expressionNode()               {}
+func (e *FloatingPointLiteral) GetValue() string              { return e.Token.Value }
+func (e *FloatingPointLiteral) GetTokenType() token.TokenType { return token.FLOAT }
+func (e *FloatingPointLiteral) GetChildren() []Node           { return []Node{} }
+func (e *FloatingPointLiteral) String() string                { return e.Token.Value }
+
 type BooleanLiteral struct {
 	Token token.Token
 	Value bool

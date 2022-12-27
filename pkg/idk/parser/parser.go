@@ -82,6 +82,7 @@ func NewParser(input string) *Parser {
 	p.registerPrefix(token.TYPE, p.parseType)
 	p.registerPrefix(token.FUNC, p.parseType)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.FLOAT, p.parseFloatingPointLiteral)
 	p.registerPrefix(token.BOOL, p.parseBooleanLiteral)
 	p.registerPrefix(token.CHAR, p.parseCharacterLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
@@ -132,6 +133,16 @@ func (p *Parser) consumeToken() token.Token {
 	if p.current.Type == token.ILLEGAL {
 		p.reportIllegalToken()
 	}
+	if p.current.Type == token.EOF {
+		return p.current
+	}
+	p.next = p.lexer.ReadToken()
+	return p.current
+}
+
+func (p *Parser) consumeTokenWithoutCheckingForIllegals() token.Token {
+	p.previous = p.current
+	p.current = p.next
 	if p.current.Type == token.EOF {
 		return p.current
 	}
@@ -289,7 +300,7 @@ func (p *Parser) parseStatement() ast.Statement {
 func (p *Parser) skipCommentedLine() {
 	p.expectCurrentTokenType(token.LINE_COMMENT)
 	for !p.currentTokenIs(token.EOL) && !p.currentTokenIs(token.EOF) {
-		p.consumeToken()
+		p.consumeTokenWithoutCheckingForIllegals()
 	}
 }
 
@@ -578,6 +589,11 @@ func (p *Parser) parseType() ast.Expression {
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit, _ := ast.NewIntegerLiteral(p.current)
+	return lit
+}
+
+func (p *Parser) parseFloatingPointLiteral() ast.Expression {
+	lit, _ := ast.NewFloatingPointLiteral(p.current)
 	return lit
 }
 

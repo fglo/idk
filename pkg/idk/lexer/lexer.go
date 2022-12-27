@@ -166,10 +166,19 @@ func (l *Lexer) ReadToken() token.Token {
 func (l *Lexer) readNumberToken() *token.Token {
 	start := l.position
 	startInLine := l.positionInLine
-	for ch := rune(l.PeekNext()); unicode.IsDigit(ch); ch = rune(l.PeekNext()) {
+	isFloat := false
+	for ch := rune(l.PeekNext()); unicode.IsDigit(ch) || (!isFloat && ch == '.'); ch = rune(l.PeekNext()) {
+		if ch == '.' {
+			isFloat = true
+		}
 		l.readChar()
 	}
 	number := substring(l.input, start, l.readPosition)
+
+	if isFloat {
+		return token.NewTokenNotDefaultValue(token.FLOAT, start, l.currentLine, startInLine, number)
+	}
+
 	return token.NewTokenNotDefaultValue(token.INT, start, l.currentLine, startInLine, number)
 }
 
@@ -181,7 +190,13 @@ func (l *Lexer) readWordToken() *token.Token {
 	}
 
 	word := substring(l.input, start, l.readPosition)
-	keyword := token.LookupKeyword(word)
+	keyword := token.IDENTIFIER
+
+	l.skipWhitespace()
+
+	if l.PeekNext() != '(' {
+		keyword = token.LookupKeyword(word)
+	}
 	return token.NewTokenNotDefaultValue(keyword, start, l.currentLine, startInLine, word)
 }
 

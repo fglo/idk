@@ -19,8 +19,8 @@ func GetDefaultValue(identifier ast.Identifier) symbol.Object {
 	switch identifier.Type {
 	case token.INT:
 		return &symbol.Integer{Value: int64(0)}
-	// case token.FLOAT:
-	// 	return &symbol.Float{Value: float64(0)}
+	case token.FLOAT:
+		return &symbol.FloatingPoint{Value: float64(0)}
 	case token.CHAR:
 		return &symbol.Character{Value: 0}
 	case token.STRING:
@@ -88,6 +88,9 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 
 	case *ast.IntegerLiteral:
 		return &symbol.Integer{Value: int64(node.Value)}
+
+	case *ast.FloatingPointLiteral:
+		return &symbol.FloatingPoint{Value: float64(node.Value)}
 
 	case *ast.BooleanLiteral:
 		return nativeBoolToBooleanObject(node.Value)
@@ -237,6 +240,8 @@ func evalPrefixExpression(operator string, right symbol.Object) symbol.Object {
 }
 
 // TODO: adding bool and chars to ints
+// TODO: operations on ints and floats
+// TODO: flaot to int and int to float conversion
 func evalInfixExpression(
 	operator string,
 	left, right symbol.Object,
@@ -246,6 +251,8 @@ func evalInfixExpression(
 		return evalTypeInfixExpression(operator, left, right)
 	case left.Type() == symbol.INTEGER_OBJ && right.Type() == symbol.INTEGER_OBJ:
 		return evalIntegerInfixExpression(operator, left, right)
+	case left.Type() == symbol.FLOATING_POINT_OBJ && right.Type() == symbol.FLOATING_POINT_OBJ:
+		return evalFloatingPointInfixExpression(operator, left, right)
 	case left.Type() == symbol.BOOLEAN_OBJ && right.Type() == symbol.BOOLEAN_OBJ:
 		return evalBooleanInfixExpression(operator, left, right)
 	case left.Type() == symbol.CHARACTER_OBJ && right.Type() == symbol.CHARACTER_OBJ:
@@ -279,12 +286,17 @@ func evalBangOperatorExpression(right symbol.Object) symbol.Object {
 }
 
 func evalMinusPrefixOperatorExpression(right symbol.Object) symbol.Object {
-	if right.Type() != symbol.INTEGER_OBJ {
+	if right.Type() != symbol.INTEGER_OBJ && right.Type() != symbol.FLOATING_POINT_OBJ {
 		return newError("unknown operator: -%s", right.Type())
 	}
 
-	value := right.(*symbol.Integer).Value
-	return &symbol.Integer{Value: -value}
+	if right.Type() == symbol.INTEGER_OBJ {
+		value := right.(*symbol.Integer).Value
+		return &symbol.Integer{Value: -value}
+	}
+
+	value := right.(*symbol.FloatingPoint).Value
+	return &symbol.FloatingPoint{Value: -value}
 }
 
 func evalTypeInfixExpression(
@@ -323,6 +335,36 @@ func evalIntegerInfixExpression(
 		return &symbol.Integer{Value: leftVal / rightVal}
 	case "%":
 		return &symbol.Integer{Value: leftVal % rightVal}
+	case "<":
+		return nativeBoolToBooleanObject(leftVal < rightVal)
+	case ">":
+		return nativeBoolToBooleanObject(leftVal > rightVal)
+	case "==":
+		return nativeBoolToBooleanObject(leftVal == rightVal)
+	case "!=":
+		return nativeBoolToBooleanObject(leftVal != rightVal)
+	default:
+		return newError("unknown operator: %s %s %s",
+			left.Type(), operator, right.Type())
+	}
+}
+
+func evalFloatingPointInfixExpression(
+	operator string,
+	left, right symbol.Object,
+) symbol.Object {
+	leftVal := left.(*symbol.FloatingPoint).Value
+	rightVal := right.(*symbol.FloatingPoint).Value
+
+	switch operator {
+	case "+":
+		return &symbol.FloatingPoint{Value: leftVal + rightVal}
+	case "-":
+		return &symbol.FloatingPoint{Value: leftVal - rightVal}
+	case "*":
+		return &symbol.FloatingPoint{Value: leftVal * rightVal}
+	case "/":
+		return &symbol.FloatingPoint{Value: leftVal / rightVal}
 	case "<":
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
@@ -566,7 +608,7 @@ func evalFunctionCallExpression(
 		return args[0]
 	}
 
-	return applyFunction(function, args)
+	return applyFunctionOrBuiltin(node.Identifier.Value, function, args)
 }
 
 func isTruthy(obj symbol.Object) bool {
@@ -607,24 +649,35 @@ func evalExpressions(
 	return result
 }
 
-func applyFunction(fn symbol.Object, args []symbol.Object) symbol.Object {
+func applyFunctionOrBuiltin(fnName string, fn symbol.Object, args []symbol.Object) symbol.Object {
 	switch fn := fn.(type) {
-
 	case *symbol.Function:
-		extendedScope := extendFunctionScope(fn, args)
-		for i, param := range fn.Parameters {
-			arg := args[i]
-			extendedScope.Insert(param.Identifier.Value, arg, symbol.ObjectType(param.Identifier.Type))
-		}
-		evaluated := Eval(fn.Body, extendedScope)
-		return unwrapReturnValue(evaluated)
-
+		return applyFunction(fnName, fn, args)
 	case *symbol.Builtin:
 		return fn.Fn(args...)
-
 	default:
 		return newError("not a function: %s", fn.Type())
 	}
+}
+
+func applyFunction(fnName string, fn *symbol.Function, args []symbol.Object) symbol.Object {
+	for i := 0; i < len(args); i++ {
+		parameterType := fn.Parameters[i].Identifier.Type
+		x := args[i].Type()
+		_ = x
+		argType := common.ToTokenType(args[i].Type())
+		if parameterType != argType {
+			return newError("function parameter type mismatch: %s, wanted: %s, got: %s", fnName, parameterType, argType)
+		}
+	}
+
+	extendedScope := extendFunctionScope(fn, args)
+	for i, param := range fn.Parameters {
+		arg := args[i]
+		extendedScope.Insert(param.Identifier.Value, arg, symbol.ObjectType(param.Identifier.Type))
+	}
+	evaluated := Eval(fn.Body, extendedScope)
+	return unwrapReturnValue(evaluated)
 }
 
 func extendFunctionScope(
