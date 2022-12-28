@@ -42,6 +42,8 @@ var precedences = map[token.TokenType]int{
 	token.NEQ:             EQUALS,
 	token.LT:              LESSGREATER,
 	token.GT:              LESSGREATER,
+	token.LTE:             LESSGREATER,
+	token.GTE:             LESSGREATER,
 	token.PLUS:            SUM,
 	token.MINUS:           SUM,
 	token.MODULO:          PRODUCT,

@@ -339,6 +339,10 @@ func evalIntegerInfixExpression(
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
 		return nativeBoolToBooleanObject(leftVal > rightVal)
+	case "<=":
+		return nativeBoolToBooleanObject(leftVal <= rightVal)
+	case ">=":
+		return nativeBoolToBooleanObject(leftVal >= rightVal)
 	case "==":
 		return nativeBoolToBooleanObject(leftVal == rightVal)
 	case "!=":
@@ -369,6 +373,10 @@ func evalFloatingPointInfixExpression(
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
 		return nativeBoolToBooleanObject(leftVal > rightVal)
+	case "<=":
+		return nativeBoolToBooleanObject(leftVal <= rightVal)
+	case ">=":
+		return nativeBoolToBooleanObject(leftVal >= rightVal)
 	case "==":
 		return nativeBoolToBooleanObject(leftVal == rightVal)
 	case "!=":
@@ -469,7 +477,14 @@ func evalForLoopStatement(
 
 	extendedScope := symbol.NewInnerScope(scope)
 	for isTruthy(condition) {
-		Eval(ie.Consequence, extendedScope)
+		result := Eval(ie.Consequence, extendedScope)
+
+		if result != nil {
+			rt := result.Type()
+			if rt == symbol.RETURN_VALUE_OBJ || rt == symbol.ERROR_OBJ {
+				return result
+			}
+		}
 
 		condition = Eval(ie.Condition, scope)
 		if symbol.IsError(condition) {
