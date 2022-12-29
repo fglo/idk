@@ -149,9 +149,11 @@ func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
 
 type Function struct {
+	Identifier string
 	Parameters []*ast.DeclareStatement
 	Body       *ast.BlockStatement
 	Scope      *Scope
+	ReturnType ObjectType
 }
 
 func (f *Function) Type() ObjectType { return FUNCTION_OBJ }

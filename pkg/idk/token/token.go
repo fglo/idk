@@ -30,9 +30,11 @@ const (
 	TRUE  TokenType = "TRUE"
 	FALSE TokenType = "FALSE"
 
-	DECLASSIGN TokenType = "DECLASSIGN"
+	DECLASSIGN TokenType = ":="
 	DECLARE    TokenType = ":"
 	ASSIGN     TokenType = "="
+
+	RETURN_TYPE TokenType = "->"
 
 	RANGE           TokenType = ".."  // TODO: range
 	RANGE_INCLUSIVE TokenType = "..=" // TODO: range inclusive
@@ -91,6 +93,8 @@ func (e TokenType) String() string {
 		return "DECLARE"
 	case ASSIGN:
 		return "ASSIGN"
+	case RETURN_TYPE:
+		return "RETURN_TYPE"
 	case RANGE:
 		return "RANGE"
 	case RANGE_INCLUSIVE:

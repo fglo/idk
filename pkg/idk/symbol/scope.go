@@ -6,6 +6,7 @@ type Symbol struct {
 }
 
 type Scope struct {
+	Name        string
 	symbolTable map[string]Symbol
 	outer       *Scope
 }
@@ -18,6 +19,12 @@ func NewScope() *Scope {
 func NewInnerScope(outer *Scope) *Scope {
 	env := NewScope()
 	env.outer = outer
+	return env
+}
+
+func NewNamedScope(name string, outer *Scope) *Scope {
+	env := NewInnerScope(outer)
+	env.Name = name
 	return env
 }
 

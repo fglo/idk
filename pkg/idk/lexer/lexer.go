@@ -89,7 +89,12 @@ func (l *Lexer) ReadToken() token.Token {
 	case '+':
 		tok = token.NewToken(token.PLUS, l.position, l.currentLine, l.positionInLine)
 	case '-':
-		tok = token.NewToken(token.MINUS, l.position, l.currentLine, l.positionInLine)
+		if l.PeekNext() == '>' {
+			tok = token.NewToken(token.RETURN_TYPE, l.position, l.currentLine, l.positionInLine)
+			l.readChar()
+		} else {
+			tok = token.NewToken(token.MINUS, l.position, l.currentLine, l.positionInLine)
+		}
 	case '*':
 		tok = token.NewToken(token.ASTERISK, l.position, l.currentLine, l.positionInLine)
 	case '/':

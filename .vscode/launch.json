@@ -52,5 +52,13 @@
             "program": "cmd/idk/main.go",
             "args": ["-f", "../../src/primes.idk"]
         },
+        {
+            "name": "Feat",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-f", "../../src/test_feat.idk"]
+        },
     ]
 }

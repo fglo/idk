@@ -1,4 +1,4 @@
-func sqrt(val:float) float
+func sqrt(val:float) -> float
 	// Initialize the result to a guess
 	result := val / 2.0
 
@@ -13,7 +13,7 @@ func sqrt(val:float) float
 end
 
 // This function returns true if the given number is prime, and false otherwise
-func isPrime(n:int) bool
+func isPrime(n:int) -> bool
     // Return false if n is less than 2
     if n < 2
         return false

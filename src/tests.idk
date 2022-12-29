@@ -1,4 +1,5 @@
-func check(condition:bool) string
+
+func check(condition:bool) -> string
     if condition
         return "OK"
     else
@@ -6,27 +7,27 @@ func check(condition:bool) string
     end
 end
 
-func testDeclassignInt() string
+func testDeclassignInt() -> string
     a := 1
     return check(a == 1)
 end
 
-func testDeclassignFloat() string
+func testDeclassignFloat() -> string
     a := 1.0
     return check(a == 1.0)
 end
 
-func testDeclassignBool() string
+func testDeclassignBool() -> string
     a := true
     return check(a)
 end
 
-func testDeclassignChar() string
+func testDeclassignChar() -> string
     a := 'a'
     return check(a == 'a')
 end
 
-func testDeclassignString() string
+func testDeclassignString() -> string
     a := "a"
     return check(a == "a")
 end
@@ -37,27 +38,27 @@ print("testDeclassignBool", testDeclassignBool())
 print("testDeclassignChar", testDeclassignChar())
 print("testDeclassignString", testDeclassignString())
 
-func testDeclareInt() string
+func testDeclareInt() -> string
     a:int = 1
     return check(a == 1)
 end
 
-func testDeclareFloat() string
+func testDeclareFloat() -> string
     a:float = 1.0
     return check(a == 1.0)
 end
 
-func testDeclareBool() string
+func testDeclareBool() -> string
     a:bool = true
     return check(a)
 end
 
-func testDeclareChar() string
+func testDeclareChar() -> string
     a:char = 'a'
     return check(a == 'a')
 end
 
-func testDeclareString() string
+func testDeclareString() -> string
     a:string = "a"
     return check(a == "a")
 end
@@ -68,31 +69,31 @@ print("testDeclareBool", testDeclareBool())
 print("testDeclareChar", testDeclareChar())
 print("testDeclareString", testDeclareString())
 
-func testDeclareAndAssignInt() string
+func testDeclareAndAssignInt() -> string
     a:int
     a = 1
     return check(a == 1)
 end
 
-func testDeclareAndAssignFloat() string
+func testDeclareAndAssignFloat() -> string
     a:float
     a = 1.0
     return check(a == 1.0)
 end
 
-func testDeclareAndAssignBool() string
+func testDeclareAndAssignBool() -> string
     a:bool
     a = true
     return check(a)
 end
 
-func testDeclareAndAssignChar() string
+func testDeclareAndAssignChar() -> string
     a:char
     a = 'a'
     return check(a == 'a')
 end
 
-func testDeclareAndAssignString() string
+func testDeclareAndAssignString() -> string
     a:string
     a = "a"
     return check(a == "a")
@@ -104,7 +105,7 @@ print("testDeclareAndAssignBool", testDeclareAndAssignBool())
 print("testDeclareAndAssignChar", testDeclareAndAssignChar())
 print("testDeclareAndAssignString", testDeclareAndAssignString())
 
-func testFor() string
+func testFor() -> string
     a:int
     for a < 5
         a = a + 1
@@ -112,7 +113,7 @@ func testFor() string
     return check(a == 5)
 end
 
-func testIfElse() string
+func testIfElse() -> string
     a:int
     if a < 5
         a = 5
@@ -164,31 +165,31 @@ print("testFunctionWithTwoParameters", testFunctionWithTwoParameters())
 print("testFunctionCallAsParameter", testFunctionCallAsParameter())
 print("testPassingFunction", testPassingFunction())
 
-func testTypeofInt() string
+func testTypeofInt() -> string
     a:int
     b:=1
     return check(typeof(a) == int and typeof(b) == int and typeof(0) == int)
 end
 
-func testTypeofBool() string
+func testTypeofBool() -> string
     a:bool
     b:=true
     return check(typeof(a) == bool and typeof(b) == bool and typeof(false) == bool)
 end
 
-func testTypeofChar() string
+func testTypeofChar() -> string
     a:char
     b:=' '
     return check(typeof(a) == char and typeof(b) == char and typeof(' ') == char)
 end
 
-func testTypeofString() string
+func testTypeofString() -> string
     a:string
     b:=""
     return check(typeof(a) == string and typeof(b) == string and typeof("") == string)
 end
 
-func testTypeofFunc() string
+func testTypeofFunc() -> string
     a:func
     return check(typeof(a) == func)
 end
@@ -199,7 +200,7 @@ print("testTypeofChar", testTypeofChar())
 print("testTypeofString", testTypeofString())
 print("testTypeofFunc", testTypeofFunc())
 
-func testComment() string
+func testComment() -> string
     a:int
     // a = 1
     return check(a == 0)
@@ -207,19 +208,19 @@ end
 
 print("testComment", testComment())
 
-func testModulo() string
+func testModulo() -> string
     a:int = 3 % 2
     return check(a == 1)
 end
 
 print("testModulo", testModulo())
 
-func testCastingFloatToInt() string
+func testCastingFloatToInt() -> string
     a:float = 1.0 // TODO: allow for missing .0 when initializing a float
     return check(int(a) == 1)
 end
 
-func testCastingIntToFloat() string
+func testCastingIntToFloat() -> string
     a:int = 1
     return check(float(a) == 1.0)
 end

@@ -419,9 +419,13 @@ func (p *Parser) parseFunctionDefinitionStatement() *ast.FunctionDefinitionState
 	parameters := p.parseFunctionDefinitionParametersList()
 
 	vartype := *token.NewTokenNotDefaultValue(token.TYPE, p.current.Position, p.current.Line, p.current.PositionInLine, string(token.VOID))
-	if p.nextTokenIs(token.TYPE) {
+	if p.nextTokenIs(token.RETURN_TYPE) {
+		p.consumeToken()
+		p.expectNextTokenType(token.TYPE)
 		vartype = p.consumeToken()
 	}
+
+	p.expectNextTokenType(token.EOL)
 
 	identifier.Type = token.FUNC
 

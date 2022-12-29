@@ -175,7 +175,17 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		if !symbol.IsError(function) {
 			return newError("Evaluator error on line %v, position %v: identifier %s is already taken", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, node.Identifier.Value)
 		}
-		scope.Insert(node.Identifier.Value, &symbol.Function{Parameters: node.Parameters, Scope: scope, Body: node.Body}, symbol.FUNCTION_OBJ)
+
+		returnType := token.LookupType(node.ReturnType.Value)
+		function = &symbol.Function{
+			Identifier: node.Identifier.Value,
+			Parameters: node.Parameters,
+			Scope:      scope,
+			Body:       node.Body,
+			ReturnType: common.ToObjectType(returnType),
+		}
+
+		scope.Insert(node.Identifier.Value, function, symbol.FUNCTION_OBJ)
 
 	case *ast.FunctionCallExpression:
 		return evalFunctionCallExpression(node, scope)
@@ -559,6 +569,7 @@ func evalAssignStatement(
 	if symbol.IsError(variable) {
 		return variable
 	}
+
 	sym, ok := scope.Lookup(node.Identifier.Value)
 	identifierType := symbol.NULL_OBJ
 	if ok {
@@ -623,7 +634,7 @@ func evalFunctionCallExpression(
 		return args[0]
 	}
 
-	return applyFunctionOrBuiltin(node.Identifier.Value, function, args)
+	return applyFunctionOrBuiltin(function, args)
 }
 
 func isTruthy(obj symbol.Object) bool {
@@ -664,10 +675,10 @@ func evalExpressions(
 	return result
 }
 
-func applyFunctionOrBuiltin(fnName string, fn symbol.Object, args []symbol.Object) symbol.Object {
+func applyFunctionOrBuiltin(fn symbol.Object, args []symbol.Object) symbol.Object {
 	switch fn := fn.(type) {
 	case *symbol.Function:
-		return applyFunction(fnName, fn, args)
+		return applyFunction(fn, args)
 	case *symbol.Builtin:
 		return fn.Fn(args...)
 	default:
@@ -675,14 +686,14 @@ func applyFunctionOrBuiltin(fnName string, fn symbol.Object, args []symbol.Objec
 	}
 }
 
-func applyFunction(fnName string, fn *symbol.Function, args []symbol.Object) symbol.Object {
+func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
 	for i := 0; i < len(args); i++ {
 		parameterType := fn.Parameters[i].Identifier.Type
 		x := args[i].Type()
 		_ = x
 		argType := common.ToTokenType(args[i].Type())
 		if parameterType != argType {
-			return newError("function parameter type mismatch: %s, wanted: %s, got: %s", fnName, parameterType, argType)
+			return newError("function parameter type mismatch: %s, wanted: %s, got: %s", fn.Identifier, parameterType, argType)
 		}
 	}
 
@@ -692,14 +703,20 @@ func applyFunction(fnName string, fn *symbol.Function, args []symbol.Object) sym
 		extendedScope.Insert(param.Identifier.Value, arg, symbol.ObjectType(param.Identifier.Type))
 	}
 	evaluated := Eval(fn.Body, extendedScope)
-	return unwrapReturnValue(evaluated)
+	result := unwrapReturnValue(evaluated)
+
+	if result.Type() != fn.ReturnType {
+		return newError("cannot use %s as %s in return statement", result.Type(), fn.ReturnType)
+	}
+
+	return result
 }
 
 func extendFunctionScope(
 	fn *symbol.Function,
 	args []symbol.Object,
 ) *symbol.Scope {
-	scope := symbol.NewInnerScope(fn.Scope)
+	scope := symbol.NewNamedScope(fn.Identifier, fn.Scope)
 
 	for _, param := range fn.Parameters {
 		evalDeclareStatement(param, scope)
