@@ -1,5 +1,5 @@
 // This function returns the nth Fibonacci number
-func fibonacci(n:int) int
+func fibonacci(n:int) -> int
     if n == 0
         return 0
     else if n == 1

@@ -716,7 +716,7 @@ func extendFunctionScope(
 	fn *symbol.Function,
 	args []symbol.Object,
 ) *symbol.Scope {
-	scope := symbol.NewNamedScope(fn.Identifier, fn.Scope)
+	scope := symbol.NewInnerScope(fn.Scope)
 
 	for _, param := range fn.Parameters {
 		evalDeclareStatement(param, scope)
