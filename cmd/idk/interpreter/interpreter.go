@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -42,7 +41,7 @@ func RunSingleFile(sourceCodePath string, prettyPrint bool) {
 func RunModule(moduleEntryPoint string, prettyPrint bool) {
 	moduleDir := filepath.Dir(moduleEntryPoint)
 
-	files, err := ioutil.ReadDir(moduleDir)
+	files, err := os.ReadDir(moduleDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +52,7 @@ func RunModule(moduleEntryPoint string, prettyPrint bool) {
 			packageName := packageDir.Name()
 			packageDirPath := fmt.Sprintf("%s/%s", moduleDir, packageName)
 
-			packageFiles, err := ioutil.ReadDir(packageDirPath)
+			packageFiles, err := os.ReadDir(packageDirPath)
 			if err != nil {
 				log.Fatal(err)
 			}
