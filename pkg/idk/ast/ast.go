@@ -277,7 +277,7 @@ func (t *Type) String() string                { return t.Token.Value }
 
 type IntegerLiteral struct {
 	Token token.Token
-	Value int
+	Value int // TODO: make Value private in literals
 }
 
 func NewIntegerLiteral(tok token.Token) (*IntegerLiteral, error) {

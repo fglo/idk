@@ -7,6 +7,8 @@ import (
 	"github.com/fglo/idk/pkg/idk/ast"
 )
 
+// TODO: more unit tests
+
 func TestDeclareAssignStatements(t *testing.T) {
 	tests := []struct {
 		input              string
@@ -287,8 +289,8 @@ func testDeclareAssignStatement(t *testing.T, s ast.Statement, name string) bool
 		return false
 	}
 
-	if declareAssign.Identifier.Value != name {
-		t.Errorf("declAssStmt.Identifier.Value not '%s'. got=%s", name, declareAssign.Identifier.Value)
+	if declareAssign.Identifier.GetValue() != name {
+		t.Errorf("declAssStmt.Identifier.Value not '%s'. got=%s", name, declareAssign.Identifier.GetValue())
 		return false
 	}
 
@@ -344,8 +346,8 @@ func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 		return false
 	}
 
-	if identifier.Value != value {
-		t.Errorf("ident.Value not %s. got=%s", value, identifier.Value)
+	if identifier.GetValue() != value {
+		t.Errorf("ident.Value not %s. got=%s", value, identifier.GetValue())
 		return false
 	}
 

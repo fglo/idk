@@ -137,7 +137,7 @@ func (p *Parser) peekNext() token.Token {
 	return p.next
 }
 
-func (p *Parser) consumeToken() token.Token {
+func (p *Parser) consumeToken() token.Token { // TODO: take token type as argument
 	p.previous = p.current
 	p.current = p.next
 	if p.current.Type == token.ILLEGAL {
