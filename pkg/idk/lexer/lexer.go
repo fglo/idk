@@ -149,6 +149,8 @@ func (l *Lexer) ReadToken() token.Token {
 		if l.PeekNext() == '.' {
 			tok = token.NewToken(token.RANGE, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
+		} else {
+			tok = token.NewToken(token.DOT, l.position, l.currentLine, l.positionInLine)
 		}
 	case ',':
 		tok = token.NewToken(token.COMMA, l.position, l.currentLine, l.positionInLine)

@@ -75,6 +75,8 @@ const (
 	RETURN TokenType = "RETURN"
 
 	IDENTIFIER TokenType = "IDENTIFIER"
+
+	IMPORT TokenType = "IMPORT"
 )
 
 func (e TokenType) String() string {
@@ -192,6 +194,7 @@ var keywords = map[string]TokenType{
 	"in":     IN,
 	"func":   FUNC,
 	"return": RETURN,
+	"import": IMPORT,
 }
 
 var types = map[string]TokenType{

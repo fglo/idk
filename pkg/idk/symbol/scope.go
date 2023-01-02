@@ -6,18 +6,36 @@ type Symbol struct {
 }
 
 type Scope struct {
+	Name        string
 	symbolTable map[string]Symbol
 	outer       *Scope
+	namedScopes map[string]*Scope
 }
 
 func NewScope() *Scope {
-	st := make(map[string]Symbol)
-	return &Scope{symbolTable: st, outer: nil}
+	return &Scope{
+		symbolTable: make(map[string]Symbol),
+		namedScopes: make(map[string]*Scope),
+		outer:       nil,
+	}
 }
 
 func NewInnerScope(outer *Scope) *Scope {
 	env := NewScope()
 	env.outer = outer
+	return env
+}
+
+func (s *Scope) GetNamedScope(name string) *Scope {
+	if scope, ok := s.namedScopes[name]; ok {
+		return scope
+	}
+
+	env := NewInnerScope(s)
+	env.Name = name
+
+	s.namedScopes[name] = env
+
 	return env
 }
 

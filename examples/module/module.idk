@@ -1,0 +1,6 @@
+import math
+
+sixteen := 16
+x := float(sixteen)
+
+print(math.sqrt(x) * 2.0 == 8.0)

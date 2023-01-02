@@ -82,10 +82,11 @@ type PrefixExpression struct {
 	Right Expression
 }
 
-func NewPrefixExpression(Operator token.Token, Right Expression) *PrefixExpression {
-	pe := new(PrefixExpression)
-	pe.Token = Operator
-	pe.Right = Right
+func NewPrefixExpression(operator token.Token, expression Expression) *PrefixExpression {
+	pe := &PrefixExpression{
+		Token: operator,
+		Right: expression,
+	}
 	return pe
 }
 
@@ -110,11 +111,12 @@ type InfixExpression struct {
 	Right Expression
 }
 
-func NewInfixExpression(Left Expression, Operator token.Token, Right Expression) *InfixExpression {
-	ie := new(InfixExpression)
-	ie.Token = Operator
-	ie.Left = Left
-	ie.Right = Right
+func NewInfixExpression(left Expression, operator token.Token, right Expression) *InfixExpression {
+	ie := &InfixExpression{
+		Token: operator,
+		Left:  left,
+		Right: right,
+	}
 	return ie
 }
 
@@ -134,6 +136,36 @@ func (ie *InfixExpression) String() string {
 	return out.String()
 }
 
+type PropertyExpression struct {
+	Parent   Expression
+	Property Expression
+}
+
+func NewPropertyExpression(parent Expression, property Expression) *PropertyExpression {
+	pe := &PropertyExpression{
+		Parent:   parent,
+		Property: property,
+	}
+	return pe
+}
+
+func (pe *PropertyExpression) expressionNode()               {}
+func (pe *PropertyExpression) GetValue() string              { return "" }
+func (pe *PropertyExpression) GetTokenType() token.TokenType { return token.DOT }
+func (pe *PropertyExpression) GetChildren() []Node           { return []Node{pe.Parent, pe.Property} }
+func (pe *PropertyExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pe.Parent.String())
+	// out.WriteString(" " + token.DOT.String() + " ")
+	out.WriteString(".")
+	out.WriteString(pe.Property.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
 type IfExpression struct {
 	Condition   Expression
 	Consequence *Expression
@@ -141,11 +173,12 @@ type IfExpression struct {
 }
 
 // TODO: implement if expression
-func NewIfExpression(Condition Expression, Consequence *Expression, Alternative *Expression) *IfExpression {
-	ie := new(IfExpression)
-	ie.Condition = Condition
-	ie.Consequence = Consequence
-	ie.Alternative = Alternative
+func NewIfExpression(condition Expression, consequence *Expression, alternative *Expression) *IfExpression {
+	ie := &IfExpression{
+		Condition:   condition,
+		Consequence: consequence,
+		Alternative: alternative,
+	}
 	return ie
 }
 
@@ -179,14 +212,15 @@ type FunctionCallExpression struct {
 	Parameters []Expression
 }
 
-func NewFunctionCallExpression(Identifier token.Token) *FunctionCallExpression {
-	fce := new(FunctionCallExpression)
-	fce.Identifier = *NewIdentifier(Identifier)
+func NewFunctionCallExpression(tok token.Token) *FunctionCallExpression {
+	fce := &FunctionCallExpression{
+		Identifier: *NewIdentifier(tok),
+	}
 	return fce
 }
 
 func (fce *FunctionCallExpression) expressionNode()               {}
-func (fce *FunctionCallExpression) GetValue() string              { return fce.Identifier.Value }
+func (fce *FunctionCallExpression) GetValue() string              { return fce.Identifier.GetValue() }
 func (fce *FunctionCallExpression) GetTokenType() token.TokenType { return fce.Identifier.Type }
 func (fce *FunctionCallExpression) GetChildren() []Node           { return []Node{} }
 func (fce *FunctionCallExpression) String() string {
@@ -209,29 +243,29 @@ func (fce *FunctionCallExpression) String() string {
 type Identifier struct {
 	Token token.Token
 	Type  token.TokenType
-	Value string
 }
 
-func NewIdentifier(Token token.Token) *Identifier {
-	l := new(Identifier)
-	l.Token = Token
-	l.Value = Token.Value
-	return l
+func NewIdentifier(identifier token.Token) *Identifier {
+	i := &Identifier{
+		Token: identifier,
+	}
+	return i
 }
 
-func (e *Identifier) expressionNode()               {}
-func (e *Identifier) GetValue() string              { return e.Token.Value }
-func (e *Identifier) GetTokenType() token.TokenType { return token.IDENTIFIER }
-func (e *Identifier) GetChildren() []Node           { return []Node{} }
-func (e *Identifier) String() string                { return e.Token.Value }
+func (i *Identifier) expressionNode()               {}
+func (i *Identifier) GetValue() string              { return i.Token.Value }
+func (i *Identifier) GetTokenType() token.TokenType { return token.IDENTIFIER }
+func (i *Identifier) GetChildren() []Node           { return []Node{} }
+func (i *Identifier) String() string                { return i.Token.Value }
 
 type Type struct {
 	Token token.Token
 }
 
-func NewType(Token token.Token) *Type {
-	t := new(Type)
-	t.Token = Token
+func NewType(tok token.Token) *Type {
+	t := &Type{
+		Token: tok,
+	}
 	return t
 }
 
@@ -246,11 +280,12 @@ type IntegerLiteral struct {
 	Value int
 }
 
-func NewIntegerLiteral(Token token.Token) (*IntegerLiteral, error) {
-	l := new(IntegerLiteral)
-	l.Token = Token
-	val, err := strconv.Atoi(Token.Value)
-	l.Value = val
+func NewIntegerLiteral(tok token.Token) (*IntegerLiteral, error) {
+	val, err := strconv.Atoi(tok.Value)
+	l := &IntegerLiteral{
+		Token: tok,
+		Value: val,
+	}
 	return l, err
 }
 
@@ -265,11 +300,12 @@ type FloatingPointLiteral struct {
 	Value float64
 }
 
-func NewFloatingPointLiteral(Token token.Token) (*FloatingPointLiteral, error) {
-	l := new(FloatingPointLiteral)
-	l.Token = Token
-	val, err := strconv.ParseFloat(Token.Value, 64)
-	l.Value = val
+func NewFloatingPointLiteral(tok token.Token) (*FloatingPointLiteral, error) {
+	val, err := strconv.ParseFloat(tok.Value, 64)
+	l := &FloatingPointLiteral{
+		Token: tok,
+		Value: val,
+	}
 	return l, err
 }
 
@@ -284,11 +320,12 @@ type BooleanLiteral struct {
 	Value bool
 }
 
-func NewBooleanLiteral(Token token.Token) (*BooleanLiteral, error) {
-	l := new(BooleanLiteral)
-	l.Token = Token
-	val, err := strconv.ParseBool(Token.Value)
-	l.Value = val
+func NewBooleanLiteral(tok token.Token) (*BooleanLiteral, error) {
+	val, err := strconv.ParseBool(tok.Value)
+	l := &BooleanLiteral{
+		Token: tok,
+		Value: val,
+	}
 	return l, err
 }
 
@@ -303,11 +340,12 @@ type CharacterLiteral struct {
 	Value rune
 }
 
-func NewCharacterLiteral(Token token.Token) *CharacterLiteral {
-	l := new(CharacterLiteral)
-	l.Token = Token
-	val := []rune(Token.Value)[0]
-	l.Value = val
+func NewCharacterLiteral(tok token.Token) *CharacterLiteral {
+	val := []rune(tok.Value)[0]
+	l := &CharacterLiteral{
+		Token: tok,
+		Value: val,
+	}
 	return l
 }
 
@@ -322,10 +360,11 @@ type StringLiteral struct {
 	Value string
 }
 
-func NewStringLiteral(Token token.Token) *StringLiteral {
-	l := new(StringLiteral)
-	l.Token = Token
-	l.Value = Token.Value
+func NewStringLiteral(tok token.Token) *StringLiteral {
+	l := &StringLiteral{
+		Token: tok,
+		Value: tok.Value,
+	}
 	return l
 }
 
@@ -341,9 +380,10 @@ type ExpressionStatement struct {
 	Expression Expression
 }
 
-func NewExpressionStatement(Expression Expression) *ExpressionStatement {
-	es := new(ExpressionStatement)
-	es.Expression = Expression
+func NewExpressionStatement(expression Expression) *ExpressionStatement {
+	es := &ExpressionStatement{
+		Expression: expression,
+	}
 	return es
 }
 
@@ -363,10 +403,11 @@ type DeclareAssignStatement struct {
 	Expression Expression
 }
 
-func NewDeclareAssignStatement(Identifier *Identifier, Expression Expression) *DeclareAssignStatement {
-	das := new(DeclareAssignStatement)
-	das.Identifier = Identifier
-	das.Expression = Expression
+func NewDeclareAssignStatement(identifier *Identifier, expression Expression) *DeclareAssignStatement {
+	das := &DeclareAssignStatement{
+		Identifier: identifier,
+		Expression: expression,
+	}
 	return das
 }
 
@@ -394,10 +435,11 @@ type DeclareStatement struct {
 	Assignment *AssignStatement
 }
 
-func NewDeclareStatement(Identifier *Identifier, Assignment *AssignStatement) *DeclareStatement {
-	ds := new(DeclareStatement)
-	ds.Identifier = Identifier
-	ds.Assignment = Assignment
+func NewDeclareStatement(identifier *Identifier, assignment *AssignStatement) *DeclareStatement {
+	ds := &DeclareStatement{
+		Identifier: identifier,
+		Assignment: assignment,
+	}
 	return ds
 }
 
@@ -432,10 +474,11 @@ type AssignStatement struct {
 	Expression Expression
 }
 
-func NewAssignStatement(Identifier *Identifier, Expression Expression) *AssignStatement {
-	as := new(AssignStatement)
-	as.Identifier = Identifier
-	as.Expression = Expression
+func NewAssignStatement(identifier *Identifier, expression Expression) *AssignStatement {
+	as := &AssignStatement{
+		Identifier: identifier,
+		Expression: expression,
+	}
 	return as
 }
 
@@ -464,11 +507,12 @@ type IfStatement struct {
 	Alternative *BlockStatement
 }
 
-func NewIfStatement(Condition Expression, Consequence *BlockStatement, Alternative *BlockStatement) *IfStatement {
-	is := new(IfStatement)
-	is.Condition = Condition
-	is.Consequence = Consequence
-	is.Alternative = Alternative
+func NewIfStatement(condition Expression, consequence *BlockStatement, alternative *BlockStatement) *IfStatement {
+	is := &IfStatement{
+		Condition:   condition,
+		Consequence: consequence,
+		Alternative: alternative,
+	}
 	return is
 }
 
@@ -504,10 +548,11 @@ type ForLoopStatement struct {
 	Consequence *BlockStatement
 }
 
-func NewForLoopStatement(Condition Expression, Consequence *BlockStatement) *ForLoopStatement {
-	fls := new(ForLoopStatement)
-	fls.Condition = Condition
-	fls.Consequence = Consequence
+func NewForLoopStatement(condition Expression, consequence *BlockStatement) *ForLoopStatement {
+	fls := &ForLoopStatement{
+		Condition:   condition,
+		Consequence: consequence,
+	}
 	return fls
 }
 
@@ -537,12 +582,13 @@ type FunctionDefinitionStatement struct {
 	Body       *BlockStatement
 }
 
-func NewFunctionDefinitionStatement(Identifier Identifier, Parameters []*DeclareStatement, ReturnType token.Token, Body *BlockStatement) *FunctionDefinitionStatement {
-	fds := new(FunctionDefinitionStatement)
-	fds.Identifier = Identifier
-	fds.Parameters = Parameters
-	fds.ReturnType = ReturnType
-	fds.Body = Body
+func NewFunctionDefinitionStatement(identifier Identifier, parameters []*DeclareStatement, returnType token.Token, body *BlockStatement) *FunctionDefinitionStatement {
+	fds := &FunctionDefinitionStatement{
+		Identifier: identifier,
+		Parameters: parameters,
+		ReturnType: returnType,
+		Body:       body,
+	}
 	return fds
 }
 
@@ -575,9 +621,10 @@ type ReturnStatement struct {
 	Expression Expression
 }
 
-func NewReturnStatement(Expression Expression) *ReturnStatement {
-	rs := new(ReturnStatement)
-	rs.Expression = Expression
+func NewReturnStatement(expression Expression) *ReturnStatement {
+	rs := &ReturnStatement{
+		Expression: expression,
+	}
 	return rs
 }
 
@@ -596,9 +643,10 @@ type BlockStatement struct {
 	Statements []Statement
 }
 
-func NewBlockStatement(Statements []Statement) *BlockStatement {
-	bs := new(BlockStatement)
-	bs.Statements = Statements
+func NewBlockStatement(statements []Statement) *BlockStatement {
+	bs := &BlockStatement{
+		Statements: statements,
+	}
 	return bs
 }
 
@@ -619,6 +667,33 @@ func (bs *BlockStatement) String() string {
 		out.WriteString(s.String())
 		out.WriteString(" ")
 	}
+
+	return out.String()
+}
+
+type ImportStatement struct {
+	Identifier *Identifier
+}
+
+func NewImportStatement(identifier token.Token) *ImportStatement {
+	is := &ImportStatement{
+		Identifier: NewIdentifier(identifier),
+	}
+	return is
+}
+
+func (is *ImportStatement) statementNode()                {}
+func (is *ImportStatement) GetValue() string              { return is.Identifier.GetValue() }
+func (is *ImportStatement) GetTokenType() token.TokenType { return token.IMPORT }
+func (is *ImportStatement) GetChildren() []Node {
+	return []Node{is.Identifier}
+}
+func (is *ImportStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(token.IMPORT.String())
+	out.WriteString(" : ")
+	out.WriteString(is.Identifier.GetValue())
 
 	return out.String()
 }

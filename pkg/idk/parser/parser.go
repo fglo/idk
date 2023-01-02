@@ -27,6 +27,7 @@ const (
 	RANGE
 	CALL
 	INDEX
+	PROPERTY
 )
 
 var precedences = map[token.TokenType]int{
@@ -52,6 +53,7 @@ var precedences = map[token.TokenType]int{
 	token.RANGE:           RANGE,
 	token.RANGE_INCLUSIVE: RANGE,
 	token.LPARENTHESIS:    CALL,
+	token.DOT:             PROPERTY,
 }
 
 type (
@@ -74,11 +76,22 @@ type Parser struct {
 }
 
 func NewParser(input string) *Parser {
-	p := new(Parser)
-	p.input = input
-	p.lexer = lexer.NewLexer(input)
+	parser := &Parser{
+		input:          input,
+		lexer:          lexer.NewLexer(input),
+		prefixParseFns: make(map[token.TokenType]prefixParseFn),
+		infixParseFns:  make(map[token.TokenType]infixParseFn),
+	}
 
-	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	parser.registerPrefixes()
+	parser.registerInfixes()
+
+	parser.consumeToken()
+
+	return parser
+}
+
+func (p *Parser) registerPrefixes() {
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
 	p.registerPrefix(token.TYPE, p.parseType)
@@ -90,31 +103,26 @@ func NewParser(input string) *Parser {
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
 	p.registerPrefix(token.NOT, p.parsePrefixExpression)
+}
 
-	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+func (p *Parser) registerInfixes() {
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.MODULO, p.parseInfixExpression)
-
 	p.registerInfix(token.IN, p.parseInfixExpression)
 	p.registerInfix(token.RANGE, p.parseInfixExpression)
-
 	p.registerInfix(token.EQ, p.parseInfixExpression)
 	p.registerInfix(token.NEQ, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.GTE, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.LTE, p.parseInfixExpression)
-
 	p.registerInfix(token.AND, p.parseInfixExpression)
 	p.registerInfix(token.OR, p.parseInfixExpression)
 	p.registerInfix(token.XOR, p.parseInfixExpression)
-
-	p.consumeToken()
-
-	return p
+	p.registerInfix(token.DOT, p.parseProperty)
 }
 
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
@@ -275,6 +283,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch {
 	case p.currentTokenIs(token.LINE_COMMENT):
 		p.skipCommentedLine()
+	case p.currentTokenIs(token.IMPORT):
+		return p.parseImportStatement()
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLASSIGN):
 		return p.parseDeclareAssignStatement()
 	case p.currentTokenIs(token.IDENTIFIER) && p.nextTokenIs(token.DECLARE):
@@ -455,17 +465,26 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 }
 
 func (p *Parser) parseFunctionCallStatement() *ast.ExpressionStatement {
-	stmt := new(ast.ExpressionStatement)
-	stmt.Expression = p.parseFunctionCallExpression()
+	stmt := &ast.ExpressionStatement{
+		Expression: p.parseFunctionCallExpression(),
+	}
 	p.ifEolIsNextThenSkip()
 	return stmt
 }
 
-func (p *Parser) parseFunctionCallExpression() ast.Expression {
+func (p *Parser) parseFunctionCallExpression() *ast.FunctionCallExpression {
 	exp := ast.NewFunctionCallExpression(p.current)
 	p.consumeToken()
 	exp.Parameters = p.parseFunctionCallParametersList()
 	return exp
+}
+
+func (p *Parser) parseImportStatement() *ast.ImportStatement {
+	p.expectNextTokenType(token.IDENTIFIER)
+	p.consumeToken()
+	stmt := ast.NewImportStatement(p.current)
+	p.consumeToken()
+	return stmt
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
@@ -578,6 +597,16 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	p.skipEols()     // skip EOLs
 	right := p.parseExpression(precedence)
 	expr := ast.NewInfixExpression(left, operator, right)
+	return expr
+}
+
+func (p *Parser) parseProperty(parent ast.Expression) ast.Expression {
+	p.expectCurrentTokenType(token.DOT)
+	precedence := p.currentPrecedence()
+	p.consumeToken() // skip the operator
+	p.expectCurrentTokenType(token.IDENTIFIER)
+	property := p.parseExpression(precedence)
+	expr := ast.NewPropertyExpression(parent.(*ast.Identifier), property)
 	return expr
 }
 

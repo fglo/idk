@@ -42,6 +42,9 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.Program:
 		return evalProgram(node, scope)
 
+	case *ast.ImportStatement:
+		return evalImportStatement(node, scope)
+
 	case *ast.BlockStatement:
 		return evalBlockStatement(node, scope)
 
@@ -102,30 +105,30 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		return &symbol.String{Value: node.Value}
 
 	// case *ast.ArrayLiteral:
-	// 	elements := evalExpressions(node.Elements, env)
+	// 	elements := evalExpressions(node.Elements, scope)
 	// 	if len(elements) == 1 && symbol.IsError(elements[0]) {
 	// 		return elements[0]
 	// 	}
 	// 	return &symbol.Array{Elements: elements}
 
 	// case *ast.IndexExpression:
-	// 	left := Eval(node.Left, env)
+	// 	left := Eval(node.Left, scope)
 	// 	if symbol.IsError(left) {
 	// 		return left
 	// 	}
-	// 	index := Eval(node.Index, env)
+	// 	index := Eval(node.Index, scope)
 	// 	if symbol.IsError(index) {
 	// 		return index
 	// 	}
 	// 	return evalIndexExpression(left, index)
 
 	// case *ast.HashLiteral:
-	// 	return evalHashLiteral(node, env)
+	// 	return evalHashLiteral(node, scope)
 
 	// case *ast.FunctionLiteral:
 	// 	params := node.Parameters
 	// 	body := node.Body
-	// 	return &symbol.Function{Parameters: params, Env: env, Body: body}
+	// 	return &symbol.Function{Parameters: params, Env: scope, Body: body}
 
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, scope)
@@ -158,6 +161,11 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 
 		return result
 
+	case *ast.PropertyExpression:
+		namedScope := scope.GetNamedScope(node.Parent.GetValue())
+
+		return Eval(node.Property, namedScope)
+
 	case *ast.IfStatement:
 		return evalIfStatement(node, scope)
 
@@ -173,19 +181,19 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.FunctionDefinitionStatement:
 		function := evalIdentifier(&node.Identifier, scope)
 		if !symbol.IsError(function) {
-			return newError("Evaluator error on line %v, position %v: identifier %s is already taken", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, node.Identifier.Value)
+			return newError("Evaluator error on line %v, position %v: identifier %s is already taken", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, node.Identifier.GetValue())
 		}
 
 		returnType := token.LookupType(node.ReturnType.Value)
 		function = &symbol.Function{
-			Identifier: node.Identifier.Value,
+			Identifier: node.Identifier.GetValue(),
 			Parameters: node.Parameters,
 			Scope:      scope,
 			Body:       node.Body,
 			ReturnType: common.ToObjectType(returnType),
 		}
 
-		scope.Insert(node.Identifier.Value, function, symbol.FUNCTION_OBJ)
+		scope.Insert(node.Identifier.GetValue(), function, symbol.FUNCTION_OBJ)
 
 	case *ast.FunctionCallExpression:
 		return evalFunctionCallExpression(node, scope)
@@ -194,11 +202,11 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	return nil
 }
 
-func evalProgram(program *ast.Program, env *symbol.Scope) symbol.Object {
+func evalProgram(program *ast.Program, scope *symbol.Scope) symbol.Object {
 	var result symbol.Object
 
 	for _, statement := range program.Statements {
-		result = Eval(statement, env)
+		result = Eval(statement, scope)
 
 		switch result := result.(type) {
 		case *symbol.ReturnValue:
@@ -211,14 +219,20 @@ func evalProgram(program *ast.Program, env *symbol.Scope) symbol.Object {
 	return result
 }
 
+func evalImportStatement(importStatement *ast.ImportStatement, scope *symbol.Scope) symbol.Object {
+	var result symbol.Object
+
+	return result
+}
+
 func evalBlockStatement(
 	block *ast.BlockStatement,
-	env *symbol.Scope,
+	scope *symbol.Scope,
 ) symbol.Object {
 	var result symbol.Object
 
 	for _, statement := range block.Statements {
-		result = Eval(statement, env)
+		result = Eval(statement, scope)
 
 		if result != nil {
 			rt := result.Type()
@@ -529,7 +543,7 @@ func evalDeclareAssignStetment(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: %s", node.Identifier.Value)
+		return newError("identifier already taken: %s", node.Identifier.GetValue())
 	}
 
 	val := Eval(node.Expression, scope)
@@ -537,7 +551,7 @@ func evalDeclareAssignStetment(
 		return val
 	}
 
-	scope.Insert(node.Identifier.Value, val, val.Type())
+	scope.Insert(node.Identifier.GetValue(), val, val.Type())
 	return nil
 }
 
@@ -547,10 +561,10 @@ func evalDeclareStatement(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: %s", node.Identifier.Value)
+		return newError("identifier already taken: %s", node.Identifier.GetValue())
 	}
 
-	scope.Insert(node.Identifier.Value, GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.Type))
+	scope.Insert(node.Identifier.GetValue(), GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.Type))
 
 	if node.Assignment != nil {
 		val := evalAssignStatement(node.Assignment, scope)
@@ -570,7 +584,7 @@ func evalAssignStatement(
 		return variable
 	}
 
-	sym, ok := scope.Lookup(node.Identifier.Value)
+	sym, ok := scope.Lookup(node.Identifier.GetValue())
 	identifierType := symbol.NULL_OBJ
 	if ok {
 		identifierType = sym.Type
@@ -585,7 +599,7 @@ func evalAssignStatement(
 		return newError("type mismatch: %s = %s", identifierType, val.Type())
 	}
 
-	scope.TryToAssign(node.Identifier.Value, val, val.Type())
+	scope.TryToAssign(node.Identifier.GetValue(), val, val.Type())
 
 	return nil
 }
@@ -594,30 +608,30 @@ func evalIdentifier(
 	node *ast.Identifier,
 	scope *symbol.Scope,
 ) symbol.Object {
-	if val, ok := scope.Lookup(node.Value); ok {
+	if val, ok := scope.Lookup(node.GetValue()); ok {
 		return val.Object
 	}
 
-	if builtin, ok := builtins[node.Value]; ok {
+	if builtin, ok := builtins[node.GetValue()]; ok {
 		return builtin
 	}
 
-	return newError("identifier not found: %s", node.Value)
+	return newError("identifier not found: %s", node.GetValue())
 }
 
 func evalIdentifierInCurrentScope(
 	node *ast.Identifier,
 	scope *symbol.Scope,
 ) symbol.Object {
-	if val, ok := scope.LookupInCurrentScope(node.Value); ok {
+	if val, ok := scope.LookupInCurrentScope(node.GetValue()); ok {
 		return val.Object
 	}
 
-	if builtin, ok := builtins[node.Value]; ok {
+	if builtin, ok := builtins[node.GetValue()]; ok {
 		return builtin
 	}
 
-	return newError("identifier not found: %s", node.Value)
+	return newError("identifier not found: %s", node.GetValue())
 }
 
 func evalFunctionCallExpression(
@@ -660,12 +674,12 @@ func newError(format string, a ...interface{}) *symbol.Error {
 
 func evalExpressions(
 	exps []ast.Expression,
-	env *symbol.Scope,
+	scope *symbol.Scope,
 ) []symbol.Object {
 	var result []symbol.Object
 
 	for _, e := range exps {
-		evaluated := Eval(e, env)
+		evaluated := Eval(e, scope)
 		if symbol.IsError(evaluated) {
 			return []symbol.Object{evaluated}
 		}
@@ -700,7 +714,7 @@ func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
 	extendedScope := extendFunctionScope(fn, args)
 	for i, param := range fn.Parameters {
 		arg := args[i]
-		extendedScope.Insert(param.Identifier.Value, arg, symbol.ObjectType(param.Identifier.Type))
+		extendedScope.Insert(param.Identifier.GetValue(), arg, symbol.ObjectType(param.Identifier.Type))
 	}
 	evaluated := Eval(fn.Body, extendedScope)
 	result := unwrapReturnValue(evaluated)
@@ -758,12 +772,12 @@ func unwrapReturnValue(obj symbol.Object) symbol.Object {
 
 // func evalHashLiteral(
 // 	node *ast.HashLiteral,
-// 	env *symbol.Scope,
+// 	scope *symbol.Scope,
 // ) symbol.Object {
 // 	pairs := make(map[symbol.HashKey]symbol.HashPair)
 
 // 	for keyNode, valueNode := range node.Pairs {
-// 		key := Eval(keyNode, env)
+// 		key := Eval(keyNode, scope)
 // 		if symbol.IsError(key) {
 // 			return key
 // 		}
@@ -773,7 +787,7 @@ func unwrapReturnValue(obj symbol.Object) symbol.Object {
 // 			return newError("unusable as hash key: %s", key.Type())
 // 		}
 
-// 		value := Eval(valueNode, env)
+// 		value := Eval(valueNode, scope)
 // 		if symbol.IsError(value) {
 // 			return value
 // 		}
