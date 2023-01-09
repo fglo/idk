@@ -85,8 +85,8 @@ func parseAndEvalPackageFile(moduleScope *symbol.Scope, packageName string, file
 			ast.PrettyPrintProgram(program)
 		}
 
-		scope := moduleScope.GetNamedScope(packageName)
-		result := evaluator.Eval(program, scope)
+		scope := moduleScope.GetOrCreateNamedScope(packageName)
+		result := evaluator.EvalProgram(filepath, program, scope)
 		if symbol.IsError(result) {
 			fmt.Println(result.Inspect())
 		}
@@ -111,7 +111,7 @@ func parseAndEvalModuleEntryFile(scope *symbol.Scope, moduleEntryPoint string, p
 			ast.PrettyPrintProgram(program)
 		}
 
-		result := evaluator.Eval(program, scope)
+		result := evaluator.EvalProgram(moduleEntryPoint, program, scope)
 		if symbol.IsError(result) {
 			fmt.Println(result.Inspect())
 		}

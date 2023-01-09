@@ -16,7 +16,7 @@ var (
 )
 
 func GetDefaultValue(identifier ast.Identifier) symbol.Object {
-	switch identifier.Type {
+	switch identifier.GetType() {
 	case token.INT:
 		return &symbol.Integer{Value: int64(0)}
 	case token.FLOAT:
@@ -33,6 +33,13 @@ func GetDefaultValue(identifier ast.Identifier) symbol.Object {
 		return &symbol.Function{}
 	}
 	return &symbol.Null{}
+}
+
+var filepath string
+
+func EvalProgram(file string, program *ast.Program, scope *symbol.Scope) symbol.Object {
+	filepath = file
+	return Eval(program, scope)
 }
 
 func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
@@ -52,17 +59,17 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 		return Eval(node.Expression, scope)
 
 	case *ast.ReturnStatement:
-		val := Eval(node.Expression, scope)
-		if symbol.IsError(val) {
-			return val
+		result := Eval(node.Expression, scope)
+		if symbol.IsError(result) {
+			return result
 		}
 
-		return &symbol.ReturnValue{Value: val}
+		return &symbol.ReturnValue{Value: result}
 
 	case *ast.DeclareAssignStatement:
 		result := evalDeclareAssignStetment(node, scope)
 		if symbol.IsError(result) {
-			return newEvaluatorError(node.Identifier.Token.Line, result.Inspect())
+			return newEvaluatorError(node.Identifier.GetLineNumber(), result.(*symbol.Error).Message)
 		}
 
 		return result
@@ -70,7 +77,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.DeclareStatement:
 		result := evalDeclareStatement(node, scope)
 		if symbol.IsError(result) {
-			return newEvaluatorError(node.Identifier.Token.Line, result.Inspect())
+			return newEvaluatorError(node.Identifier.GetLineNumber(), result.(*symbol.Error).Message)
 		}
 
 		return result
@@ -78,31 +85,31 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.AssignStatement:
 		result := evalAssignStatement(node, scope)
 		if symbol.IsError(result) {
-			return newEvaluatorError(node.Identifier.Token.Line, result.Inspect())
+			return newEvaluatorError(node.Identifier.GetLineNumber(), result.(*symbol.Error).Message)
 		}
 
 		return result
 
 	// Expressions
 	case *ast.Type:
-		tokenType := token.LookupType(node.Token.Value)
+		tokenType := token.LookupType(node.GetTokenValue())
 		objType := common.ToObjectType(tokenType)
 		return &symbol.Type{Value: objType}
 
 	case *ast.IntegerLiteral:
-		return &symbol.Integer{Value: int64(node.Value)}
+		return &symbol.Integer{Value: int64(node.GetValue())}
 
 	case *ast.FloatingPointLiteral:
-		return &symbol.FloatingPoint{Value: float64(node.Value)}
+		return &symbol.FloatingPoint{Value: float64(node.GetValue())}
 
 	case *ast.BooleanLiteral:
-		return nativeBoolToBooleanObject(node.Value)
+		return nativeBoolToBooleanObject(node.GetValue())
 
 	case *ast.CharacterLiteral:
-		return &symbol.Character{Value: node.Value}
+		return &symbol.Character{Value: node.GetValue()}
 
 	case *ast.StringLiteral:
-		return &symbol.String{Value: node.Value}
+		return &symbol.String{Value: node.GetValue()}
 
 	// case *ast.ArrayLiteral:
 	// 	elements := evalExpressions(node.Elements, scope)
@@ -136,9 +143,9 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 			return right
 		}
 
-		result := evalPrefixExpression(node.Token.Value, right)
+		result := evalPrefixExpression(node.GetTokenValue(), right)
 		if symbol.IsError(result) {
-			return newEvaluatorError(node.Token.Line, result.Inspect())
+			return newEvaluatorError(node.GetLineNumber(), result.(*symbol.Error).Message)
 		}
 
 		return result
@@ -154,15 +161,18 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 			return right
 		}
 
-		result := evalInfixExpression(node.Token.Value, left, right)
+		result := evalInfixExpression(node.GetTokenValue(), left, right)
 		if symbol.IsError(result) {
-			return newEvaluatorError(node.Token.Line, result.Inspect())
+			return newEvaluatorError(node.GetLineNumber(), result.(*symbol.Error).Message)
 		}
 
 		return result
 
 	case *ast.PropertyExpression:
-		namedScope := scope.GetNamedScope(node.Parent.GetValue())
+		namedScope := scope.GetNamedScope(node.Parent.GetTokenValue())
+		if namedScope == nil {
+			return newEvaluatorError(node.Parent.GetLineNumber(), "Couldn't find package named '%s'", node.Parent.GetTokenValue())
+		}
 
 		return Eval(node.Property, namedScope)
 
@@ -181,7 +191,7 @@ func Eval(node ast.Node, scope *symbol.Scope) symbol.Object {
 	case *ast.FunctionDefinitionStatement:
 		function := evalIdentifier(&node.Identifier, scope)
 		if !symbol.IsError(function) {
-			return newError("Evaluator error on line %v, position %v: identifier %s is already taken", node.Identifier.Token.Line, node.Identifier.Token.PositionInLine, node.Identifier.GetValue())
+			return newEvaluatorError(node.GetLineNumber(), "identifier %s is already taken", node.Identifier.GetValue())
 		}
 
 		returnType := token.LookupType(node.ReturnType.Value)
@@ -220,9 +230,12 @@ func evalProgram(program *ast.Program, scope *symbol.Scope) symbol.Object {
 }
 
 func evalImportStatement(importStatement *ast.ImportStatement, scope *symbol.Scope) symbol.Object {
-	var result symbol.Object
+	namedScope := scope.GetNamedScope(importStatement.GetTokenValue())
+	if namedScope == nil {
+		return newEvaluatorError(importStatement.GetLineNumber(), "Couldn't find package named '%s'", importStatement.GetTokenValue())
+	}
 
-	return result
+	return nil
 }
 
 func evalBlockStatement(
@@ -259,7 +272,7 @@ func evalPrefixExpression(operator string, right symbol.Object) symbol.Object {
 	case "-":
 		return evalMinusPrefixOperatorExpression(right)
 	default:
-		return newError("unknown operator: %s%s", operator, right.Type())
+		return newError("unknown operator: %s %s", operator, right.Type())
 	}
 }
 
@@ -543,7 +556,7 @@ func evalDeclareAssignStetment(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: %s", node.Identifier.GetValue())
+		return newEvaluatorError(node.Identifier.GetLineNumber(), "identifier already taken: %s", node.Identifier.GetValue())
 	}
 
 	val := Eval(node.Expression, scope)
@@ -561,10 +574,10 @@ func evalDeclareStatement(
 ) symbol.Object {
 	variable := evalIdentifierInCurrentScope(node.Identifier, scope)
 	if !symbol.IsError(variable) {
-		return newError("identifier already taken: %s", node.Identifier.GetValue())
+		return newEvaluatorError(node.Identifier.GetLineNumber(), "identifier already taken: %s", node.Identifier.GetValue())
 	}
 
-	scope.Insert(node.Identifier.GetValue(), GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.Type))
+	scope.Insert(node.Identifier.GetValue(), GetDefaultValue(*node.Identifier), common.ToObjectType(node.Identifier.GetType()))
 
 	if node.Assignment != nil {
 		val := evalAssignStatement(node.Assignment, scope)
@@ -616,7 +629,7 @@ func evalIdentifier(
 		return builtin
 	}
 
-	return newError("identifier not found: %s", node.GetValue())
+	return newEvaluatorError(node.GetLineNumber(), "identifier not found: %s", node.GetValue())
 }
 
 func evalIdentifierInCurrentScope(
@@ -631,7 +644,7 @@ func evalIdentifierInCurrentScope(
 		return builtin
 	}
 
-	return newError("identifier not found: %s", node.GetValue())
+	return newEvaluatorError(node.GetLineNumber(), "identifier not found: %s", node.GetValue())
 }
 
 func evalFunctionCallExpression(
@@ -664,12 +677,20 @@ func isTruthy(obj symbol.Object) bool {
 	}
 }
 
-func newEvaluatorError(line int, message string) *symbol.Error {
-	return &symbol.Error{Message: fmt.Sprintf("Evaluator error on line %v: %s", line, message)}
+func newEvaluatorError(line int, format string, a ...interface{}) *symbol.Error {
+	return &symbol.Error{
+		File:       filepath,
+		LineNumber: line,
+		Message:    fmt.Sprintf(format, a...),
+	}
 }
 
 func newError(format string, a ...interface{}) *symbol.Error {
-	return &symbol.Error{Message: fmt.Sprintf(format, a...)}
+	return &symbol.Error{
+		File:       filepath,
+		LineNumber: 0,
+		Message:    fmt.Sprintf(format, a...),
+	}
 }
 
 func evalExpressions(
@@ -702,7 +723,7 @@ func applyFunctionOrBuiltin(fn symbol.Object, args []symbol.Object) symbol.Objec
 
 func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
 	for i := 0; i < len(args); i++ {
-		parameterType := fn.Parameters[i].Identifier.Type
+		parameterType := fn.Parameters[i].Identifier.GetType()
 		x := args[i].Type()
 		_ = x
 		argType := common.ToTokenType(args[i].Type())
@@ -714,10 +735,14 @@ func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
 	extendedScope := extendFunctionScope(fn, args)
 	for i, param := range fn.Parameters {
 		arg := args[i]
-		extendedScope.Insert(param.Identifier.GetValue(), arg, symbol.ObjectType(param.Identifier.Type))
+		extendedScope.Insert(param.Identifier.GetValue(), arg, symbol.ObjectType(param.Identifier.GetType()))
 	}
 	evaluated := Eval(fn.Body, extendedScope)
 	result := unwrapReturnValue(evaluated)
+
+	if symbol.IsError(result) {
+		return result
+	}
 
 	if result.Type() != fn.ReturnType {
 		return newError("cannot use %s as %s in return statement", result.Type(), fn.ReturnType)

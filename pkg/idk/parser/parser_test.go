@@ -76,9 +76,9 @@ func TestParsingPrefixExpressions(t *testing.T) {
 		if !ok {
 			t.Fatalf("stmt is not ast.PrefixExpression. got=%T", stmt.Expression)
 		}
-		if exp.Token.Value != tt.operator {
+		if exp.GetTokenValue() != tt.operator {
 			t.Fatalf("exp.Operator is not '%s'. got=%s",
-				tt.operator, exp.Token.Value)
+				tt.operator, exp.GetTokenValue())
 		}
 		if !testLiteralExpression(t, exp.Right, tt.value) {
 			return
@@ -294,8 +294,8 @@ func testDeclareAssignStatement(t *testing.T, s ast.Statement, name string) bool
 		return false
 	}
 
-	if declareAssign.Identifier.Token.Value != name {
-		t.Errorf("declAssStmt.Identifier.Token.Value not '%s'. got=%s", name, declareAssign.Identifier.Token.Value)
+	if declareAssign.Identifier.GetValue() != name {
+		t.Errorf("declAssStmt.Identifier.GetTokenValue() not '%s'. got=%s", name, declareAssign.Identifier.GetValue())
 		return false
 	}
 
@@ -326,13 +326,13 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int) bool {
 		return false
 	}
 
-	if integer.Value != value {
-		t.Errorf("integ.Value not %d. got=%d", value, integer.Value)
+	if integer.GetValue() != value {
+		t.Errorf("integ.Value not %d. got=%d", value, integer.GetValue())
 		return false
 	}
 
-	if integer.Token.Value != fmt.Sprintf("%d", value) {
-		t.Errorf("integer.Token.Value not '%d'. got=%s", value, integer.Token.Value)
+	if integer.GetTokenValue() != fmt.Sprintf("%d", value) {
+		t.Errorf("integer.GetTokenValue() not '%d'. got=%s", value, integer.GetTokenValue())
 		return false
 	}
 
@@ -351,8 +351,8 @@ func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 		return false
 	}
 
-	if identifier.Token.Value != value {
-		t.Errorf("integer.Token.Value not '%s'. got=%s", value, identifier.Token.Value)
+	if identifier.GetTokenValue() != value {
+		t.Errorf("integer.GetTokenValue() not '%s'. got=%s", value, identifier.GetTokenValue())
 		return false
 	}
 
@@ -366,13 +366,13 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 		return false
 	}
 
-	if boolean.Value != value {
-		t.Errorf("bo.Value not %t. got=%t", value, boolean.Value)
+	if boolean.GetValue() != value {
+		t.Errorf("bo.Value not %t. got=%t", value, boolean.GetValue())
 		return false
 	}
 
-	if boolean.Token.Value != fmt.Sprintf("%t", value) {
-		t.Errorf("integer.Token.Value not '%t'. got=%s", value, boolean.Token.Value)
+	if boolean.GetTokenValue() != fmt.Sprintf("%t", value) {
+		t.Errorf("integer.GetTokenValue() not '%t'. got=%s", value, boolean.GetTokenValue())
 		return false
 	}
 
@@ -392,8 +392,8 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
 		return false
 	}
 
-	if opExp.Token.Value != operator {
-		t.Errorf("exp.Token.Value is not '%s'. got=%q", operator, opExp.Token.Value)
+	if opExp.GetTokenValue() != operator {
+		t.Errorf("exp.GetTokenValue() is not '%s'. got=%q", operator, opExp.GetTokenValue())
 		return false
 	}
 

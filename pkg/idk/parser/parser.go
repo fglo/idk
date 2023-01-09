@@ -339,7 +339,7 @@ func (p *Parser) parseDeclareStatement() *ast.DeclareStatement {
 	p.consumeToken() // declare operator
 	vartype := p.consumeToken()
 
-	identifier.Type = token.LookupType(vartype.Value)
+	identifier.SetType(token.LookupType(vartype.Value))
 
 	var ass *ast.AssignStatement
 	if p.nextTokenIs(token.ASSIGN) {
@@ -423,6 +423,7 @@ func (p *Parser) parseFunctionDefinitionStatement() *ast.FunctionDefinitionState
 	}
 
 	identifier := ast.NewIdentifier(p.current)
+	identifier.SetType(token.FUNC)
 
 	p.consumeToken() // skip identifier
 
@@ -436,8 +437,6 @@ func (p *Parser) parseFunctionDefinitionStatement() *ast.FunctionDefinitionState
 	}
 
 	p.expectNextTokenType(token.EOL)
-
-	identifier.Type = token.FUNC
 
 	p.ifEolIsNextThenSkip()
 

@@ -26,7 +26,7 @@ func NewInnerScope(outer *Scope) *Scope {
 	return env
 }
 
-func (s *Scope) GetNamedScope(name string) *Scope {
+func (s *Scope) GetOrCreateNamedScope(name string) *Scope {
 	if scope, ok := s.namedScopes[name]; ok {
 		return scope
 	}
@@ -37,6 +37,14 @@ func (s *Scope) GetNamedScope(name string) *Scope {
 	s.namedScopes[name] = env
 
 	return env
+}
+
+func (s *Scope) GetNamedScope(name string) *Scope {
+	if scope, ok := s.namedScopes[name]; ok {
+		return scope
+	}
+
+	return nil
 }
 
 func (s *Scope) Lookup(name string) (Symbol, bool) {

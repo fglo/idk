@@ -142,11 +142,23 @@ func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
 func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
 
 type Error struct {
-	Message string
+	File           string
+	LineNumber     int
+	PositionInLine int
+	Message        string
 }
 
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
-func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
+func (e *Error) Inspect() string {
+	switch {
+	case e.LineNumber != 0 && e.PositionInLine != 0:
+		return fmt.Sprintf("ERROR: Evaluator error in file %s on line %v, position %v: %s", e.File, e.LineNumber, e.PositionInLine, e.Message)
+	case e.LineNumber != 0:
+		return fmt.Sprintf("ERROR: Evaluator error in file %s on line %v: %s", e.File, e.LineNumber, e.Message)
+	default:
+		return fmt.Sprintf("ERROR: Evaluator error in file %s: %s", e.File, e.Message)
+	}
+}
 
 type Function struct {
 	Identifier string

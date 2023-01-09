@@ -18,7 +18,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "cmd/idk/main.go",
-            "args": ["-m", "../../examples/module/module.idk", "-p"]
+            "args": ["-m", "../../examples/module/module.idk"]
         },
         {
             "name": "Fibonacci",
