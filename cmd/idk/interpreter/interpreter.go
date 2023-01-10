@@ -47,6 +47,7 @@ func RunModule(moduleEntryPoint string, prettyPrint bool) {
 	}
 
 	scope := symbol.NewScope()
+
 	for _, packageDir := range files {
 		if packageDir.IsDir() {
 			packageName := packageDir.Name()
@@ -57,9 +58,11 @@ func RunModule(moduleEntryPoint string, prettyPrint bool) {
 				log.Fatal(err)
 			}
 
-			for _, fileName := range packageFiles {
-				filepath := fmt.Sprintf("%s/%s/%s", moduleDir, packageName, fileName.Name())
-				parseAndEvalPackageFile(scope, packageName, filepath, prettyPrint)
+			for _, file := range packageFiles {
+				if !file.IsDir() && filepath.Ext(file.Name()) == ".idk" {
+					filepath := fmt.Sprintf("%s/%s/%s", moduleDir, packageName, file.Name())
+					parseAndEvalPackageFile(scope, packageName, filepath, prettyPrint)
+				}
 			}
 		}
 	}

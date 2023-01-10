@@ -1,4 +1,3 @@
-// This function returns the nth Fibonacci number
 func fibonacci(n:int) -> int
     if n == 0
         return 0
@@ -9,8 +8,6 @@ func fibonacci(n:int) -> int
     end
 end
 
-// Calculate the 10th Fibonacci number
-fib10 := fibonacci(10)
+fib := fibonacci(30)
 
-// Print the result
-print(fib10)
+print(fib)
