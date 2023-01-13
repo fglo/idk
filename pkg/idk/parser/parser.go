@@ -38,7 +38,7 @@ var precedences = map[token.TokenType]int{
 	token.AND:             AND,
 	token.OR:              OR,
 	token.XOR:             XOR,
-	token.NOT:             NOT,
+	token.BANG:            NOT,
 	token.EQ:              EQUALS,
 	token.NEQ:             EQUALS,
 	token.LT:              LESSGREATER,
@@ -102,7 +102,7 @@ func (p *Parser) registerPrefixes() {
 	p.registerPrefix(token.CHAR, p.parseCharacterLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LPARENTHESIS, p.parseGroupedExpression)
-	p.registerPrefix(token.NOT, p.parsePrefixExpression)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 }
 
 func (p *Parser) registerInfixes() {

@@ -31,15 +31,16 @@ func (l *Lexer) peek(offset int) byte {
 	if i >= len(l.input) {
 		return 0
 	}
+
 	return l.input[i]
 }
 
-func (l *Lexer) PeekNext() byte {
+func (l *Lexer) peekNext() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
-	} else {
-		return l.input[l.readPosition]
 	}
+
+	return l.input[l.readPosition]
 }
 
 func (l *Lexer) readChar() byte {
@@ -55,14 +56,14 @@ func (l *Lexer) readChar() byte {
 }
 
 func (l *Lexer) skipWhitespace() {
-	for ch := rune(l.PeekNext()); unicode.IsSpace(ch) && ch != '\n'; ch = rune(l.PeekNext()) {
+	for ch := rune(l.peekNext()); unicode.IsSpace(ch) && ch != '\n'; ch = rune(l.peekNext()) {
 		l.readChar()
 	}
 }
 
 func (l *Lexer) skipEol() {
 	l.skipWhitespace()
-	for l.PeekNext() == '\n' {
+	for l.peekNext() == '\n' {
 		l.readChar()
 		l.currentLine++
 		l.skipWhitespace()
@@ -89,7 +90,7 @@ func (l *Lexer) ReadToken() token.Token {
 	case '+':
 		tok = token.NewToken(token.PLUS, l.position, l.currentLine, l.positionInLine)
 	case '-':
-		if l.PeekNext() == '>' {
+		if l.peekNext() == '>' {
 			tok = token.NewToken(token.RETURN_TYPE, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
@@ -98,7 +99,7 @@ func (l *Lexer) ReadToken() token.Token {
 	case '*':
 		tok = token.NewToken(token.ASTERISK, l.position, l.currentLine, l.positionInLine)
 	case '/':
-		if l.PeekNext() == '/' {
+		if l.peekNext() == '/' {
 			tok = token.NewToken(token.LINE_COMMENT, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
@@ -111,42 +112,42 @@ func (l *Lexer) ReadToken() token.Token {
 	case ')':
 		tok = token.NewToken(token.RPARENTHESIS, l.position, l.currentLine, l.positionInLine)
 	case ':':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.DECLASSIGN, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.DECLARE, l.position, l.currentLine, l.positionInLine)
 		}
 	case '=':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.EQ, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.ASSIGN, l.position, l.currentLine, l.positionInLine)
 		}
 	case '!':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.NEQ, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
-			tok = token.NewToken(token.NOT, l.position, l.currentLine, l.positionInLine)
+			tok = token.NewToken(token.BANG, l.position, l.currentLine, l.positionInLine)
 		}
 	case '<':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.LTE, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.LT, l.position, l.currentLine, l.positionInLine)
 		}
 	case '>':
-		if l.PeekNext() == '=' {
+		if l.peekNext() == '=' {
 			tok = token.NewToken(token.GTE, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
 			tok = token.NewToken(token.GT, l.position, l.currentLine, l.positionInLine)
 		}
 	case '.':
-		if l.PeekNext() == '.' {
+		if l.peekNext() == '.' {
 			tok = token.NewToken(token.RANGE, l.position, l.currentLine, l.positionInLine)
 			l.readChar()
 		} else {
@@ -174,7 +175,7 @@ func (l *Lexer) readNumberToken() *token.Token {
 	start := l.position
 	startInLine := l.positionInLine
 	isFloat := false
-	for ch := rune(l.PeekNext()); unicode.IsDigit(ch) || (!isFloat && ch == '.'); ch = rune(l.PeekNext()) {
+	for ch := rune(l.peekNext()); unicode.IsDigit(ch) || (!isFloat && ch == '.'); ch = rune(l.peekNext()) {
 		if ch == '.' {
 			isFloat = true
 		}
@@ -192,7 +193,7 @@ func (l *Lexer) readNumberToken() *token.Token {
 func (l *Lexer) readWordToken() *token.Token {
 	start := l.position
 	startInLine := l.positionInLine
-	for ch := rune(l.PeekNext()); unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_'; ch = rune(l.PeekNext()) {
+	for ch := rune(l.peekNext()); unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_'; ch = rune(l.peekNext()) {
 		l.readChar()
 	}
 
@@ -201,7 +202,7 @@ func (l *Lexer) readWordToken() *token.Token {
 
 	l.skipWhitespace()
 
-	if l.PeekNext() != '(' {
+	if l.peekNext() != '(' {
 		keyword = token.LookupKeyword(word)
 	}
 	return token.NewTokenNotDefaultValue(keyword, start, l.currentLine, startInLine, word)
