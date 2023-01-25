@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 
 	"github.com/fglo/idk/pkg/idk/ast"
+	"github.com/fglo/idk/pkg/idk/compiler"
 	"github.com/fglo/idk/pkg/idk/evaluator"
 	"github.com/fglo/idk/pkg/idk/parser"
 	"github.com/fglo/idk/pkg/idk/symbol"
+	"github.com/fglo/idk/pkg/idk/virtualmachine"
 )
 
 func RunSingleFile(sourceCodePath string, prettyPrint bool) {
@@ -68,6 +70,26 @@ func RunModule(moduleEntryPoint string, prettyPrint bool) {
 	}
 
 	parseAndEvalModuleEntryFile(scope, moduleEntryPoint, prettyPrint)
+}
+
+func CompileAndRun(sourceCodePath string) {
+	fileContent, err := os.ReadFile(sourceCodePath)
+	check(err)
+
+	p := compiler.NewCompiler(string(fileContent))
+	program := p.CompileProgram()
+	_ = program
+
+	if len(p.Errors()) != 0 {
+		fmt.Println("Compiler errors:")
+		for _, msg := range p.Errors() {
+			fmt.Println(msg)
+		}
+	} else {
+		// bytecode := compiler.Compile(sourceCodePath, program)
+		interpreter := virtualmachine.NewVirtualMachine(program)
+		interpreter.Run()
+	}
 }
 
 func parseAndEvalPackageFile(moduleScope *symbol.Scope, packageName string, filepath string, prettyPrint bool) {

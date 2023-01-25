@@ -45,6 +45,14 @@
             "args": ["-f", "../../examples/test_feat.idk"]
         },
         {
+            "name": "Compilation",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/idk/main.go",
+            "args": ["-c", "../../examples/test_compilation.idk"]
+        },
+        {
             "name": "Go: Run & Pretty Print IDK file",
             "type": "go",
             "request": "launch",

@@ -1,7 +1,9 @@
 package evaluator
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/fglo/idk/pkg/idk/ast"
 	"github.com/fglo/idk/pkg/idk/common"
@@ -14,6 +16,8 @@ var (
 	TRUE  = &symbol.Boolean{Value: true}
 	FALSE = &symbol.Boolean{Value: false}
 )
+
+var filepath string
 
 func GetDefaultValue(identifier ast.Identifier) symbol.Object {
 	switch identifier.GetType() {
@@ -34,8 +38,6 @@ func GetDefaultValue(identifier ast.Identifier) symbol.Object {
 	}
 	return &symbol.Null{}
 }
-
-var filepath string
 
 func EvalProgram(file string, program *ast.Program, scope *symbol.Scope) symbol.Object {
 	filepath = file
@@ -721,24 +723,33 @@ func applyFunctionOrBuiltin(fn symbol.Object, args []symbol.Object) symbol.Objec
 	}
 }
 
-func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
-	for i := 0; i < len(args); i++ {
-		parameterType := fn.Parameters[i].Identifier.GetType()
-		x := args[i].Type()
-		_ = x
-		argType := common.ToTokenType(args[i].Type())
-		if parameterType != argType {
-			return newError("function parameter type mismatch: %s, wanted: %s, got: %s", fn.Identifier, parameterType, argType)
-		}
-	}
+var memoizedFunctionCalls = make(map[string]symbol.Object) // TODO: proper caching
 
-	extendedScope := extendFunctionScope(fn, args)
-	for i, param := range fn.Parameters {
-		arg := args[i]
-		extendedScope.Insert(param.Identifier.GetValue(), arg, symbol.ObjectType(param.Identifier.GetType()))
+func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
+	callStatementString := getCallStatementString(fn, args)
+
+	result, ok := memoizedFunctionCalls[callStatementString]
+	if !ok {
+		for i := 0; i < len(args); i++ {
+			parameterType := fn.Parameters[i].Identifier.GetType()
+			x := args[i].Type()
+			_ = x
+			argType := common.ToTokenType(args[i].Type())
+			if parameterType != argType {
+				return newError("function parameter type mismatch: %s, wanted: %s, got: %s", fn.Identifier, parameterType, argType)
+			}
+		}
+
+		extendedScope := extendFunctionScope(fn, args)
+		for i, param := range fn.Parameters {
+			arg := args[i]
+			extendedScope.Insert(param.Identifier.GetValue(), arg, symbol.ObjectType(param.Identifier.GetType()))
+		}
+		evaluated := Eval(fn.Body, extendedScope)
+		result = unwrapReturnValue(evaluated)
+
+		memoizedFunctionCalls[callStatementString] = result
 	}
-	evaluated := Eval(fn.Body, extendedScope)
-	result := unwrapReturnValue(evaluated)
 
 	if symbol.IsError(result) {
 		return result
@@ -749,6 +760,24 @@ func applyFunction(fn *symbol.Function, args []symbol.Object) symbol.Object {
 	}
 
 	return result
+}
+
+func getCallStatementString(fn *symbol.Function, args []symbol.Object) string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, arg := range args {
+		params = append(params, arg.Inspect())
+	}
+
+	out.WriteString(fn.Scope.Name)
+	out.WriteString(".")
+	out.WriteString(fn.Identifier)
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(")")
+
+	return out.String()
 }
 
 func extendFunctionScope(
