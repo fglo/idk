@@ -1,6 +1,8 @@
 package opcodes
 
 import (
+	"strings"
+
 	"github.com/fglo/idk/pkg/idk/token"
 )
 
@@ -138,6 +140,26 @@ func ToString(opc byte) string {
 		return "IVAR_BIND"
 	case IVAR_LOOKUP:
 		return "IVAR_LOOKUP"
+	case FPUSH:
+		return "FPUSH"
+	case FADD:
+		return "FADD"
+	case FSUB:
+		return "FSUB"
+	case FMUL:
+		return "FMUL"
+	case FDIV:
+		return "FDIV"
+	case FMOD:
+		return "FMOD"
+	case FNEG:
+		return "FNEG"
+	case FPRINT:
+		return "FPRINT"
+	case FVAR_BIND:
+		return "FVAR_BIND"
+	case FVAR_LOOKUP:
+		return "FVAR_LOOKUP"
 	default:
 		return string(opc)
 	}
@@ -153,6 +175,23 @@ const (
 	CHAR
 	STRING
 )
+
+func ValTypeFromString(vtStr string) ValType {
+	switch strings.ToUpper(vtStr) {
+	case "INT":
+		return INT
+	case "FLOAT":
+		return FLOAT
+	case "BOOL":
+		return BOOL
+	case "CHAR":
+		return CHAR
+	case "STRING":
+		return STRING
+	default:
+		return UNKNOWN_TYPE
+	}
+}
 
 func (vt ValType) String() string {
 	switch vt {
@@ -171,10 +210,10 @@ func (vt ValType) String() string {
 	}
 }
 
-func GetInfixOperator(operator token.TokenType, varType ValType) byte {
+func InfixOperator(operator token.TokenType, valType ValType) byte {
 	switch operator {
 	case token.PLUS:
-		switch varType {
+		switch valType {
 		case INT:
 			return IADD
 		case FLOAT:
@@ -183,28 +222,28 @@ func GetInfixOperator(operator token.TokenType, varType ValType) byte {
 			return SCONCAT
 		}
 	case token.MINUS:
-		switch varType {
+		switch valType {
 		case INT:
 			return ISUB
 		case FLOAT:
 			return FSUB
 		}
 	case token.ASTERISK:
-		switch varType {
+		switch valType {
 		case INT:
 			return IMUL
 		case FLOAT:
 			return FMUL
 		}
 	case token.SLASH:
-		switch varType {
+		switch valType {
 		case INT:
 			return IDIV
 		case FLOAT:
 			return FDIV
 		}
 	case token.MODULO:
-		switch varType {
+		switch valType {
 		case INT:
 			return IMOD
 		case FLOAT:
@@ -215,17 +254,17 @@ func GetInfixOperator(operator token.TokenType, varType ValType) byte {
 	return UNKNOWN_OP
 }
 
-func GetPrefixOperator(operator token.TokenType, varType ValType) byte {
+func PrefixOperator(operator token.TokenType, valType ValType) byte {
 	switch operator {
 	case token.MINUS:
-		switch varType {
+		switch valType {
 		case INT:
 			return INEG
 		case FLOAT:
 			return FNEG
 		}
 	case token.BANG:
-		switch varType {
+		switch valType {
 		case BOOL:
 			return BNEG
 		}
@@ -234,8 +273,8 @@ func GetPrefixOperator(operator token.TokenType, varType ValType) byte {
 	return UNKNOWN_OP
 }
 
-func VarBind(varType ValType) byte {
-	switch varType {
+func VarBind(valType ValType) byte {
+	switch valType {
 	case INT:
 		return IVAR_BIND
 	case FLOAT:
@@ -251,8 +290,8 @@ func VarBind(varType ValType) byte {
 	return UNKNOWN_OP
 }
 
-func VarLookup(varType ValType) byte {
-	switch varType {
+func VarLookup(valType ValType) byte {
+	switch valType {
 	case INT:
 		return IVAR_LOOKUP
 	case FLOAT:
@@ -263,6 +302,23 @@ func VarLookup(varType ValType) byte {
 		return CVAR_LOOKUP
 	case STRING:
 		return SVAR_LOOKUP
+	}
+
+	return UNKNOWN_OP
+}
+
+func ValPrint(valType ValType) byte {
+	switch valType {
+	case INT:
+		return IPRINT
+	case FLOAT:
+		return FPRINT
+	case BOOL:
+		return BPRINT
+	case CHAR:
+		return CPRINT
+	case STRING:
+		return SPRINT
 	}
 
 	return UNKNOWN_OP

@@ -87,8 +87,8 @@ func CompileAndRun(sourceCodePath string) {
 		}
 	} else {
 		// bytecode := compiler.Compile(sourceCodePath, program)
-		interpreter := virtualmachine.NewVirtualMachine(program)
-		interpreter.Run()
+		vm := virtualmachine.NewVirtualMachine(program)
+		vm.Run()
 	}
 }
 

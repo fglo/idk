@@ -1,9 +1,25 @@
 a := 1 + 2 * 3
 print(-a)
 
-// b: int
-// b = 1 + 2 * 3
+b: int
+b = 1 + 2 * 3
+print(b)
+
+c: int = 1 + 2 * 3
+print(c)
+
+d := 0.1 + 0.2
+print(d)
+
+// b: float
+// b = 1.2
 // print(b)
 
-// c: int = 1 + 2 * 3
+// c: bool = true
 // print(c)
+
+// d: '$'
+// print(d)
+
+// e: "text"
+// print(e)

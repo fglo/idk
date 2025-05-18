@@ -73,6 +73,7 @@ func (vm *VirtualMachine) Run() {
 
 	for vm.ip < codeLength {
 		switch bytecode[vm.ip] {
+		// INT
 		case opcodes.IPUSH:
 			vm.ip++
 			addr := int(bytecode[vm.ip])
@@ -110,7 +111,10 @@ func (vm *VirtualMachine) Run() {
 			vm.ip++
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
-			value := vm.symbolTable.lookupInt(varname)
+			value, err := vm.symbolTable.lookupInt(varname)
+			if err != nil {
+				panic(err) // TODO: maybe better error handling
+			}
 			vm.intStack.push(value)
 		case opcodes.IFUNC_CREATE:
 			vm.ip++
@@ -150,6 +154,50 @@ func (vm *VirtualMachine) Run() {
 			if len(vm.callStack) > 0 {
 				bytecode = vm.functionTable[vm.callStack[len(vm.callStack)-1].functionName].code
 			}
+		// FLOAT
+		case opcodes.FPUSH:
+			vm.ip++
+			addr := int(bytecode[vm.ip])
+			value := constantPool.RetrieveFloat(addr)
+			vm.floatStack.push(value)
+		case opcodes.FADD:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.floatStack.push(b + a)
+		case opcodes.FSUB:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.floatStack.push(b - a)
+		case opcodes.FMUL:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.floatStack.push(b * a)
+		case opcodes.FDIV:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.floatStack.push(b / a)
+		case opcodes.FNEG:
+			val := vm.floatStack.pop()
+			vm.floatStack.push(-val)
+		case opcodes.FPRINT:
+			value := vm.floatStack.pop()
+			fmt.Println(value)
+		case opcodes.FVAR_BIND:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value := vm.floatStack.pop()
+			vm.symbolTable.bindFloat(varname, value)
+		case opcodes.FVAR_LOOKUP:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value, err := vm.symbolTable.lookupFloat(varname)
+			if err != nil {
+				panic(err) // TODO: maybe better error handling
+			}
+			vm.floatStack.push(value)
+		// STATEMENTS
 		case opcodes.IF:
 			a := vm.intStack.pop()
 			b := vm.intStack.pop()

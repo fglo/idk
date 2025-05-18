@@ -1,6 +1,10 @@
 package virtualmachine
 
-import "github.com/fglo/idk/pkg/idk/opcodes"
+import (
+	"fmt"
+
+	"github.com/fglo/idk/pkg/idk/opcodes"
+)
 
 type symbolTable struct {
 	types   map[string]opcodes.ValType
@@ -27,11 +31,11 @@ func newSymbolTable() *symbolTable {
 }
 
 func (s *symbolTable) lookupVarType(name string) opcodes.ValType {
-	varType, exists := s.types[name]
+	valType, exists := s.types[name]
 	if !exists {
-		// handle error
+		return opcodes.UNKNOWN_TYPE
 	}
-	return varType
+	return valType
 }
 
 func (s *symbolTable) bindInt(name string, value int) {
@@ -40,10 +44,24 @@ func (s *symbolTable) bindInt(name string, value int) {
 	s.intMemory = append(s.intMemory, value)
 }
 
-func (s *symbolTable) lookupInt(name string) int {
+func (s *symbolTable) bindFloat(name string, value float64) {
+	s.symbols[name] = len(s.floatMemory)
+	s.types[name] = opcodes.FLOAT
+	s.floatMemory = append(s.floatMemory, value)
+}
+
+func (s *symbolTable) lookupInt(name string) (int, error) {
 	address, exists := s.symbols[name]
 	if !exists {
-		// handle error
+		return 0, fmt.Errorf("Couldn't find symbol '%s'", name)
 	}
-	return s.intMemory[address]
+	return s.intMemory[address], nil
+}
+
+func (s *symbolTable) lookupFloat(name string) (float64, error) {
+	address, exists := s.symbols[name]
+	if !exists {
+		return 0, fmt.Errorf("Couldn't find symbol '%s'", name)
+	}
+	return s.floatMemory[address], nil
 }

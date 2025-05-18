@@ -25,9 +25,9 @@ func NewInnerScope(outer *scope) *scope {
 	return env
 }
 
-func (s *scope) Insert(name string, addr int, varType opcodes.ValType) {
+func (s *scope) Insert(name string, addr int, valType opcodes.ValType) {
 	s.symbolTable[name] = symbol{
-		valType: varType,
+		valType: valType,
 		cpAddr:  addr,
 	}
 }
