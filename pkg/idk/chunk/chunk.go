@@ -77,6 +77,7 @@ func (c *Chunk) Disassemble() string {
 	out.WriteString("──────┼───────────────────────────────────\n")
 
 	for ip := 0; ip < len(c.Bytecode); ip++ {
+		currentIP := ip
 		bcode := c.Bytecode[ip]
 		code := opcodes.ToString(bcode)
 		switch bcode {
@@ -85,30 +86,76 @@ func (c *Chunk) Disassemble() string {
 				ip++
 				param := c.Bytecode[ip]
 				value := c.ConstantPool.RetrieveInt(int(param))
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %d\n", ip, bcode, code, param, value))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %d\n", currentIP, bcode, code, param, value))
 			} else {
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", ip, bcode, code))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 			}
 		case opcodes.FPUSH:
 			if ip < len(c.Bytecode)-1 {
 				ip++
 				param := c.Bytecode[ip]
 				value := c.ConstantPool.RetrieveFloat(int(param))
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %f\n", ip, bcode, code, param, value))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %f\n", currentIP, bcode, code, param, value))
 			} else {
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", ip, bcode, code))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 			}
-		case opcodes.IVAR_BIND, opcodes.IVAR_LOOKUP, opcodes.FVAR_BIND, opcodes.FVAR_LOOKUP:
+		case opcodes.BPUSH:
+			if ip < len(c.Bytecode)-1 {
+				ip++
+				param := c.Bytecode[ip]
+				value := c.ConstantPool.RetrieveBool(int(param))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %t\n", currentIP, bcode, code, param, value))
+			} else {
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
+			}
+		case opcodes.CPUSH:
+			if ip < len(c.Bytecode)-1 {
+				ip++
+				param := c.Bytecode[ip]
+				value := c.ConstantPool.RetrieveChar(int(param))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %c\n", currentIP, bcode, code, param, value))
+			} else {
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
+			}
+		case opcodes.SPUSH:
 			if ip < len(c.Bytecode)-1 {
 				ip++
 				param := c.Bytecode[ip]
 				value := c.ConstantPool.RetrieveString(int(param))
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %s\n", ip, bcode, code, param, value))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %s\n", currentIP, bcode, code, param, value))
 			} else {
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", ip, bcode, code))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
+			}
+		case opcodes.IVAR_BIND, opcodes.IVAR_LOOKUP,
+			opcodes.FVAR_BIND, opcodes.FVAR_LOOKUP,
+			opcodes.BVAR_BIND, opcodes.BVAR_LOOKUP,
+			opcodes.CVAR_BIND, opcodes.CVAR_LOOKUP,
+			opcodes.SVAR_BIND, opcodes.SVAR_LOOKUP:
+			if ip < len(c.Bytecode)-1 {
+				ip++
+				param := c.Bytecode[ip]
+				value := c.ConstantPool.RetrieveString(int(param))
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %s\n", currentIP, bcode, code, param, value))
+			} else {
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
+			}
+		case opcodes.IFUNC_CREATE, opcodes.IFUNC_CALL,
+			opcodes.FFUNC_CREATE, opcodes.FFUNC_CALL,
+			opcodes.BFUNC_CREATE, opcodes.BFUNC_CALL,
+			opcodes.CFUNC_CREATE, opcodes.CFUNC_CALL,
+			opcodes.SFUNC_CREATE, opcodes.SFUNC_CALL:
+			if ip < len(c.Bytecode)-1 {
+				ip++
+				param := c.Bytecode[ip]
+				value := c.ConstantPool.RetrieveString(int(param))
+				ip++
+				numArgs := c.Bytecode[ip]
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %-10s %d\n", currentIP, bcode, code, param, value, numArgs)) // TODO: display number of arguments
+			} else {
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 			}
 		default:
-			out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", ip, bcode, code))
+			out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 		}
 	}
 

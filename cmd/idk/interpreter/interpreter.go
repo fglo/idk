@@ -76,13 +76,13 @@ func CompileAndRun(sourceCodePath string) {
 	fileContent, err := os.ReadFile(sourceCodePath)
 	check(err)
 
-	p := compiler.NewCompiler(string(fileContent))
-	program := p.CompileProgram()
+	compiler := compiler.NewCompiler(string(fileContent))
+	program := compiler.CompileProgram()
 	_ = program
 
-	if len(p.Errors()) != 0 {
+	if len(compiler.Errors()) != 0 {
 		fmt.Println("Compiler errors:")
-		for _, msg := range p.Errors() {
+		for _, msg := range compiler.Errors() {
 			fmt.Println(msg)
 		}
 	} else {

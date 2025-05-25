@@ -1,3 +1,5 @@
+print("start")
+
 a := 1 + 2 * 3
 print(-a)
 
@@ -11,15 +13,20 @@ print(c)
 d := 0.1 + 0.2
 print(d)
 
-// b: float
-// b = 1.2
-// print(b)
+e := false
+print(e)
 
-// c: bool = true
-// print(c)
+f := '$'
+print(f)
 
-// d: '$'
-// print(d)
+g := "text"
+print(g)
 
-// e: "text"
-// print(e)
+func h() -> int
+    print(1)
+    return 2
+end
+
+print(h())
+
+print("end")

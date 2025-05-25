@@ -55,17 +55,31 @@ func NewVirtualMachine(chunk *chunk.Chunk) *VirtualMachine {
 		charStack:   newStack[rune](),
 		stringStack: newStack[string](),
 
-		memory:       make([]int, 0),
-		symbolTable:  newSymbolTable(),
-		callStack:    make([]callFrame, 0),
-		loopCounters: make([]int, 0),
-		loopLimits:   make([]int, 0),
+		memory:        make([]int, 0),
+		symbolTable:   newSymbolTable(),
+		callStack:     make([]callFrame, 0),
+		functionTable: make(map[string]*function),
+		loopCounters:  make([]int, 0),
+		loopLimits:    make([]int, 0),
 	}
 
 	return i
 }
 
 func (vm *VirtualMachine) Run() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("CALL stack:", vm.callStack)
+			fmt.Println("INT stack:", vm.intStack)
+			fmt.Println("FLOAT stack:", vm.floatStack)
+			fmt.Println("BOOL stack:", vm.boolStack)
+			fmt.Println("CHAR stack:", vm.charStack)
+			fmt.Println("STRING stack:", vm.stringStack)
+
+			panic(fmt.Sprintf("runtime error at ip %d", vm.ip))
+		}
+	}()
+
 	bytecode := vm.chunk.Bytecode
 	codeLength := len(bytecode)
 
@@ -118,20 +132,27 @@ func (vm *VirtualMachine) Run() {
 			vm.intStack.push(value)
 		case opcodes.IFUNC_CREATE:
 			vm.ip++
-			nameLength := int(bytecode[vm.ip])
+			funcNameAddr := int(bytecode[vm.ip])
+			funcName := constantPool.RetrieveString(funcNameAddr)
 			vm.ip++
-			name := string(bytecode[vm.ip : vm.ip+nameLength])
-			vm.ip += nameLength
 			numArgs := int(bytecode[vm.ip])
+
 			vm.ip++
-			funcCode := bytecode[vm.ip:]
-			vm.functionTable[name] = &function{name: name, args: numArgs, code: funcCode}
+			// TODO: handle arguments
+
+			blockLen := 0
+			for bytecode[vm.ip+blockLen] != opcodes.IFUNC_RETURN {
+				blockLen++
+			}
+
+			funcCode := bytecode[vm.ip : vm.ip+blockLen+1]
+			vm.functionTable[funcName] = &function{name: funcName, args: numArgs, code: funcCode}
+			vm.ip += blockLen
 		case opcodes.IFUNC_CALL:
 			vm.ip++
-			nameLength := int(bytecode[vm.ip])
+			funcNameAddr := int(bytecode[vm.ip])
+			funcName := constantPool.RetrieveString(funcNameAddr)
 			vm.ip++
-			name := string(bytecode[vm.ip : vm.ip+nameLength])
-			vm.ip += nameLength
 			numArgs := int(bytecode[vm.ip])
 			vm.ip++
 			args := make([]int, numArgs)
@@ -140,19 +161,24 @@ func (vm *VirtualMachine) Run() {
 			}
 			vm.intStack = vm.intStack[:len(vm.intStack)-numArgs]
 			vm.callStack = append(vm.callStack, callFrame{
-				functionName: name,
+				functionName: funcName,
 				args:         args,
 				returnAddr:   vm.ip,
 			})
-			vm.ip = 0
-			bytecode = vm.functionTable[name].code
+			vm.ip = -1
+			bytecode = vm.functionTable[funcName].code
+			codeLength = len(bytecode)
 		case opcodes.IFUNC_RETURN:
 			returnValue := vm.intStack.pop()
-			vm.ip = vm.callStack[len(vm.callStack)-1].returnAddr
+			vm.ip = vm.callStack[len(vm.callStack)-1].returnAddr - 1
 			vm.callStack = vm.callStack[:len(vm.callStack)-1]
 			vm.intStack.push(returnValue)
 			if len(vm.callStack) > 0 {
 				bytecode = vm.functionTable[vm.callStack[len(vm.callStack)-1].functionName].code
+				codeLength = len(bytecode)
+			} else {
+				bytecode = vm.chunk.Bytecode
+				codeLength = len(bytecode)
 			}
 		// FLOAT
 		case opcodes.FPUSH:
@@ -197,6 +223,81 @@ func (vm *VirtualMachine) Run() {
 				panic(err) // TODO: maybe better error handling
 			}
 			vm.floatStack.push(value)
+		// BOOL
+		case opcodes.BPUSH:
+			vm.ip++
+			addr := int(bytecode[vm.ip])
+			value := constantPool.RetrieveBool(addr)
+			vm.boolStack.push(value)
+		case opcodes.BNEG:
+			val := vm.boolStack.pop()
+			vm.boolStack.push(!val)
+		case opcodes.BPRINT:
+			value := vm.boolStack.pop()
+			fmt.Println(value)
+		case opcodes.BVAR_BIND:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value := vm.boolStack.pop()
+			vm.symbolTable.bindBool(varname, value)
+		case opcodes.BVAR_LOOKUP:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value, err := vm.symbolTable.lookupBool(varname)
+			if err != nil {
+				panic(err) // TODO: maybe better error handling
+			}
+			vm.boolStack.push(value)
+		// CHAR
+		case opcodes.CPUSH:
+			vm.ip++
+			addr := int(bytecode[vm.ip])
+			value := constantPool.RetrieveChar(addr)
+			vm.charStack.push(value)
+		case opcodes.CPRINT:
+			value := vm.charStack.pop()
+			fmt.Println(value)
+		case opcodes.CVAR_BIND:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value := vm.charStack.pop()
+			vm.symbolTable.bindChar(varname, value)
+		case opcodes.CVAR_LOOKUP:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value, err := vm.symbolTable.lookupChar(varname)
+			if err != nil {
+				panic(err) // TODO: maybe better error handling
+			}
+			vm.charStack.push(value)
+		// STRING
+		case opcodes.SPUSH:
+			vm.ip++
+			addr := int(bytecode[vm.ip])
+			value := constantPool.RetrieveString(addr)
+			vm.stringStack.push(value)
+		case opcodes.SPRINT:
+			value := vm.stringStack.pop()
+			fmt.Println(value)
+		case opcodes.SVAR_BIND:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value := vm.stringStack.pop()
+			vm.symbolTable.bindString(varname, value)
+		case opcodes.SVAR_LOOKUP:
+			vm.ip++
+			varnameAddr := int(bytecode[vm.ip])
+			varname := constantPool.RetrieveString(varnameAddr)
+			value, err := vm.symbolTable.lookupString(varname)
+			if err != nil {
+				panic(err) // TODO: maybe better error handling
+			}
+			vm.stringStack.push(value)
 		// STATEMENTS
 		case opcodes.IF:
 			a := vm.intStack.pop()

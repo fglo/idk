@@ -80,6 +80,9 @@ const (
 	SVAR_BIND
 	SVAR_LOOKUP
 
+	FUNC_VAR_BIND
+	FUNC_VAR_LOOKUP
+
 	// functions
 	IFUNC_CREATE
 	IFUNC_CALL
@@ -140,6 +143,12 @@ func ToString(opc byte) string {
 		return "IVAR_BIND"
 	case IVAR_LOOKUP:
 		return "IVAR_LOOKUP"
+	case IFUNC_CREATE:
+		return "IFUNC_CREATE"
+	case IFUNC_CALL:
+		return "IFUNC_CALL"
+	case IFUNC_RETURN:
+		return "IFUNC_RETURN"
 	case FPUSH:
 		return "FPUSH"
 	case FADD:
@@ -160,6 +169,32 @@ func ToString(opc byte) string {
 		return "FVAR_BIND"
 	case FVAR_LOOKUP:
 		return "FVAR_LOOKUP"
+	case BPUSH:
+		return "BPUSH"
+	case BNEG:
+		return "BNEG"
+	case BPRINT:
+		return "BPRINT"
+	case BVAR_BIND:
+		return "BVAR_BIND"
+	case BVAR_LOOKUP:
+		return "BVAR_LOOKUP"
+	case CPUSH:
+		return "CPUSH"
+	case CPRINT:
+		return "CPRINT"
+	case CVAR_BIND:
+		return "CVAR_BIND"
+	case CVAR_LOOKUP:
+		return "CVAR_LOOKUP"
+	case SPUSH:
+		return "SPUSH"
+	case SPRINT:
+		return "SPRINT"
+	case SVAR_BIND:
+		return "SVAR_BIND"
+	case SVAR_LOOKUP:
+		return "SVAR_LOOKUP"
 	default:
 		return string(opc)
 	}
@@ -174,6 +209,7 @@ const (
 	BOOL
 	CHAR
 	STRING
+	FUNC
 )
 
 func ValTypeFromString(vtStr string) ValType {
@@ -188,6 +224,8 @@ func ValTypeFromString(vtStr string) ValType {
 		return CHAR
 	case "STRING":
 		return STRING
+	case "FUNC":
+		return FUNC
 	default:
 		return UNKNOWN_TYPE
 	}
@@ -205,6 +243,8 @@ func (vt ValType) String() string {
 		return "CHAR"
 	case STRING:
 		return "STRING"
+	case FUNC:
+		return "FUNC"
 	default:
 		return "UNKNOWN"
 	}
@@ -285,6 +325,8 @@ func VarBind(valType ValType) byte {
 		return CVAR_BIND
 	case STRING:
 		return SVAR_BIND
+	case FUNC:
+		return FUNC_VAR_BIND
 	}
 
 	return UNKNOWN_OP
@@ -302,6 +344,59 @@ func VarLookup(valType ValType) byte {
 		return CVAR_LOOKUP
 	case STRING:
 		return SVAR_LOOKUP
+	case FUNC:
+		return FUNC_VAR_LOOKUP
+	}
+
+	return UNKNOWN_OP
+}
+
+func FuncCreate(valType ValType) byte {
+	switch valType {
+	case INT:
+		return IFUNC_CREATE
+	case FLOAT:
+		return FFUNC_CREATE
+	case BOOL:
+		return BFUNC_CREATE
+	case CHAR:
+		return CFUNC_CREATE
+	case STRING:
+		return SFUNC_CREATE
+	}
+
+	return UNKNOWN_OP
+}
+
+func FuncCall(valType ValType) byte {
+	switch valType {
+	case INT:
+		return IFUNC_CALL
+	case FLOAT:
+		return FFUNC_CALL
+	case BOOL:
+		return BFUNC_CALL
+	case CHAR:
+		return CFUNC_CALL
+	case STRING:
+		return SFUNC_CALL
+	}
+
+	return UNKNOWN_OP
+}
+
+func FuncReturn(valType ValType) byte {
+	switch valType {
+	case INT:
+		return IFUNC_RETURN
+	case FLOAT:
+		return FFUNC_RETURN
+	case BOOL:
+		return BFUNC_RETURN
+	case CHAR:
+		return CFUNC_RETURN
+	case STRING:
+		return SFUNC_RETURN
 	}
 
 	return UNKNOWN_OP

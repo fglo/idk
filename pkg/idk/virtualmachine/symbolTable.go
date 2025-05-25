@@ -50,6 +50,24 @@ func (s *symbolTable) bindFloat(name string, value float64) {
 	s.floatMemory = append(s.floatMemory, value)
 }
 
+func (s *symbolTable) bindBool(name string, value bool) {
+	s.symbols[name] = len(s.boolMemory)
+	s.types[name] = opcodes.BOOL
+	s.boolMemory = append(s.boolMemory, value)
+}
+
+func (s *symbolTable) bindChar(name string, value rune) {
+	s.symbols[name] = len(s.charMemory)
+	s.types[name] = opcodes.CHAR
+	s.charMemory = append(s.charMemory, value)
+}
+
+func (s *symbolTable) bindString(name string, value string) {
+	s.symbols[name] = len(s.stringMemory)
+	s.types[name] = opcodes.STRING
+	s.stringMemory = append(s.stringMemory, value)
+}
+
 func (s *symbolTable) lookupInt(name string) (int, error) {
 	address, exists := s.symbols[name]
 	if !exists {
@@ -64,4 +82,28 @@ func (s *symbolTable) lookupFloat(name string) (float64, error) {
 		return 0, fmt.Errorf("Couldn't find symbol '%s'", name)
 	}
 	return s.floatMemory[address], nil
+}
+
+func (s *symbolTable) lookupBool(name string) (bool, error) {
+	address, exists := s.symbols[name]
+	if !exists {
+		return false, fmt.Errorf("Couldn't find symbol '%s'", name)
+	}
+	return s.boolMemory[address], nil
+}
+
+func (s *symbolTable) lookupChar(name string) (rune, error) {
+	address, exists := s.symbols[name]
+	if !exists {
+		return 0, fmt.Errorf("Couldn't find symbol '%s'", name)
+	}
+	return s.charMemory[address], nil
+}
+
+func (s *symbolTable) lookupString(name string) (string, error) {
+	address, exists := s.symbols[name]
+	if !exists {
+		return "", fmt.Errorf("Couldn't find symbol '%s'", name)
+	}
+	return s.stringMemory[address], nil
 }
