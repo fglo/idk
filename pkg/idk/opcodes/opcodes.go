@@ -51,11 +51,13 @@ const (
 	// char operations
 	CPUSH
 	CEQ
+	CNEQ
 
 	// string operations
 	SPUSH
 	SCONCAT
 	SEQ
+	SNEQ
 
 	// branches
 	BT
@@ -137,6 +139,18 @@ func ToString(opc byte) string {
 		return "IMOD"
 	case INEG:
 		return "INEG"
+	case IGT:
+		return "IGT"
+	case ILT:
+		return "ILT"
+	case IGE:
+		return "IGE"
+	case ILE:
+		return "ILE"
+	case IEQ:
+		return "IEQ"
+	case INEQ:
+		return "INEQ"
 	case IPRINT:
 		return "IPRINT"
 	case IVAR_BIND:
@@ -163,6 +177,18 @@ func ToString(opc byte) string {
 		return "FMOD"
 	case FNEG:
 		return "FNEG"
+	case FGT:
+		return "FGT"
+	case FLT:
+		return "FLT"
+	case FGE:
+		return "FGE"
+	case FLE:
+		return "FLE"
+	case FEQ:
+		return "FEQ"
+	case FNEQ:
+		return "FNEQ"
 	case FPRINT:
 		return "FPRINT"
 	case FVAR_BIND:
@@ -173,6 +199,16 @@ func ToString(opc byte) string {
 		return "BPUSH"
 	case BNEG:
 		return "BNEG"
+	case BEQ:
+		return "BEQ"
+	case BNEQ:
+		return "BNEQ"
+	case BAND:
+		return "BAND"
+	case BOR:
+		return "BOR"
+	case BXOR:
+		return "BXOR"
 	case BPRINT:
 		return "BPRINT"
 	case BVAR_BIND:
@@ -181,6 +217,10 @@ func ToString(opc byte) string {
 		return "BVAR_LOOKUP"
 	case CPUSH:
 		return "CPUSH"
+	case CEQ:
+		return "CEQ"
+	case CNEQ:
+		return "CNEQ"
 	case CPRINT:
 		return "CPRINT"
 	case CVAR_BIND:
@@ -189,6 +229,10 @@ func ToString(opc byte) string {
 		return "CVAR_LOOKUP"
 	case SPUSH:
 		return "SPUSH"
+	case SEQ:
+		return "SEQ"
+	case SNEQ:
+		return "SNEQ"
 	case SPRINT:
 		return "SPRINT"
 	case SVAR_BIND:
@@ -289,6 +333,75 @@ func InfixOperator(operator token.TokenType, valType ValType) byte {
 		case FLOAT:
 			return FMOD
 		}
+	case token.GT:
+		switch valType {
+		case INT:
+			return IGT
+		case FLOAT:
+			return FGT
+		}
+	case token.LT:
+		switch valType {
+		case INT:
+			return ILT
+		case FLOAT:
+			return FLT
+		}
+	case token.GTE:
+		switch valType {
+		case INT:
+			return IGE
+		case FLOAT:
+			return FGE
+		}
+	case token.LTE:
+		switch valType {
+		case INT:
+			return ILE
+		case FLOAT:
+			return FLE
+		}
+	case token.EQ:
+		switch valType {
+		case INT:
+			return IEQ
+		case FLOAT:
+			return FEQ
+		case BOOL:
+			return BEQ
+		case CHAR:
+			return CEQ
+		case STRING:
+			return SEQ
+		}
+	case token.NEQ:
+		switch valType {
+		case INT:
+			return INEQ
+		case FLOAT:
+			return FNEQ
+		case BOOL:
+			return BNEQ
+		case CHAR:
+			return CNEQ
+		case STRING:
+			return SNEQ
+		}
+	case token.AND:
+		switch valType {
+		case BOOL:
+			return BAND
+		}
+	case token.OR:
+		switch valType {
+		case BOOL:
+			return BOR
+		}
+	case token.XOR:
+		switch valType {
+		case BOOL:
+			return BXOR
+		}
 	}
 
 	return UNKNOWN_OP
@@ -311,6 +424,35 @@ func PrefixOperator(operator token.TokenType, valType ValType) byte {
 	}
 
 	return UNKNOWN_OP
+}
+
+func OperatorResultType(operator token.TokenType, inputType ValType) ValType {
+	switch operator {
+	case token.PLUS:
+		return inputType
+	case token.MINUS:
+		return inputType
+	case token.ASTERISK:
+		return inputType
+	case token.SLASH:
+		return inputType
+	case token.MODULO:
+		return inputType
+	case token.GT:
+		return BOOL
+	case token.LT:
+		return BOOL
+	case token.GTE:
+		return BOOL
+	case token.LTE:
+		return BOOL
+	case token.EQ:
+		return BOOL
+	case token.NEQ:
+		return BOOL
+	}
+
+	return inputType
 }
 
 func VarBind(valType ValType) byte {

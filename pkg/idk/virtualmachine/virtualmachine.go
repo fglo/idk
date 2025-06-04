@@ -112,6 +112,30 @@ func (vm *VirtualMachine) Run() {
 		case opcodes.INEG:
 			val := vm.intStack.pop()
 			vm.intStack.push(-val)
+		case opcodes.IGT:
+			a := vm.intStack.pop()
+			b := vm.intStack.pop()
+			vm.boolStack.push(a > b)
+		case opcodes.ILT:
+			a := vm.intStack.pop()
+			b := vm.intStack.pop()
+			vm.boolStack.push(a < b)
+		case opcodes.IGE:
+			a := vm.intStack.pop()
+			b := vm.intStack.pop()
+			vm.boolStack.push(a >= b)
+		case opcodes.ILE:
+			a := vm.intStack.pop()
+			b := vm.intStack.pop()
+			vm.boolStack.push(a <= b)
+		case opcodes.IEQ:
+			a := vm.intStack.pop()
+			b := vm.intStack.pop()
+			vm.boolStack.push(a == b)
+		case opcodes.INEQ:
+			a := vm.intStack.pop()
+			b := vm.intStack.pop()
+			vm.boolStack.push(a != b)
 		case opcodes.IPRINT:
 			value := vm.intStack.pop()
 			fmt.Println(value)
@@ -156,7 +180,7 @@ func (vm *VirtualMachine) Run() {
 			numArgs := int(bytecode[vm.ip])
 			vm.ip++
 			args := make([]int, numArgs)
-			for j := 0; j < numArgs; j++ {
+			for j := range numArgs {
 				args[j] = vm.intStack[len(vm.intStack)-1-j]
 			}
 			vm.intStack = vm.intStack[:len(vm.intStack)-numArgs]
@@ -205,6 +229,30 @@ func (vm *VirtualMachine) Run() {
 		case opcodes.FNEG:
 			val := vm.floatStack.pop()
 			vm.floatStack.push(-val)
+		case opcodes.FGT:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.boolStack.push(a > b)
+		case opcodes.FLT:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.boolStack.push(a < b)
+		case opcodes.FGE:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.boolStack.push(a >= b)
+		case opcodes.FLE:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.boolStack.push(a <= b)
+		case opcodes.FEQ:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.boolStack.push(a == b)
+		case opcodes.FNEQ:
+			a := vm.floatStack.pop()
+			b := vm.floatStack.pop()
+			vm.boolStack.push(a != b)
 		case opcodes.FPRINT:
 			value := vm.floatStack.pop()
 			fmt.Println(value)
@@ -232,6 +280,26 @@ func (vm *VirtualMachine) Run() {
 		case opcodes.BNEG:
 			val := vm.boolStack.pop()
 			vm.boolStack.push(!val)
+		case opcodes.BEQ:
+			a := vm.boolStack.pop()
+			b := vm.boolStack.pop()
+			vm.boolStack.push(a == b)
+		case opcodes.BNEQ:
+			a := vm.boolStack.pop()
+			b := vm.boolStack.pop()
+			vm.boolStack.push(a != b)
+		case opcodes.BAND:
+			a := vm.boolStack.pop()
+			b := vm.boolStack.pop()
+			vm.boolStack.push(a && b)
+		case opcodes.BOR:
+			a := vm.boolStack.pop()
+			b := vm.boolStack.pop()
+			vm.boolStack.push(a || b)
+		case opcodes.BXOR:
+			a := vm.boolStack.pop()
+			b := vm.boolStack.pop()
+			vm.boolStack.push((a || b) && !(a && b))
 		case opcodes.BPRINT:
 			value := vm.boolStack.pop()
 			fmt.Println(value)
@@ -256,6 +324,14 @@ func (vm *VirtualMachine) Run() {
 			addr := int(bytecode[vm.ip])
 			value := constantPool.RetrieveChar(addr)
 			vm.charStack.push(value)
+		case opcodes.CEQ:
+			a := vm.charStack.pop()
+			b := vm.charStack.pop()
+			vm.boolStack.push(a == b)
+		case opcodes.CNEQ:
+			a := vm.charStack.pop()
+			b := vm.charStack.pop()
+			vm.boolStack.push(a != b)
 		case opcodes.CPRINT:
 			value := vm.charStack.pop()
 			fmt.Println(value)
@@ -280,6 +356,14 @@ func (vm *VirtualMachine) Run() {
 			addr := int(bytecode[vm.ip])
 			value := constantPool.RetrieveString(addr)
 			vm.stringStack.push(value)
+		case opcodes.SEQ:
+			a := vm.stringStack.pop()
+			b := vm.stringStack.pop()
+			vm.boolStack.push(a == b)
+		case opcodes.SNEQ:
+			a := vm.stringStack.pop()
+			b := vm.stringStack.pop()
+			vm.boolStack.push(a != b)
 		case opcodes.SPRINT:
 			value := vm.stringStack.pop()
 			fmt.Println(value)

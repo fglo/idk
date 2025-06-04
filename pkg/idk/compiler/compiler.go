@@ -62,7 +62,7 @@ type (
 	typeCompileFn   func() ([]byte, opcodes.ValType)
 	returnCompileFn func() ([]byte, opcodes.ValType)
 	prefixCompileFn func() ([]byte, opcodes.ValType)
-	infixCompileFn  func(left []byte) ([]byte, opcodes.ValType)
+	infixCompileFn  func(left []byte, leftValType opcodes.ValType) ([]byte, opcodes.ValType)
 )
 
 type Compiler struct {
@@ -372,22 +372,14 @@ func (c *Compiler) compileExpression(precedence int) ([]byte, opcodes.ValType) {
 	}
 	expr, valType := compilePrefix()
 
-	previousVarType := valType
-
 	for !c.next.Is(token.EOL) && !c.next.Is(token.COMMA) && precedence < c.nextPrecedence() {
-		operator := c.next
-
 		compileInfix := c.infixCompileFns[c.peek().Type]
 		if compileInfix == nil {
 			return expr, valType
 		}
 
 		c.advance()
-		expr, valType = compileInfix(expr)
-
-		if previousVarType != valType {
-			c.reportTypeMismatch(operator, previousVarType, valType)
-		}
+		expr, valType = compileInfix(expr, valType)
 
 		c.expectOperatorOrEndOfExpression()
 	}
@@ -408,12 +400,12 @@ func (c *Compiler) compilePrefixExpression() ([]byte, opcodes.ValType) {
 	return bytecode, valType
 }
 
-func (c *Compiler) compileInfixExpression(left []byte) ([]byte, opcodes.ValType) {
+func (c *Compiler) compileInfixExpression(left []byte, leftValType opcodes.ValType) ([]byte, opcodes.ValType) {
 	bytecode := make([]byte, 0)
 
 	bytecode = append(bytecode, left...)
 
-	operator := c.current.Type
+	operator := c.current
 	precedence := c.currentPrecedence()
 	c.advance() // skip the operator
 
@@ -421,12 +413,18 @@ func (c *Compiler) compileInfixExpression(left []byte) ([]byte, opcodes.ValType)
 		c.advance()
 	}
 
-	right, valType := c.compileExpression(precedence)
+	right, rightValType := c.compileExpression(precedence)
+
+	if leftValType != rightValType {
+		c.reportTypeMismatch(operator, leftValType, rightValType)
+	}
 
 	bytecode = append(bytecode, right...)
-	bytecode = append(bytecode, opcodes.InfixOperator(operator, valType))
+	bytecode = append(bytecode, opcodes.InfixOperator(operator.Type, rightValType))
 
-	return bytecode, valType
+	resultValType := opcodes.OperatorResultType(operator.Type, rightValType)
+
+	return bytecode, resultValType
 }
 
 func (c *Compiler) compileIdentifier() ([]byte, opcodes.ValType) {

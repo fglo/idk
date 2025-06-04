@@ -10,7 +10,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-f", "../../examples/tests.idk"]
+      "args": [
+        "-f",
+        "../../examples/tests.idk"
+      ]
     },
     {
       "name": "Module",
@@ -18,7 +21,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-m", "../../examples/module/module.idk"]
+      "args": [
+        "-m",
+        "../../examples/module/module.idk"
+      ]
     },
     {
       "name": "Fibonacci",
@@ -26,7 +32,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-f", "../../examples/fibonacci.idk"]
+      "args": [
+        "-f",
+        "../../examples/fibonacci.idk"
+      ]
     },
     {
       "name": "Primes",
@@ -34,7 +43,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-f", "../../examples/primes.idk"]
+      "args": [
+        "-f",
+        "../../examples/primes.idk"
+      ]
     },
     {
       "name": "Feat",
@@ -42,7 +54,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-f", "../../examples/test_feat.idk"]
+      "args": [
+        "-f",
+        "../../examples/test_feat.idk"
+      ]
     },
     {
       "name": "Compilation",
@@ -50,7 +65,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-c", "../../examples/test_compilation.idk"]
+      "args": [
+        "-c",
+        "../../examples/compilation/tests.idk"
+      ]
     },
     {
       "name": "Go: Run & Pretty Print IDK file",
@@ -58,7 +76,11 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-f", "${file}", "-p"]
+      "args": [
+        "-f",
+        "${file}",
+        "-p"
+      ]
     },
     {
       "name": "Go: Run IDK file",
@@ -66,7 +88,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "cmd/idk/main.go",
-      "args": ["-f", "${file}"]
+      "args": [
+        "-f",
+        "${file}"
+      ]
     },
     {
       "name": "Go: Run IDK REPL",

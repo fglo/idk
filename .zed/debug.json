@@ -1,0 +1,19 @@
+[
+  {
+    "label": "Debug current Go file",
+    "adapter": "Delve",
+    "program": "$ZED_FILE",
+    "request": "launch",
+    "mode": "debug",
+    "cwd": "$ZED_WORKTREE_ROOT"
+  },
+  {
+    "label": "Debug compilation",
+    "adapter": "Delve",
+    "program": "cmd/idk/main.go",
+    "request": "launch",
+    "mode": "debug",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "args": ["-c", "../../examples/test_compilation.idk"]
+  }
+]
