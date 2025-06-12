@@ -37,10 +37,6 @@ func (c *Chunk) AddFloatConstant(val float64) int {
 	return c.ConstantPool.InsertFloat(val)
 }
 
-func (c *Chunk) AddBoolConstant(val bool) int {
-	return c.ConstantPool.InsertBool(val)
-}
-
 func (c *Chunk) AddCharConstant(val rune) int {
 	return c.ConstantPool.InsertChar(val)
 }
@@ -55,10 +51,6 @@ func (c *Chunk) GetIntConstant(addr int) int {
 
 func (c *Chunk) GetFloatConstant(addr int) float64 {
 	return c.ConstantPool.RetrieveFloat(addr)
-}
-
-func (c *Chunk) GetBoolConstant(addr int) bool {
-	return c.ConstantPool.RetrieveBool(addr)
 }
 
 func (c *Chunk) GetCharConstant(addr int) rune {
@@ -102,9 +94,12 @@ func (c *Chunk) Disassemble() string {
 		case opcodes.BPUSH:
 			if ip < len(c.Bytecode)-1 {
 				ip++
-				param := c.Bytecode[ip]
-				value := c.ConstantPool.RetrieveBool(int(param))
-				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %t\n", currentIP, bcode, code, param, value))
+				valueByte := c.Bytecode[ip]
+				value := false
+				if valueByte == 1 {
+					value = true
+				}
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9s %t\n", currentIP, bcode, code, "", value))
 			} else {
 				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 			}
@@ -154,6 +149,9 @@ func (c *Chunk) Disassemble() string {
 			} else {
 				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 			}
+		case opcodes.IF:
+			ip++
+			out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9d\n", currentIP, bcode, code, int(c.Bytecode[ip])))
 		default:
 			out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 		}

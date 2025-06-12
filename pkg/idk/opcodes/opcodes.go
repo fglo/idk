@@ -239,6 +239,8 @@ func ToString(opc byte) string {
 		return "SVAR_BIND"
 	case SVAR_LOOKUP:
 		return "SVAR_LOOKUP"
+	case IF:
+		return "IF"
 	default:
 		return string(opc)
 	}

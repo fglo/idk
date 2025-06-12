@@ -115,7 +115,7 @@ func (c *Compiler) CompileProgram() *chunk.Chunk {
 		if c.current.Is(token.EOL) {
 			continue
 		}
-		c.compileStatement()
+		c.chunk.WriteBytes(c.compileStatement())
 		c.skipEols()
 	}
 
@@ -125,34 +125,38 @@ func (c *Compiler) CompileProgram() *chunk.Chunk {
 
 /// statements
 
-func (c *Compiler) compileStatement() {
+func (c *Compiler) compileStatement() []byte {
+	bytecode := make([]byte, 0)
+
 	switch {
 	case c.current.Is(token.LINE_COMMENT):
 		c.skipCommentedLine()
 	// case c.current.Is(token.IMPORT):
 	// 	return c.compileImportStatement()
 	case c.current.Is(token.IDENTIFIER) && c.next.Is(token.DECLASSIGN):
-		c.compileDeclareAssignStatement(c.current)
+		bytecode = append(bytecode, c.compileDeclareAssignStatement(c.current)...)
 	case c.current.Is(token.IDENTIFIER) && c.next.Is(token.DECLARE):
-		c.compileDeclareStatement(c.current)
+		bytecode = append(bytecode, c.compileDeclareStatement(c.current)...)
 	case c.current.Is(token.IDENTIFIER) && c.next.Is(token.ASSIGN):
-		c.compileAssignStatement(c.current)
+		bytecode = append(bytecode, c.compileAssignStatement(c.current)...)
 	case c.current.Is(token.IDENTIFIER) && c.next.Is(token.LPARENTHESIS):
-		c.compileFunctionCallStatement()
-	// case c.current.Is(token.IF):
-	// 	return c.compileIfStatement()
+		bytecode = append(bytecode, c.compileFunctionCallStatement()...)
+	case c.current.Is(token.IF):
+		bytecode = append(bytecode, c.compileIfStatement()...)
 	// case c.current.Is(token.FOR):
-	// 	return c.compileForStatement()
+	// 	c.compileForStatement()
 	case c.current.Is(token.FUNC):
-		c.compileFunctionDefinitionStatement()
+		bytecode = append(bytecode, c.compileFunctionDefinitionStatement()...)
 	case c.current.Is(token.RETURN):
-		c.compileReturnStatement()
+		bytecode = append(bytecode, c.compileReturnStatement()...)
 	case c.current.Is(token.END):
 		c.advance()
 	default:
 		c.reportUnexpectedFirstToken(c.current)
-		// return c.compileExpressionStatement()
+		// c.compileExpressionStatement()
 	}
+
+	return bytecode
 }
 
 func (c *Compiler) skipCommentedLine() {
@@ -162,7 +166,9 @@ func (c *Compiler) skipCommentedLine() {
 	}
 }
 
-func (c *Compiler) compileDeclareAssignStatement(identifier token.Token) {
+func (c *Compiler) compileDeclareAssignStatement(identifier token.Token) []byte {
+	bytecode := make([]byte, 0)
+
 	c.expectNext(token.DECLASSIGN)
 	c.advance()
 
@@ -170,18 +176,22 @@ func (c *Compiler) compileDeclareAssignStatement(identifier token.Token) {
 
 	expr, valType := c.compileExpression(LOWEST)
 	if expr == nil {
-		return
+		return bytecode
 	}
 
 	addr := c.chunk.AddStringConstant(identifier.Value)
 	c.currentScope.Insert(identifier.Value, addr, valType)
 
-	c.chunk.WriteBytes(expr)
-	c.chunk.Write(opcodes.VarBind(valType))
-	c.chunk.Write(byte(addr))
+	bytecode = append(bytecode, expr...)
+	bytecode = append(bytecode, opcodes.VarBind(valType))
+	bytecode = append(bytecode, byte(addr))
+
+	return bytecode
 }
 
-func (c *Compiler) compileDeclareStatement(identifier token.Token) {
+func (c *Compiler) compileDeclareStatement(identifier token.Token) []byte {
+	bytecode := make([]byte, 0)
+
 	c.expectNext(token.DECLARE)
 	c.advance()
 
@@ -190,65 +200,72 @@ func (c *Compiler) compileDeclareStatement(identifier token.Token) {
 
 	bytes, valType := c.compileType()
 	if bytes == nil {
-		return
+		return bytecode
 	}
 
 	addr := c.chunk.AddStringConstant(identifier.Value)
 	c.currentScope.Insert(identifier.Value, addr, valType)
 
-	c.chunk.WriteBytes(bytes)
-	c.chunk.Write(opcodes.VarBind(valType))
-	c.chunk.Write(byte(addr))
+	bytecode = append(bytecode, bytes...)
+	bytecode = append(bytecode, opcodes.VarBind(valType))
+	bytecode = append(bytecode, byte(addr))
 
 	if c.next.Type == token.ASSIGN {
-		c.compileAssignStatement(identifier)
+		bytecode = append(bytecode, c.compileAssignStatement(identifier)...)
 	}
+
+	return bytecode
 }
 
-func (c *Compiler) compileAssignStatement(identifier token.Token) {
+func (c *Compiler) compileAssignStatement(identifier token.Token) []byte {
+	bytecode := make([]byte, 0)
+
 	c.expectNext(token.ASSIGN)
 	c.advance()
 
 	c.advance()
 	expr, valType := c.compileExpression(LOWEST)
 	if expr == nil {
-		return
+		return bytecode
 	}
 
 	addr := c.chunk.AddStringConstant(identifier.Value)
 	c.currentScope.Insert(identifier.Value, addr, valType)
 
-	c.chunk.WriteBytes(expr)
-	c.chunk.Write(opcodes.VarBind(valType))
-	c.chunk.Write(byte(addr))
+	bytecode = append(bytecode, expr...)
+	bytecode = append(bytecode, opcodes.VarBind(valType))
+	bytecode = append(bytecode, byte(addr))
+
+	return bytecode
 }
 
-// func (c *Compiler) compileIfStatement() *ast.IfStatement {
-// 	innerIf := c.previousTokenWas(token.ELSE)
+func (c *Compiler) compileIfStatement() []byte {
+	bytecode := make([]byte, 0)
 
-// 	if c.expectCurrentTokenType(token.IF) {
-// 		c.consumeToken() // skip if keyword
-// 	}
+	c.expectCurrent(token.IF)
 
-// 	condition := c.compileExpression(LOWEST)
+	token := c.current
 
-// 	c.skipEols()
+	c.advance()
 
-// 	consequence := c.compileBlockStatement()
+	expr, valType := c.compileExpression(LOWEST)
+	if expr == nil {
+		return bytecode
+	}
 
-// 	c.skipEols()
+	if valType != opcodes.BOOL {
+		c.reportWrongType(token, opcodes.BOOL, valType)
+	}
 
-// 	var alternative *ast.BlockStatement
-// 	if c.next.Is(token.ELSE) {
-// 		c.consumeToken()
-// 		alternative = c.compileBlockStatement()
-// 	}
-// 	if !innerIf && c.expectNextTokenType(token.END) {
-// 		c.consumeToken() // skip end keyword
-// 	}
+	blockStatementByteCode := c.compileBlockStatement()
 
-// 	return ast.NewIfStatement(condition, consequence, alternative)
-// }
+	bytecode = append(bytecode, expr...)
+	bytecode = append(bytecode, opcodes.IF)
+	bytecode = append(bytecode, byte(len(blockStatementByteCode)))
+	bytecode = append(bytecode, blockStatementByteCode...)
+
+	return bytecode
+}
 
 // func (c *Compiler) compileForStatement() *ast.ForLoopStatement { // TODO: parsing for loop different from while
 // 	if c.expectCurrentTokenType(token.FOR) {
@@ -270,7 +287,9 @@ func (c *Compiler) compileAssignStatement(identifier token.Token) {
 // 	return ast.NewForLoopStatement(condition, consequence)
 // }
 
-func (c *Compiler) compileFunctionDefinitionStatement() {
+func (c *Compiler) compileFunctionDefinitionStatement() []byte {
+	bytecode := make([]byte, 0)
+
 	c.expectCurrent(token.FUNC)
 
 	c.expectNext(token.IDENTIFIER)
@@ -294,35 +313,43 @@ func (c *Compiler) compileFunctionDefinitionStatement() {
 
 	valType := opcodes.ValTypeFromString(c.current.Value)
 	if valType == opcodes.UNKNOWN_TYPE {
-		return
+		return bytecode
 	}
 
 	addr := c.chunk.AddStringConstant(identifier.Value)
 	c.currentScope.Insert(identifier.Value, addr, valType)
 
-	c.chunk.Write(opcodes.FuncCreate(valType))
-	c.chunk.Write(byte(addr))
-	c.chunk.Write(0) // TODO: actual number of args
+	bytecode = append(bytecode, opcodes.FuncCreate(valType))
+	bytecode = append(bytecode, byte(addr))
+	bytecode = append(bytecode, 0) // TODO: actual number of args
 
-	c.compileBlockStatement()
+	bytecode = append(bytecode, c.compileBlockStatement()...)
+
+	return bytecode
 }
 
-func (c *Compiler) compileReturnStatement() {
+func (c *Compiler) compileReturnStatement() []byte {
+	bytecode := make([]byte, 0)
+
 	c.expectCurrent(token.RETURN)
 	c.advance()
 
 	expr, valType := c.compileExpression(LOWEST)
 	if expr == nil {
-		return
+		return bytecode
 	}
 
-	c.chunk.WriteBytes(expr)
-	c.chunk.Write(opcodes.FuncReturn(valType))
+	bytecode = append(bytecode, expr...)
+	bytecode = append(bytecode, opcodes.FuncReturn(valType))
+
+	return bytecode
 }
 
-func (c *Compiler) compileFunctionCallStatement() {
+func (c *Compiler) compileFunctionCallStatement() []byte {
+	bytecode := make([]byte, 0)
 	expr, _ := c.compileFunctionCallExpression()
-	c.chunk.WriteBytes(expr)
+	bytecode = append(bytecode, expr...)
+	return bytecode
 }
 
 // func (c *Compiler) compileImportStatement() *ast.ImportStatement {
@@ -333,17 +360,22 @@ func (c *Compiler) compileFunctionCallStatement() {
 // 	return stmt
 // }
 
-func (c *Compiler) compileBlockStatement() *chunk.Chunk {
+func (c *Compiler) compileBlockStatement() []byte {
+	bytecode := make([]byte, 0)
+
 	for !c.next.Is(token.END) {
 		c.advance()
 		if c.current.Is(token.EOL) {
 			continue
 		}
-		c.compileStatement()
+		bytecode = append(bytecode, c.compileStatement()...)
 		c.skipEols()
 	}
 
-	return c.chunk
+	c.expectNext(token.END)
+	c.advance()
+
+	return bytecode
 }
 
 // func (c *Compiler) compileBlockStatement() *ast.BlockStatement {
@@ -398,6 +430,25 @@ func (c *Compiler) compilePrefixExpression() ([]byte, opcodes.ValType) {
 	bytecode = append(bytecode, opcodes.PrefixOperator(operator, valType))
 
 	return bytecode, valType
+}
+
+func (c *Compiler) compileGroupedExpression() ([]byte, opcodes.ValType) {
+	bytecode := make([]byte, 0)
+
+	c.expectCurrent(token.LPARENTHESIS)
+	c.advance()
+
+	expr, valType := c.compileExpression(LOWEST)
+	if expr == nil {
+		return nil, opcodes.UNKNOWN_TYPE
+	}
+
+	bytecode = append(bytecode, expr...)
+
+	c.expectNext(token.RPARENTHESIS)
+	c.advance()
+
+	return expr, valType
 }
 
 func (c *Compiler) compileInfixExpression(left []byte, leftValType opcodes.ValType) ([]byte, opcodes.ValType) {
@@ -473,16 +524,6 @@ func (c *Compiler) compileFunctionCallExpression() ([]byte, opcodes.ValType) {
 	return bytecode, valType
 }
 
-// func (c *Compiler) compileGroupedExpression() ast.Expression {
-// 	c.consumeToken() //skip opening parenthesis
-// 	exp := c.compileExpression(LOWEST)
-// 	if !c.expectNextTokenType(token.RPARENTHESIS) {
-// 		return nil
-// 	}
-// 	c.consumeToken() //skip closing parenthesis
-// 	return exp
-// }
-
 /// types
 
 func (c *Compiler) compileType() ([]byte, opcodes.ValType) {
@@ -521,10 +562,8 @@ func (c *Compiler) compileFloatingPointType() ([]byte, opcodes.ValType) {
 func (c *Compiler) compileBooleanType() ([]byte, opcodes.ValType) {
 	bytecode := make([]byte, 0)
 
-	addr := c.chunk.AddBoolConstant(false)
-
 	bytecode = append(bytecode, opcodes.BPUSH)
-	bytecode = append(bytecode, byte(addr))
+	bytecode = append(bytecode, 0)
 
 	return bytecode, opcodes.BOOL
 }
@@ -595,10 +634,14 @@ func (c *Compiler) compileBooleanLiteral() ([]byte, opcodes.ValType) {
 	bytecode := make([]byte, 0)
 
 	val, _ := strconv.ParseBool(c.current.Value)
-	addr := c.chunk.AddBoolConstant(val)
+
+	byteVal := byte(0)
+	if val {
+		byteVal = 1
+	}
 
 	bytecode = append(bytecode, opcodes.BPUSH)
-	bytecode = append(bytecode, byte(addr))
+	bytecode = append(bytecode, byteVal)
 
 	return bytecode, opcodes.BOOL
 }
@@ -662,10 +705,8 @@ func (c *Compiler) compileFloatingPointReturn() ([]byte, opcodes.ValType) {
 func (c *Compiler) compileBooleanReturn() ([]byte, opcodes.ValType) {
 	bytecode := make([]byte, 0)
 
-	addr := c.chunk.AddBoolConstant(false)
-
 	bytecode = append(bytecode, opcodes.BPUSH)
-	bytecode = append(bytecode, byte(addr))
+	bytecode = append(bytecode, 0)
 
 	return bytecode, opcodes.BOOL
 }
@@ -709,11 +750,9 @@ func (c *Compiler) registerPrefixes() {
 	c.registerPrefix(token.BOOL, c.compileBooleanLiteral)
 	c.registerPrefix(token.CHAR, c.compileCharacterLiteral)
 	c.registerPrefix(token.STRING, c.compileStringLiteral)
-	// c.registerPrefix(token.LPARENTHESIS, c.compileGroupedExpression)
+	c.registerPrefix(token.LPARENTHESIS, c.compileGroupedExpression)
 	c.registerPrefix(token.MINUS, c.compilePrefixExpression)
 	c.registerPrefix(token.BANG, c.compilePrefixExpression)
-	// c.registerPrefix(token.TYPE, c.compileType)
-	// c.registerPrefix(token.FUNC, c.compileType)
 }
 
 func (c *Compiler) registerInfixes() {
@@ -884,6 +923,15 @@ func (c *Compiler) reportTypeMismatch(operator token.Token, type1, type2 opcodes
 		type2,
 		operator.Line,
 		operator.PositionInLine)
+	c.errors = append(c.errors, msg)
+}
+
+func (c *Compiler) reportWrongType(token token.Token, expected, actual opcodes.ValType) {
+	msg := fmt.Sprintf("ERROR: wrong type. Expected: '%v', got '%v' on line %v, position %v.",
+		expected,
+		actual,
+		token.Line,
+		token.PositionInLine)
 	c.errors = append(c.errors, msg)
 }
 

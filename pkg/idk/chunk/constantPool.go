@@ -3,7 +3,6 @@ package chunk
 type ConstantPool struct {
 	intPool    []int
 	floatPool  []float64
-	boolPool   []bool
 	charPool   []rune
 	stringPool []string
 }
@@ -12,7 +11,6 @@ func NewConstantPool() *ConstantPool {
 	return &ConstantPool{
 		intPool:    make([]int, 0),
 		floatPool:  make([]float64, 0),
-		boolPool:   make([]bool, 0),
 		charPool:   make([]rune, 0),
 		stringPool: make([]string, 0),
 	}
@@ -34,15 +32,6 @@ func (cp *ConstantPool) InsertFloat(val float64) int {
 
 func (cp *ConstantPool) RetrieveFloat(address int) float64 {
 	return cp.floatPool[address]
-}
-
-func (cp *ConstantPool) InsertBool(val bool) int {
-	cp.boolPool = append(cp.boolPool, val)
-	return len(cp.boolPool) - 1
-}
-
-func (cp *ConstantPool) RetrieveBool(address int) bool {
-	return cp.boolPool[address]
 }
 
 func (cp *ConstantPool) InsertChar(val rune) int {

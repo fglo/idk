@@ -66,16 +66,19 @@ func NewVirtualMachine(chunk *chunk.Chunk) *VirtualMachine {
 	return i
 }
 
+func (vm *VirtualMachine) PrintStacks() {
+	fmt.Println("CALL stack:", vm.callStack)
+	fmt.Println("INT stack:", vm.intStack)
+	fmt.Println("FLOAT stack:", vm.floatStack)
+	fmt.Println("BOOL stack:", vm.boolStack)
+	fmt.Println("CHAR stack:", vm.charStack)
+	fmt.Println("STRING stack:", vm.stringStack)
+}
+
 func (vm *VirtualMachine) Run() {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("CALL stack:", vm.callStack)
-			fmt.Println("INT stack:", vm.intStack)
-			fmt.Println("FLOAT stack:", vm.floatStack)
-			fmt.Println("BOOL stack:", vm.boolStack)
-			fmt.Println("CHAR stack:", vm.charStack)
-			fmt.Println("STRING stack:", vm.stringStack)
-
+			vm.PrintStacks()
 			panic(fmt.Sprintf("runtime error at ip %d", vm.ip))
 		}
 	}()
@@ -113,28 +116,28 @@ func (vm *VirtualMachine) Run() {
 			val := vm.intStack.pop()
 			vm.intStack.push(-val)
 		case opcodes.IGT:
-			a := vm.intStack.pop()
 			b := vm.intStack.pop()
+			a := vm.intStack.pop()
 			vm.boolStack.push(a > b)
 		case opcodes.ILT:
-			a := vm.intStack.pop()
 			b := vm.intStack.pop()
+			a := vm.intStack.pop()
 			vm.boolStack.push(a < b)
 		case opcodes.IGE:
-			a := vm.intStack.pop()
 			b := vm.intStack.pop()
+			a := vm.intStack.pop()
 			vm.boolStack.push(a >= b)
 		case opcodes.ILE:
-			a := vm.intStack.pop()
 			b := vm.intStack.pop()
+			a := vm.intStack.pop()
 			vm.boolStack.push(a <= b)
 		case opcodes.IEQ:
-			a := vm.intStack.pop()
 			b := vm.intStack.pop()
+			a := vm.intStack.pop()
 			vm.boolStack.push(a == b)
 		case opcodes.INEQ:
-			a := vm.intStack.pop()
 			b := vm.intStack.pop()
+			a := vm.intStack.pop()
 			vm.boolStack.push(a != b)
 		case opcodes.IPRINT:
 			value := vm.intStack.pop()
@@ -230,28 +233,28 @@ func (vm *VirtualMachine) Run() {
 			val := vm.floatStack.pop()
 			vm.floatStack.push(-val)
 		case opcodes.FGT:
-			a := vm.floatStack.pop()
 			b := vm.floatStack.pop()
+			a := vm.floatStack.pop()
 			vm.boolStack.push(a > b)
 		case opcodes.FLT:
-			a := vm.floatStack.pop()
 			b := vm.floatStack.pop()
+			a := vm.floatStack.pop()
 			vm.boolStack.push(a < b)
 		case opcodes.FGE:
-			a := vm.floatStack.pop()
 			b := vm.floatStack.pop()
+			a := vm.floatStack.pop()
 			vm.boolStack.push(a >= b)
 		case opcodes.FLE:
-			a := vm.floatStack.pop()
 			b := vm.floatStack.pop()
+			a := vm.floatStack.pop()
 			vm.boolStack.push(a <= b)
 		case opcodes.FEQ:
-			a := vm.floatStack.pop()
 			b := vm.floatStack.pop()
+			a := vm.floatStack.pop()
 			vm.boolStack.push(a == b)
 		case opcodes.FNEQ:
-			a := vm.floatStack.pop()
 			b := vm.floatStack.pop()
+			a := vm.floatStack.pop()
 			vm.boolStack.push(a != b)
 		case opcodes.FPRINT:
 			value := vm.floatStack.pop()
@@ -274,8 +277,10 @@ func (vm *VirtualMachine) Run() {
 		// BOOL
 		case opcodes.BPUSH:
 			vm.ip++
-			addr := int(bytecode[vm.ip])
-			value := constantPool.RetrieveBool(addr)
+			value := false
+			if bytecode[vm.ip] == 1 {
+				value = true
+			}
 			vm.boolStack.push(value)
 		case opcodes.BNEG:
 			val := vm.boolStack.pop()
@@ -384,9 +389,7 @@ func (vm *VirtualMachine) Run() {
 			vm.stringStack.push(value)
 		// STATEMENTS
 		case opcodes.IF:
-			a := vm.intStack.pop()
-			b := vm.intStack.pop()
-			if a < b {
+			if !vm.boolStack.pop() {
 				vm.ip++
 				jump := int(bytecode[vm.ip])
 				vm.ip += jump
@@ -428,4 +431,10 @@ func (vm *VirtualMachine) Run() {
 
 		vm.ip++
 	}
+
+	fmt.Println()
+	fmt.Println("---------------------")
+	fmt.Println()
+
+	vm.PrintStacks()
 }

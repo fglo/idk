@@ -1,24 +1,31 @@
 print("start")
 
+print(-7)
 a := 1 + 2 * 3
 print(-a)
 
+print(4)
 b: int
-b = 1 + 2 * 3
+b = 2 + 6 / 3
 print(b)
 
-c: int = 1 + 2 * 3
+print(1)
+c: int = (5 - 2) / 3
 print(c)
 
+print(0.3)
 d := 0.1 + 0.2
 print(d)
 
+print(false)
 e := false
 print(e)
 
+print('$')
 f := '$'
 print(f)
 
+print("text")
 g := "text"
 print(g)
 
@@ -37,8 +44,12 @@ print(true and false)
 
 print(true or false)
 
+print(true xor true)
+
 print(true xor false)
 
-print(true xor true)
+if 1 < 2
+    print("entered if statement")
+end
 
 print("end")
