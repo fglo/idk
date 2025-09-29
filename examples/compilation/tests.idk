@@ -29,12 +29,16 @@ print("text")
 g := "text"
 print(g)
 
-func h() -> int
-    print(1)
-    return 2
+func h1() -> int
+    return 1
 end
 
-print(h())
+func h() -> int
+    print("called h")
+    return h1() + h1()
+end
+
+print(h() + h())
 
 print(1 < 2)
 

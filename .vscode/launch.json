@@ -60,7 +60,7 @@
       ]
     },
     {
-      "name": "Compilation",
+      "name": "Compile Tests",
       "type": "go",
       "request": "launch",
       "mode": "debug",
@@ -68,6 +68,17 @@
       "args": [
         "-c",
         "../../examples/compilation/tests.idk"
+      ]
+    },
+    {
+      "name": "Compile Fibonacci",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "cmd/idk/main.go",
+      "args": [
+        "-c",
+        "../../examples/compilation/fibonacci.idk"
       ]
     },
     {

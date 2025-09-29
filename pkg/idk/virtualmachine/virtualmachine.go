@@ -88,6 +88,10 @@ func (vm *VirtualMachine) Run() {
 
 	constantPool := vm.chunk.ConstantPool
 
+	// TODO: handle calling unexistant functino
+	// TODO: handle calling function on variable which isn't a function
+	// TODO: using function as a variable
+
 	for vm.ip < codeLength {
 		switch bytecode[vm.ip] {
 		// INT

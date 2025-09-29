@@ -300,10 +300,44 @@ func (c *Compiler) compileFunctionDefinitionStatement() []byte {
 	c.expectNext(token.LPARENTHESIS)
 	c.advance()
 
-	// c.compileFunctionDefinitionParametersList()
+	noParams := 0
 
-	c.expectNext(token.RPARENTHESIS)
-	c.advance()
+	paramsBytecode := make([]byte, 0)
+
+	if c.next.Is(token.IDENTIFIER) {
+		for !c.current.Is(token.RPARENTHESIS) {
+			c.expectNext(token.IDENTIFIER)
+			c.advance()
+
+			paramIdentifier := c.current
+
+			c.expectNext(token.DECLARE)
+			c.advance()
+
+			c.expectNext(token.TYPE)
+			c.advance()
+
+			bytes, valType := c.compileType()
+			if bytes == nil {
+				return bytecode // TODO: better error handling
+			}
+
+			addr := c.chunk.AddStringConstant(paramIdentifier.Value)
+			c.currentScope.Insert(paramIdentifier.Value, addr, valType)
+
+			paramsBytecode = append(paramsBytecode, bytes...)
+			paramsBytecode = append(paramsBytecode, opcodes.VarBind(valType))
+			paramsBytecode = append(paramsBytecode, byte(addr))
+
+			c.expectNext(token.COMMA, token.RPARENTHESIS)
+			c.advance()
+
+			noParams += 1
+		}
+	} else {
+		c.expectNext(token.RPARENTHESIS)
+		c.advance()
+	}
 
 	c.expectNext(token.RETURN_TYPE)
 	c.advance()
@@ -321,7 +355,9 @@ func (c *Compiler) compileFunctionDefinitionStatement() []byte {
 
 	bytecode = append(bytecode, opcodes.FuncCreate(valType))
 	bytecode = append(bytecode, byte(addr))
-	bytecode = append(bytecode, 0) // TODO: actual number of args
+	bytecode = append(bytecode, byte(noParams)) // TODO: actual number of args
+
+	bytecode = append(bytecode, paramsBytecode...)
 
 	bytecode = append(bytecode, c.compileBlockStatement()...)
 
@@ -377,23 +413,6 @@ func (c *Compiler) compileBlockStatement() []byte {
 
 	return bytecode
 }
-
-// func (c *Compiler) compileBlockStatement() *ast.BlockStatement {
-// 	statements := []ast.Statement{}
-
-// 	c.skipEols()
-
-// 	for !c.next.Is(token.END) && !c.next.Is(token.EOF) && !c.next.Is(token.ELSE) {
-// 		c.consumeToken()
-// 		s := c.compileStatement()
-// 		if s != nil {
-// 			statements = append(statements, s)
-// 		}
-// 		c.skipEols()
-// 	}
-
-// 	return ast.NewBlockStatement(statements)
-// }
 
 /// expressions
 
@@ -495,31 +514,47 @@ func (c *Compiler) compileFunctionCallExpression() ([]byte, opcodes.ValType) {
 	c.expectNext(token.LPARENTHESIS)
 	c.advance()
 
-	// exp.Parameters = c.compileFunctionCallParametersList()
+	// TODO: exp.Parameters = c.compileFunctionCallParametersList()
 
 	switch identifier {
 	case "print":
 		c.advance()
 		expr, valType = c.compileExpression(LOWEST)
 		bytecode = append(bytecode, expr...)
-		// bytecode = append(bytecode, compileExpression(node.Parameters[0])...)
 		bytecode = append(bytecode, opcodes.ValPrint(valType))
+		c.expectNext(token.RPARENTHESIS)
+		c.advance()
 	default:
 		symbol, ok := c.currentScope.Lookup(identifier)
 		if !ok {
 			return nil, opcodes.UNKNOWN_TYPE
 		}
 
-		bytecode = append(bytecode, expr...)
+		noParams := 0
+		if !c.next.Is(token.RPARENTHESIS) {
+			for !c.current.Is(token.RPARENTHESIS) {
+				expr, valType = c.compileExpression(LOWEST)
+				if expr == nil {
+					return bytecode, valType // TODO: better error handling
+				}
+
+				bytecode = append(bytecode, expr...)
+
+				c.expectCurrent(token.COMMA, token.RPARENTHESIS)
+
+				noParams += 1
+			}
+		} else {
+			c.expectNext(token.RPARENTHESIS)
+			c.advance()
+		}
+
 		bytecode = append(bytecode, opcodes.FuncCall(symbol.valType))
 		bytecode = append(bytecode, byte(symbol.cpAddr))
-		bytecode = append(bytecode, 0) // TODO: actual number of args
+		bytecode = append(bytecode, byte(noParams))
 
 		valType = symbol.valType
 	}
-
-	c.expectNext(token.RPARENTHESIS)
-	c.advance()
 
 	return bytecode, valType
 }
@@ -832,20 +867,30 @@ func (c *Compiler) consumeTokenWithoutCheckingForIllegals() token.Token {
 	return c.current
 }
 
-func (c *Compiler) expectCurrent(t token.TokenType) bool {
-	if c.current.Is(t) {
+func (c *Compiler) expectCurrent(tokens ...token.TokenType) bool {
+	found := false
+	for _, t := range tokens {
+		found = found || c.current.Is(t)
+	}
+
+	if found {
 		return true
 	} else {
-		c.reportUnexpectedToken(c.current, t)
+		c.reportUnexpectedToken(c.current, tokens...)
 		return false
 	}
 }
 
-func (c *Compiler) expectNext(t token.TokenType) bool {
-	if c.next.Is(t) {
+func (c *Compiler) expectNext(tokens ...token.TokenType) bool {
+	found := false
+	for _, t := range tokens {
+		found = found || c.next.Is(t)
+	}
+
+	if found {
 		return true
 	} else {
-		c.reportUnexpectedToken(c.next, t)
+		c.reportUnexpectedToken(c.next, tokens...)
 		return false
 	}
 }
@@ -883,12 +928,26 @@ func (c *Compiler) Errors() []string {
 	return c.errors
 }
 
-func (c *Compiler) reportUnexpectedToken(unexpected token.Token, expectedType token.TokenType) {
-	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. <%v> was expected.",
+func (c *Compiler) reportUnexpectedToken(unexpected token.Token, expectedTypes ...token.TokenType) {
+	expectedStr := ""
+	if len(expectedTypes) == 1 {
+		expectedStr = fmt.Sprintf("<%v>", expectedTypes[0])
+	} else {
+		for i, expectedType := range expectedTypes {
+			if i == 0 {
+				expectedStr = fmt.Sprintf("<%v>", expectedType)
+			} else {
+				expectedStr = fmt.Sprintf("%s or <%v>", expectedStr, expectedType)
+			}
+		}
+	}
+
+	msg := fmt.Sprintf("ERROR: Unexpected token <%v> on line %v, position %v. %s was expected.",
 		unexpected.Type,
 		unexpected.Line,
 		unexpected.PositionInLine,
-		expectedType)
+		expectedStr,
+	)
 	c.errors = append(c.errors, msg)
 }
 
