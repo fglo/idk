@@ -167,18 +167,12 @@ func (vm *VirtualMachine) Run() {
 			funcName := constantPool.RetrieveString(funcNameAddr)
 			vm.ip++
 			numArgs := int(bytecode[vm.ip])
-
 			vm.ip++
-			// TODO: handle arguments
-
-			blockLen := 0
-			for bytecode[vm.ip+blockLen] != opcodes.IFUNC_RETURN {
-				blockLen++
-			}
-
-			funcCode := bytecode[vm.ip : vm.ip+blockLen+1]
+			funcLen := int(bytecode[vm.ip])
+			vm.ip++
+			funcCode := bytecode[vm.ip : vm.ip+funcLen+(numArgs*2)]
 			vm.functionTable[funcName] = &function{name: funcName, args: numArgs, code: funcCode}
-			vm.ip += blockLen
+			vm.ip += funcLen + (numArgs * 2) - 1
 		case opcodes.IFUNC_CALL:
 			vm.ip++
 			funcNameAddr := int(bytecode[vm.ip])
@@ -190,7 +184,6 @@ func (vm *VirtualMachine) Run() {
 			for j := range numArgs {
 				args[j] = vm.intStack[len(vm.intStack)-1-j]
 			}
-			vm.intStack = vm.intStack[:len(vm.intStack)-numArgs]
 			vm.callStack = append(vm.callStack, callFrame{
 				functionName: funcName,
 				args:         args,

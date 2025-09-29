@@ -325,7 +325,7 @@ func (c *Compiler) compileFunctionDefinitionStatement() []byte {
 			addr := c.chunk.AddStringConstant(paramIdentifier.Value)
 			c.currentScope.Insert(paramIdentifier.Value, addr, valType)
 
-			paramsBytecode = append(paramsBytecode, bytes...)
+			// paramsBytecode = append(paramsBytecode, bytes...)
 			paramsBytecode = append(paramsBytecode, opcodes.VarBind(valType))
 			paramsBytecode = append(paramsBytecode, byte(addr))
 
@@ -357,9 +357,11 @@ func (c *Compiler) compileFunctionDefinitionStatement() []byte {
 	bytecode = append(bytecode, byte(addr))
 	bytecode = append(bytecode, byte(noParams)) // TODO: actual number of args
 
-	bytecode = append(bytecode, paramsBytecode...)
+	blockStatementByteCode := c.compileBlockStatement()
 
-	bytecode = append(bytecode, c.compileBlockStatement()...)
+	bytecode = append(bytecode, byte(len(blockStatementByteCode)))
+	bytecode = append(bytecode, paramsBytecode...)
+	bytecode = append(bytecode, blockStatementByteCode...)
 
 	return bytecode
 }
@@ -531,23 +533,22 @@ func (c *Compiler) compileFunctionCallExpression() ([]byte, opcodes.ValType) {
 		}
 
 		noParams := 0
-		if !c.next.Is(token.RPARENTHESIS) {
-			for !c.current.Is(token.RPARENTHESIS) {
-				expr, valType = c.compileExpression(LOWEST)
-				if expr == nil {
-					return bytecode, valType // TODO: better error handling
-				}
-
-				bytecode = append(bytecode, expr...)
-
-				c.expectCurrent(token.COMMA, token.RPARENTHESIS)
-
-				noParams += 1
-			}
-		} else {
-			c.expectNext(token.RPARENTHESIS)
+		for !c.next.Is(token.RPARENTHESIS) {
 			c.advance()
+			expr, valType = c.compileExpression(LOWEST)
+			if expr == nil {
+				return bytecode, valType // TODO: better error handling
+			}
+
+			bytecode = append(bytecode, expr...)
+
+			c.expectNext(token.COMMA, token.RPARENTHESIS)
+
+			noParams += 1
 		}
+
+		c.expectNext(token.RPARENTHESIS)
+		c.advance()
 
 		bytecode = append(bytecode, opcodes.FuncCall(symbol.valType))
 		bytecode = append(bytecode, byte(symbol.cpAddr))

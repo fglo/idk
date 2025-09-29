@@ -134,11 +134,28 @@ func (c *Chunk) Disassemble() string {
 			} else {
 				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
 			}
-		case opcodes.IFUNC_CREATE, opcodes.IFUNC_CALL,
-			opcodes.FFUNC_CREATE, opcodes.FFUNC_CALL,
-			opcodes.BFUNC_CREATE, opcodes.BFUNC_CALL,
-			opcodes.CFUNC_CREATE, opcodes.CFUNC_CALL,
-			opcodes.SFUNC_CREATE, opcodes.SFUNC_CALL:
+		case opcodes.IFUNC_CREATE,
+			opcodes.FFUNC_CREATE,
+			opcodes.BFUNC_CREATE,
+			opcodes.CFUNC_CREATE,
+			opcodes.SFUNC_CREATE:
+			if ip < len(c.Bytecode)-1 {
+				ip++
+				param := c.Bytecode[ip]
+				value := c.ConstantPool.RetrieveString(int(param))
+				ip++
+				numArgs := c.Bytecode[ip]
+				ip++
+				funcLen := c.Bytecode[ip]
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s %-9v %-10s %d %d\n", currentIP, bcode, code, param, value, numArgs, funcLen)) // TODO: display number of arguments
+			} else {
+				out.WriteString(fmt.Sprintf(" %-4d │ %04d  %-15s\n", currentIP, bcode, code))
+			}
+		case opcodes.IFUNC_CALL,
+			opcodes.FFUNC_CALL,
+			opcodes.BFUNC_CALL,
+			opcodes.CFUNC_CALL,
+			opcodes.SFUNC_CALL:
 			if ip < len(c.Bytecode)-1 {
 				ip++
 				param := c.Bytecode[ip]
