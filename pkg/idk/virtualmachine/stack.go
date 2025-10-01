@@ -16,3 +16,9 @@ func (s *stack[T]) pop() T {
 	*s = stack[:len(stack)-1]
 	return val
 }
+
+func (s *stack[T]) peek() T {
+	stack := *s
+	val := stack[len(stack)-1]
+	return val
+}

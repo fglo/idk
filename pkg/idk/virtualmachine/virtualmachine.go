@@ -17,6 +17,7 @@ type callFrame struct {
 	functionName string
 	args         []int
 	returnAddr   int
+	symbolTable  *symbolTable
 }
 
 type Stacks struct {
@@ -39,7 +40,7 @@ type VirtualMachine struct {
 
 	memory        []int
 	symbolTable   *symbolTable
-	callStack     []callFrame
+	callStack     stack[callFrame]
 	functionTable map[string]*function
 	loopCounters  []int
 	loopLimits    []int
@@ -85,6 +86,7 @@ func (vm *VirtualMachine) Run() {
 
 	bytecode := vm.chunk.Bytecode
 	codeLength := len(bytecode)
+	symbolTable := vm.symbolTable
 
 	constantPool := vm.chunk.ConstantPool
 
@@ -151,12 +153,12 @@ func (vm *VirtualMachine) Run() {
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
 			value := vm.intStack.pop()
-			vm.symbolTable.bindInt(varname, value)
+			symbolTable.bindInt(varname, value)
 		case opcodes.IVAR_LOOKUP:
 			vm.ip++
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
-			value, err := vm.symbolTable.lookupInt(varname)
+			value, err := symbolTable.lookupInt(varname)
 			if err != nil {
 				panic(err) // TODO: maybe better error handling
 			}
@@ -184,25 +186,33 @@ func (vm *VirtualMachine) Run() {
 			for j := range numArgs {
 				args[j] = vm.intStack[len(vm.intStack)-1-j]
 			}
-			vm.callStack = append(vm.callStack, callFrame{
+
+			newCallFrame := callFrame{
 				functionName: funcName,
 				args:         args,
-				returnAddr:   vm.ip,
-			})
+				returnAddr:   vm.ip - 1,
+				symbolTable:  newSymbolTable(),
+			}
+
+			vm.callStack = append(vm.callStack, newCallFrame)
 			vm.ip = -1
 			bytecode = vm.functionTable[funcName].code
 			codeLength = len(bytecode)
+			symbolTable = newCallFrame.symbolTable
 		case opcodes.IFUNC_RETURN:
 			returnValue := vm.intStack.pop()
-			vm.ip = vm.callStack[len(vm.callStack)-1].returnAddr - 1
-			vm.callStack = vm.callStack[:len(vm.callStack)-1]
+			currentCallFrame := vm.callStack.pop()
+			vm.ip = currentCallFrame.returnAddr
 			vm.intStack.push(returnValue)
 			if len(vm.callStack) > 0 {
-				bytecode = vm.functionTable[vm.callStack[len(vm.callStack)-1].functionName].code
+				previousCallFrame := vm.callStack.peek()
+				bytecode = vm.functionTable[previousCallFrame.functionName].code
 				codeLength = len(bytecode)
+				symbolTable = previousCallFrame.symbolTable
 			} else {
 				bytecode = vm.chunk.Bytecode
 				codeLength = len(bytecode)
+				symbolTable = vm.symbolTable
 			}
 		// FLOAT
 		case opcodes.FPUSH:
@@ -261,12 +271,12 @@ func (vm *VirtualMachine) Run() {
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
 			value := vm.floatStack.pop()
-			vm.symbolTable.bindFloat(varname, value)
+			symbolTable.bindFloat(varname, value)
 		case opcodes.FVAR_LOOKUP:
 			vm.ip++
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
-			value, err := vm.symbolTable.lookupFloat(varname)
+			value, err := symbolTable.lookupFloat(varname)
 			if err != nil {
 				panic(err) // TODO: maybe better error handling
 			}
@@ -310,12 +320,12 @@ func (vm *VirtualMachine) Run() {
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
 			value := vm.boolStack.pop()
-			vm.symbolTable.bindBool(varname, value)
+			symbolTable.bindBool(varname, value)
 		case opcodes.BVAR_LOOKUP:
 			vm.ip++
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
-			value, err := vm.symbolTable.lookupBool(varname)
+			value, err := symbolTable.lookupBool(varname)
 			if err != nil {
 				panic(err) // TODO: maybe better error handling
 			}
@@ -342,12 +352,12 @@ func (vm *VirtualMachine) Run() {
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
 			value := vm.charStack.pop()
-			vm.symbolTable.bindChar(varname, value)
+			symbolTable.bindChar(varname, value)
 		case opcodes.CVAR_LOOKUP:
 			vm.ip++
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
-			value, err := vm.symbolTable.lookupChar(varname)
+			value, err := symbolTable.lookupChar(varname)
 			if err != nil {
 				panic(err) // TODO: maybe better error handling
 			}
@@ -374,12 +384,12 @@ func (vm *VirtualMachine) Run() {
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
 			value := vm.stringStack.pop()
-			vm.symbolTable.bindString(varname, value)
+			symbolTable.bindString(varname, value)
 		case opcodes.SVAR_LOOKUP:
 			vm.ip++
 			varnameAddr := int(bytecode[vm.ip])
 			varname := constantPool.RetrieveString(varnameAddr)
-			value, err := vm.symbolTable.lookupString(varname)
+			value, err := symbolTable.lookupString(varname)
 			if err != nil {
 				panic(err) // TODO: maybe better error handling
 			}

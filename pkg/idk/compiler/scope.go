@@ -9,7 +9,7 @@ type scope struct {
 
 type symbol struct {
 	valType opcodes.ValType
-	cpAddr  int
+	cpAddr  int // constant pool address
 }
 
 func NewScope() *scope {

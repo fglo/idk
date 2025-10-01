@@ -30,6 +30,7 @@ g := "text"
 print(g)
 
 func h1() -> int
+    print("called h1")
     return 1
 end
 
@@ -54,6 +55,10 @@ print(true xor false)
 
 if 1 < 2
     print("entered if statement")
+end
+
+if 1 == 2
+    print("shouldn't see this")
 end
 
 print("end")

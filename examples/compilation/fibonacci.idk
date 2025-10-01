@@ -10,4 +10,6 @@ end
 
 fib := fibonacci(4)
 
+print("result:")
+
 print(fib)
