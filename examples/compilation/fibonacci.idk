@@ -1,6 +1,4 @@
 func fibonacci(n:int) -> int
-    print(n)
-
     if n < 2
         return n
     end
@@ -8,7 +6,7 @@ func fibonacci(n:int) -> int
     return fibonacci(n - 1) + fibonacci(n - 2)
 end
 
-fib := fibonacci(4)
+fib := fibonacci(10)
 
 print("result:")
 
