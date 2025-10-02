@@ -1,0 +1,64 @@
+print("start")
+
+print(-7)
+a := 1 + 2 * 3
+print(-a)
+
+print(4)
+b: int
+b = 2 + 6 / 3
+print(b)
+
+print(1)
+c: int = (5 - 2) / 3
+print(c)
+
+print(0.3)
+d := 0.1 + 0.2
+print(d)
+
+print(false)
+e := false
+print(e)
+
+print('$')
+f := '$'
+print(f)
+
+print("text")
+g := "text"
+print(g)
+
+func h1() -> int
+    print("called h1")
+    return 1
+end
+
+func h() -> int
+    print("called h")
+    return h1() + h1()
+end
+
+print(h() + h())
+
+print(1 < 2)
+
+print(2. == 2.)
+
+print(true and false)
+
+print(true or false)
+
+print(true xor true)
+
+print(true xor false)
+
+if 1 < 2
+    print("entered if statement")
+end
+
+if 1 == 2
+    print("shouldn't see this")
+end
+
+print("end")

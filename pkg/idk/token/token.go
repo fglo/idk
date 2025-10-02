@@ -36,10 +36,9 @@ const (
 
 	RETURN_TYPE TokenType = "->"
 
+	TO              TokenType = "TO"
 	RANGE           TokenType = ".."  // TODO: range
 	RANGE_INCLUSIVE TokenType = "..=" // TODO: range inclusive
-
-	TO TokenType = "TO"
 
 	PLUS     TokenType = "+"
 	MINUS    TokenType = "-"
@@ -60,10 +59,10 @@ const (
 	COMMA TokenType = ","
 	DOT   TokenType = "."
 
-	NOT TokenType = "!"
-	AND TokenType = "AND"
-	OR  TokenType = "OR"
-	XOR TokenType = "XOR"
+	BANG TokenType = "!"
+	AND  TokenType = "AND"
+	OR   TokenType = "OR"
+	XOR  TokenType = "XOR"
 
 	IF   TokenType = "IF"
 	ELSE TokenType = "ELSE"
@@ -131,7 +130,7 @@ func (e TokenType) String() string {
 		return "COMMA"
 	case DOT:
 		return "DOT"
-	case NOT:
+	case BANG:
 		return "NOT"
 	default:
 		return string(e)
@@ -187,7 +186,7 @@ var keywords = map[string]TokenType{
 	"else":   ELSE,
 	"for":    FOR,
 	"end":    END,
-	"not":    NOT,
+	"not":    BANG,
 	"and":    AND,
 	"or":     OR,
 	"xor":    XOR,
@@ -242,10 +241,10 @@ var operators = map[TokenType]byte{
 	LT:  0,
 	LTE: 0,
 
-	NOT: 0,
-	AND: 0,
-	OR:  0,
-	XOR: 0,
+	BANG: 0,
+	AND:  0,
+	OR:   0,
+	XOR:  0,
 }
 
 func (t TokenType) IsOperator() bool {

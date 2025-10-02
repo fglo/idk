@@ -1,0 +1,28 @@
+[
+  {
+    "label": "Debug current Go file",
+    "adapter": "Delve",
+    "program": "$ZED_FILE",
+    "request": "launch",
+    "mode": "debug",
+    "cwd": "$ZED_WORKTREE_ROOT"
+  },
+  {
+    "label": "Debug compilation tests",
+    "adapter": "Delve",
+    "program": "cmd/idk/main.go",
+    "request": "launch",
+    "mode": "debug",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "args": ["-c", "examples/compilation/tests.idk"]
+  },
+  {
+    "label": "Debug compiled fibonacci",
+    "adapter": "Delve",
+    "program": "cmd/idk/main.go",
+    "request": "launch",
+    "mode": "debug",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "args": ["-c", "examples/compilation/fibonacci.idk"]
+  }
+]

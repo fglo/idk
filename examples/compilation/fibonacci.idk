@@ -2,10 +2,12 @@ func fibonacci(n:int) -> int
     if n < 2
         return n
     end
-    
+
     return fibonacci(n - 1) + fibonacci(n - 2)
 end
 
-fib := fibonacci(50)
+fib := fibonacci(10)
+
+print("result:")
 
 print(fib)
